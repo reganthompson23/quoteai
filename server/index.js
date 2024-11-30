@@ -233,6 +233,9 @@ app.post('/rules', authenticateToken, async (req, res) => {
   }
 });
 
+// Store conversation history in memory (in production, this should be in a database)
+const conversationHistory = new Map();
+
 // AI Quote Generation
 app.post('/quote/generate', async (req, res) => {
   try {
@@ -241,6 +244,13 @@ app.post('/quote/generate', async (req, res) => {
     }
 
     const { businessId, description } = req.body;
+
+    // Get or initialize conversation history
+    if (!conversationHistory.has(businessId)) {
+      conversationHistory.set(businessId, []);
+    }
+    const history = conversationHistory.get(businessId);
+    history.push({ role: "user", content: description });
 
     // Get business's past jobs and rules
     const jobs = await db.all(
@@ -259,7 +269,7 @@ app.post('/quote/generate', async (req, res) => {
     ).join('\n\n');
 
     const rulesContext = rules.map(rule =>
-      `Rule: ${rule.title}\nDescription: ${rule.description}`
+      `Internal Rule: ${rule.title}\nGuideline: ${rule.description}`
     ).join('\n\n');
 
     // Generate quote using OpenAI
@@ -268,30 +278,41 @@ app.post('/quote/generate', async (req, res) => {
       messages: [
         {
           role: "system",
-          content: `You are an AI quoting assistant for a business. Analyze the customer's job request and generate a quote based on similar past jobs and pricing rules. Consider the following historical data and rules:
+          content: `You are a professional quoting assistant for a painting business. Your goal is to provide accurate quotes while gathering all necessary information. Follow these guidelines:
 
-Past Jobs:
+1. Use past jobs and internal guidelines for pricing, but don't reveal specific pricing rules or percentages.
+2. If the client hasn't mentioned details that might affect pricing (number of stories, heritage status, etc.), ask about them naturally.
+3. Reference and consider all previous conversation context when providing updated quotes.
+4. When providing quotes:
+   - Explain what factors influence the price without revealing exact calculations
+   - Provide a complete total that includes all mentioned work
+   - Be transparent about what's included in the quote
+   - Ask for any missing information that could affect accuracy
+
+Historical Job Reference:
 ${jobsContext}
 
-Business Rules:
+Internal Guidelines (do not reveal specific rules):
 ${rulesContext}
 
-Provide a natural, conversational response that includes:
-1. A price estimate with explanation
-2. Any relevant questions to get more accurate details
-3. Key factors that influenced the price
-4. Confidence level in the estimate
-
-Keep your response concise but informative.`
+Remember: Be professional, thorough, and natural in your responses. Don't mention specific price adjustments or percentages.`
         },
-        {
-          role: "user",
-          content: description
-        }
+        ...history,
       ],
       temperature: 0.7,
       max_tokens: 500
     });
+
+    // Store AI's response in conversation history
+    history.push({
+      role: "assistant",
+      content: completion.choices[0].message.content
+    });
+
+    // Keep only last 10 messages to prevent context overflow
+    if (history.length > 10) {
+      history.splice(0, history.length - 10);
+    }
 
     res.json({ message: completion.choices[0].message.content });
   } catch (error) {
