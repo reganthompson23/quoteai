@@ -3,7 +3,6 @@ export interface User {
   email: string;
   businessName: string;
   industry: string;
-  createdAt: Date;
 }
 
 export interface Job {
@@ -12,10 +11,10 @@ export interface Job {
   title: string;
   description: string;
   price: number;
-  createdAt: Date;
+  createdAt: string;
 }
 
-export interface Rule {
+export interface PricingRule {
   id: string;
   businessId: string;
   title: string;
