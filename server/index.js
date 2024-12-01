@@ -32,66 +32,90 @@ try {
 // Database setup
 let db;
 async function setupDatabase() {
-  const dbPath = process.env.NODE_ENV === 'production'
-    ? '/opt/render/project/src/data/database.sqlite'
-    : join(__dirname, '../database.sqlite');
+  try {
+    const dbPath = process.env.NODE_ENV === 'production'
+      ? '/opt/render/project/src/data/database.sqlite'
+      : join(__dirname, '../database.sqlite');
 
-  // Ensure the data directory exists in production
-  if (process.env.NODE_ENV === 'production') {
-    const dir = '/opt/render/project/src/data';
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    console.log('Setting up database at:', dbPath);
+
+    // Ensure the data directory exists in production
+    if (process.env.NODE_ENV === 'production') {
+      const dir = '/opt/render/project/src/data';
+      console.log('Checking data directory:', dir);
+      
+      if (!fs.existsSync(dir)) {
+        console.log('Creating data directory...');
+        fs.mkdirSync(dir, { recursive: true });
+      } else {
+        console.log('Data directory already exists');
+      }
+
+      // Ensure directory is writable
+      try {
+        fs.accessSync(dir, fs.constants.W_OK);
+        console.log('Data directory is writable');
+      } catch (err) {
+        console.error('Data directory is not writable:', err);
+      }
     }
-  }
 
-  db = await open({
-    filename: dbPath,
-    driver: sqlite3.Database,
-  });
+    console.log('Opening database connection...');
+    db = await open({
+      filename: dbPath,
+      driver: sqlite3.Database,
+    });
 
-  console.log('Creating database tables if they don\'t exist...');
-  
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      email TEXT UNIQUE,
-      password TEXT,
-      businessName TEXT,
-      industry TEXT,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+    console.log('Creating database tables...');
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE,
+        password TEXT,
+        businessName TEXT,
+        industry TEXT,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
 
-    CREATE TABLE IF NOT EXISTS jobs (
-      id TEXT PRIMARY KEY,
-      businessId TEXT,
-      title TEXT,
-      description TEXT,
-      price REAL,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (businessId) REFERENCES users(id)
-    );
+      CREATE TABLE IF NOT EXISTS jobs (
+        id TEXT PRIMARY KEY,
+        businessId TEXT,
+        title TEXT,
+        description TEXT,
+        price REAL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (businessId) REFERENCES users(id)
+      );
 
-    CREATE TABLE IF NOT EXISTS rules (
-      id TEXT PRIMARY KEY,
-      businessId TEXT,
-      title TEXT,
-      description TEXT,
-      isActive BOOLEAN,
-      FOREIGN KEY (businessId) REFERENCES users(id)
-    );
-  `);
+      CREATE TABLE IF NOT EXISTS rules (
+        id TEXT PRIMARY KEY,
+        businessId TEXT,
+        title TEXT,
+        description TEXT,
+        isActive BOOLEAN,
+        FOREIGN KEY (businessId) REFERENCES users(id)
+      );
+    `);
 
-  console.log('Database setup complete.');
+    // Verify tables were created
+    const tables = await db.all("SELECT name FROM sqlite_master WHERE type='table';");
+    console.log('Created tables:', tables.map(t => t.name).join(', '));
 
-  // Insert demo user if not exists
-  const demoUser = await db.get('SELECT * FROM users WHERE email = ?', ['regan@syndicatestore.com.au']);
-  if (!demoUser) {
-    console.log('Creating demo user...');
-    const hashedPassword = await bcrypt.hash('test123456', 10);
-    await db.run(
-      'INSERT INTO users (id, email, password, businessName, industry) VALUES (?, ?, ?, ?, ?)',
-      ['demo-user', 'regan@syndicatestore.com.au', hashedPassword, 'Syndicate Painting', 'Painting']
-    );
+    // Insert demo user if not exists
+    const demoUser = await db.get('SELECT * FROM users WHERE email = ?', ['regan@syndicatestore.com.au']);
+    if (!demoUser) {
+      console.log('Creating demo user...');
+      const hashedPassword = await bcrypt.hash('test123456', 10);
+      await db.run(
+        'INSERT INTO users (id, email, password, businessName, industry) VALUES (?, ?, ?, ?, ?)',
+        ['demo-user', 'regan@syndicatestore.com.au', hashedPassword, 'Syndicate Painting', 'Painting']
+      );
+    }
+
+    console.log('Database setup complete!');
+  } catch (error) {
+    console.error('Database setup failed:', error);
+    throw error;
   }
 }
 
