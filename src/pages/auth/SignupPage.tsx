@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { api } from '../../lib/api';
@@ -14,15 +14,22 @@ interface SignupForm {
 export function SignupPage() {
   const navigate = useNavigate();
   const { login } = useAuthStore();
+  const [error, setError] = useState<string>('');
   const { register, handleSubmit, formState: { errors } } = useForm<SignupForm>();
 
   const onSubmit = async (data: SignupForm) => {
     try {
+      setError('');
       const response = await api.signup(data);
-      login(response.token, response.user);
-      navigate('/dashboard');
-    } catch (error) {
+      if (response.token && response.user) {
+        login(response.token, response.user);
+        navigate('/dashboard');
+      } else {
+        setError('Signup failed. Please try again.');
+      }
+    } catch (error: any) {
       console.error('Signup failed:', error);
+      setError(error.message || 'Failed to create account. Please try again.');
     }
   };
 
@@ -36,6 +43,12 @@ export function SignupPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {error && (
+            <div className="mb-4 p-2 text-sm text-red-700 bg-red-100 rounded">
+              {error}
+            </div>
+          )}
+          
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">

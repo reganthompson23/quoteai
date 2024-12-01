@@ -11,12 +11,13 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
     },
   });
 
+  const data = await response.json();
+
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || 'An error occurred');
+    throw new Error(data.message || 'An error occurred');
   }
 
-  return response.json();
+  return data;
 }
 
 export const api = {
