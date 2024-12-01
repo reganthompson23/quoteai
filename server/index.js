@@ -33,40 +33,40 @@ try {
 let db;
 async function setupDatabase() {
   try {
-    // Ensure the data directory exists in production
-    const dataDir = process.env.NODE_ENV === 'production'
-      ? '/opt/render/project/src/data'
-      : join(__dirname, '..');
-    
+    const dataDir = '/opt/render/project/src/data';
     const dbPath = join(dataDir, 'database.sqlite');
     
     console.log('Setting up database at:', dbPath);
     
-    if (process.env.NODE_ENV === 'production') {
-      console.log('Checking data directory:', dataDir);
-      if (!fs.existsSync(dataDir)) {
-        console.log('Creating data directory...');
-        fs.mkdirSync(dataDir, { recursive: true });
-      } else {
-        console.log('Data directory already exists');
-      }
+    // Ensure data directory exists
+    if (!fs.existsSync(dataDir)) {
+      console.log('Creating data directory...');
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    console.log('Data directory exists:', dataDir);
 
-      // Ensure directory is writable
-      try {
-        fs.accessSync(dataDir, fs.constants.W_OK);
-        console.log('Data directory is writable');
-      } catch (err) {
-        console.error('Data directory is not writable:', err);
-      }
+    // Check directory permissions
+    try {
+      fs.accessSync(dataDir, fs.constants.W_OK);
+      console.log('Data directory is writable');
+    } catch (err) {
+      console.error('Data directory is not writable:', err);
+      throw err;
     }
 
+    // Open database connection
     console.log('Opening database connection...');
     db = await open({
       filename: dbPath,
       driver: sqlite3.Database,
     });
 
-    console.log('Creating database tables...');
+    // Check if tables exist
+    const existingTables = await db.all("SELECT name FROM sqlite_master WHERE type='table';");
+    console.log('Existing tables:', existingTables.map(t => t.name).join(', '));
+
+    // Create tables if they don't exist
+    console.log('Creating tables...');
     await db.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
@@ -76,7 +76,10 @@ async function setupDatabase() {
         industry TEXT,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+    console.log('Users table created');
 
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS jobs (
         id TEXT PRIMARY KEY,
         businessId TEXT,
@@ -86,7 +89,10 @@ async function setupDatabase() {
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (businessId) REFERENCES users(id)
       );
+    `);
+    console.log('Jobs table created');
 
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS rules (
         id TEXT PRIMARY KEY,
         businessId TEXT,
@@ -96,10 +102,11 @@ async function setupDatabase() {
         FOREIGN KEY (businessId) REFERENCES users(id)
       );
     `);
+    console.log('Rules table created');
 
     // Verify tables were created
-    const tables = await db.all("SELECT name FROM sqlite_master WHERE type='table';");
-    console.log('Created tables:', tables.map(t => t.name).join(', '));
+    const finalTables = await db.all("SELECT name FROM sqlite_master WHERE type='table';");
+    console.log('Final tables:', finalTables.map(t => t.name).join(', '));
 
     // Insert demo user if not exists
     const demoUser = await db.get('SELECT * FROM users WHERE email = ?', ['regan@syndicatestore.com.au']);
@@ -110,7 +117,12 @@ async function setupDatabase() {
         'INSERT INTO users (id, email, password, businessName, industry) VALUES (?, ?, ?, ?, ?)',
         ['demo-user', 'regan@syndicatestore.com.au', hashedPassword, 'Syndicate Painting', 'Painting']
       );
+      console.log('Demo user created');
     }
+
+    // Verify users exist
+    const userCount = await db.get('SELECT COUNT(*) as count FROM users');
+    console.log('Total users in database:', userCount.count);
 
     console.log('Database setup complete!');
   } catch (error) {
