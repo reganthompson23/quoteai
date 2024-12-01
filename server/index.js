@@ -33,27 +33,27 @@ try {
 let db;
 async function setupDatabase() {
   try {
-    const dbPath = process.env.NODE_ENV === 'production'
-      ? '/opt/render/project/src/data/database.sqlite'
-      : join(__dirname, '../database.sqlite');
-
-    console.log('Setting up database at:', dbPath);
-
     // Ensure the data directory exists in production
+    const dataDir = process.env.NODE_ENV === 'production'
+      ? '/opt/render/project/src/data'
+      : join(__dirname, '..');
+    
+    const dbPath = join(dataDir, 'database.sqlite');
+    
+    console.log('Setting up database at:', dbPath);
+    
     if (process.env.NODE_ENV === 'production') {
-      const dir = '/opt/render/project/src/data';
-      console.log('Checking data directory:', dir);
-      
-      if (!fs.existsSync(dir)) {
+      console.log('Checking data directory:', dataDir);
+      if (!fs.existsSync(dataDir)) {
         console.log('Creating data directory...');
-        fs.mkdirSync(dir, { recursive: true });
+        fs.mkdirSync(dataDir, { recursive: true });
       } else {
         console.log('Data directory already exists');
       }
 
       // Ensure directory is writable
       try {
-        fs.accessSync(dir, fs.constants.W_OK);
+        fs.accessSync(dataDir, fs.constants.W_OK);
         console.log('Data directory is writable');
       } catch (err) {
         console.error('Data directory is not writable:', err);
