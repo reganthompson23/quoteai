@@ -153,6 +153,43 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Routes
+app.post('/auth/signup', async (req, res) => {
+  try {
+    const { email, password, businessName, industry } = req.body;
+
+    // Check if user already exists
+    const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
+    // Hash password and create user
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const userId = crypto.randomUUID();
+
+    await db.run(
+      'INSERT INTO users (id, email, password, businessName, industry) VALUES (?, ?, ?, ?, ?)',
+      [userId, email, hashedPassword, businessName, industry]
+    );
+
+    // Generate token
+    const token = jwt.sign({ id: userId, email }, process.env.JWT_SECRET);
+
+    res.status(201).json({
+      token,
+      user: {
+        id: userId,
+        email,
+        businessName,
+        industry,
+      },
+    });
+  } catch (error) {
+    console.error('Signup Error:', error);
+    res.status(500).json({ message: 'Failed to create account' });
+  }
+});
+
 app.post('/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;

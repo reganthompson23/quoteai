@@ -10,6 +10,7 @@ import { RuleForm } from './components/pricing/RuleForm';
 import { WidgetPreview } from './components/widget/WidgetPreview';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/auth/LoginPage';
+import { SignupPage } from './pages/auth/SignupPage';
 import { useAuthStore } from './store/auth';
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
             <Route
               path="/dashboard"
               element={
