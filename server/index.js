@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -35,11 +36,21 @@ async function setupDatabase() {
     ? '/opt/render/project/src/data/database.sqlite'
     : join(__dirname, '../database.sqlite');
 
+  // Ensure the data directory exists in production
+  if (process.env.NODE_ENV === 'production') {
+    const dir = '/opt/render/project/src/data';
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  }
+
   db = await open({
     filename: dbPath,
     driver: sqlite3.Database,
   });
 
+  console.log('Creating database tables if they don\'t exist...');
+  
   await db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
@@ -70,59 +81,16 @@ async function setupDatabase() {
     );
   `);
 
+  console.log('Database setup complete.');
+
   // Insert demo user if not exists
   const demoUser = await db.get('SELECT * FROM users WHERE email = ?', ['regan@syndicatestore.com.au']);
   if (!demoUser) {
+    console.log('Creating demo user...');
     const hashedPassword = await bcrypt.hash('test123456', 10);
     await db.run(
       'INSERT INTO users (id, email, password, businessName, industry) VALUES (?, ?, ?, ?, ?)',
       ['demo-user', 'regan@syndicatestore.com.au', hashedPassword, 'Syndicate Painting', 'Painting']
-    );
-
-    // Insert demo jobs
-    await db.run(
-      'INSERT INTO jobs (id, businessId, title, description, price) VALUES (?, ?, ?, ?, ?)',
-      [
-        crypto.randomUUID(),
-        'demo-user',
-        'Two-Story House Exterior Paint',
-        'Complete exterior painting of a large two-story house. Required scaffolding and special equipment for high areas. House had detailed trim work and required extensive prep due to old paint peeling. Used premium weather-resistant paint. Total area approximately 3000 sq ft.',
-        4500
-      ]
-    );
-
-    await db.run(
-      'INSERT INTO jobs (id, businessId, title, description, price) VALUES (?, ?, ?, ?, ?)',
-      [
-        crypto.randomUUID(),
-        'demo-user',
-        'Interior Apartment Renovation',
-        'Full interior painting of a 3-bedroom apartment. Walls needed repair and patching before painting. Used premium low-VOC paint for all rooms. Included detailed trim work and ceiling painting. Completed over 4 days with 2 painters.',
-        2800
-      ]
-    );
-
-    // Insert demo rules
-    await db.run(
-      'INSERT INTO rules (id, businessId, title, description, isActive) VALUES (?, ?, ?, ?, ?)',
-      [
-        crypto.randomUUID(),
-        'demo-user',
-        'Two-Story Premium',
-        'Increase the price by 20% for every story the house has IF it is an exterior job',
-        true
-      ]
-    );
-
-    await db.run(
-      'INSERT INTO rules (id, businessId, title, description, isActive) VALUES (?, ?, ?, ?, ?)',
-      [
-        crypto.randomUUID(),
-        'demo-user',
-        'Heritage Building Care',
-        'Add 30% to the base price for heritage-listed buildings due to extra care and specialized materials required',
-        true
-      ]
     );
   }
 }
