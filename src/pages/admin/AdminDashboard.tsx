@@ -24,19 +24,10 @@ export function AdminDashboard() {
   useEffect(() => {
     async function fetchUsers() {
       try {
-        const response = await fetch('https://quoteai-backend.onrender.com/admin/users', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        const data = await response.json();
-        if (response.ok) {
-          setUsers(data);
-        } else {
-          setError(data.message || 'Failed to fetch users');
-        }
-      } catch (err) {
-        setError('Failed to fetch users');
+        const data = await api.getUsers();
+        setUsers(data);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch users');
       }
     }
 

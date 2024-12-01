@@ -34,6 +34,9 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  // Admin
+  getUsers: () => fetchApi('/admin/users'),
+
   // Jobs
   getJobs: () => fetchApi('/jobs'),
   
