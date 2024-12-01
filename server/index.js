@@ -369,3 +369,22 @@ app.listen(port, () => {
   console.log(`Server running on port ${port}`);
   console.log(`OpenAI API Key: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Missing'}`);
 });
+
+// Admin routes (protected by admin check)
+const isAdmin = (req, res, next) => {
+  const { email } = req.user;
+  if (email === 'regan@syndicatestore.com.au') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Admin access required' });
+  }
+};
+
+app.get('/admin/users', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const users = await db.all('SELECT id, email, businessName, industry, createdAt FROM users');
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
