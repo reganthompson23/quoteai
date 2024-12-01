@@ -31,8 +31,12 @@ try {
 // Database setup
 let db;
 async function setupDatabase() {
+  const dbPath = process.env.NODE_ENV === 'production'
+    ? '/opt/render/project/src/data/database.sqlite'
+    : join(__dirname, '../database.sqlite');
+
   db = await open({
-    filename: join(__dirname, '../database.sqlite'),
+    filename: dbPath,
     driver: sqlite3.Database,
   });
 
