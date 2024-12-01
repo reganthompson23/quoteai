@@ -1,26 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../store/auth';
-
-interface SignupForm {
-  email: string;
-  password: string;
-  businessName: string;
-  industry: string;
-}
 
 export function SignupPage() {
   const navigate = useNavigate();
   const { login } = useAuthStore();
-  const [error, setError] = useState<string>('');
-  const { register, handleSubmit, formState: { errors } } = useForm<SignupForm>();
+  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    businessName: '',
+    industry: ''
+  });
 
-  const onSubmit = async (data: SignupForm) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
     try {
       setError('');
-      const response = await api.signup(data);
+      const response = await api.signup(formData);
       if (response.token && response.user) {
         login(response.token, response.user);
         navigate('/dashboard');
@@ -49,18 +55,21 @@ export function SignupPage() {
             </div>
           )}
           
-          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
               </label>
               <div className="mt-1">
                 <input
-                  {...register('email', { required: true })}
+                  id="email"
+                  name="email"
                   type="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
-                {errors.email && <p className="mt-1 text-sm text-red-600">Email is required</p>}
               </div>
             </div>
 
@@ -70,15 +79,14 @@ export function SignupPage() {
               </label>
               <div className="mt-1">
                 <input
-                  {...register('password', { required: true, minLength: 6 })}
+                  id="password"
+                  name="password"
                   type="password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
-                {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">
-                    Password must be at least 6 characters
-                  </p>
-                )}
               </div>
             </div>
 
@@ -88,13 +96,14 @@ export function SignupPage() {
               </label>
               <div className="mt-1">
                 <input
-                  {...register('businessName', { required: true })}
+                  id="businessName"
+                  name="businessName"
                   type="text"
+                  required
+                  value={formData.businessName}
+                  onChange={handleChange}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
-                {errors.businessName && (
-                  <p className="mt-1 text-sm text-red-600">Business name is required</p>
-                )}
               </div>
             </div>
 
@@ -104,13 +113,14 @@ export function SignupPage() {
               </label>
               <div className="mt-1">
                 <input
-                  {...register('industry', { required: true })}
+                  id="industry"
+                  name="industry"
                   type="text"
+                  required
+                  value={formData.industry}
+                  onChange={handleChange}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
-                {errors.industry && (
-                  <p className="mt-1 text-sm text-red-600">Industry is required</p>
-                )}
               </div>
             </div>
 
