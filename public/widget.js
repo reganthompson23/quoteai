@@ -87,6 +87,30 @@
       user-select: none;
     }
 
+    .quoteai-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .quoteai-header p {
+      margin: 4px 0 0;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .quoteai-header a {
+      color: white;
+      text-decoration: none;
+      opacity: 0.9;
+      transition: opacity 0.2s;
+    }
+
+    .quoteai-header a:hover {
+      opacity: 1;
+    }
+
     .quoteai-close {
       background: none;
       border: none;
@@ -220,14 +244,14 @@
       <div class="quoteai-chat" role="dialog" aria-label="Chat">
         <div class="quoteai-header">
           <div>
-            <h3 style="margin: 0; font-size: 16px;">Get an Instant Quote</h3>
-            <p style="margin: 4px 0 0; font-size: 12px; opacity: 0.8;">Powered by QuoteAI</p>
+            <h3>Get An Instant Estimate</h3>
+            <p><a href="https://starlit-churros-bd6ab7.netlify.app" target="_blank">Powered by Instant Estimate</a></p>
           </div>
           <button class="quoteai-close" aria-label="Close chat">✕</button>
         </div>
         <div class="quoteai-messages">
           <div class="quoteai-message bot">
-            Hi! I can help you get an instant quote. Just describe what you need.
+            Hi! I can help you get an instant estimate. Just describe what you need.
           </div>
         </div>
         <div class="quoteai-input">
