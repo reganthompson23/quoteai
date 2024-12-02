@@ -1,42 +1,61 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Building2 } from 'lucide-react';
 import { useAuthStore } from '../../store/auth';
 
 export function Header() {
-  const { isAuthenticated, user } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const isAdmin = user?.email === 'regan@syndicatestore.com.au';
 
   return (
-    <header className="border-b bg-white">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
-          <Building2 className="h-6 w-6 text-blue-600" />
-          <span className="text-xl font-bold">QuoteAI</span>
-        </Link>
-
-        <div className="flex items-center space-x-4">
-          {isAuthenticated ? (
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                {user?.businessName}
-              </span>
-            </div>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Log in
-              </Link>
-              <Link
-                to="/signup"
-                className="text-sm bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              >
-                Get Started
-              </Link>
-            </>
-          )}
+    <header className="bg-white shadow">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex">
+            <Link to="/" className="flex items-center">
+              <span className="text-xl font-bold text-blue-600">QuoteAI</span>
+            </Link>
+          </div>
+          <div className="flex items-center space-x-4">
+            {isAuthenticated ? (
+              <>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Admin
+                  </Link>
+                )}
+                <Link
+                  to="/dashboard"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => logout()}
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </header>
