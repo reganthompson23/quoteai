@@ -385,13 +385,46 @@ Remember: Be concise and professional. No long explanations unless providing a f
       history.splice(0, history.length - 10);
     }
 
-    // Store the chat in the database
-    const chatId = crypto.randomUUID();
+    res.json({ message: completion.choices[0].message.content });
+  } catch (error) {
+    console.error('OpenAI Error:', error);
+    res.status(500).json({ 
+      message: 'Failed to generate quote',
+      error: error.message 
+    });
+  }
+});
+
+// Chat completion endpoint
+app.post('/chats/complete', async (req, res) => {
+  try {
+    const { businessId, messages } = req.body;
+    
+    if (!messages || messages.length === 0) {
+      return res.status(400).json({ message: 'No messages provided' });
+    }
+
+    // Generate a summary using OpenAI
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "Create a brief summary (max 200 characters) of this conversation about a service quote. Focus on the key details discussed and any price estimates given."
+        },
+        ...messages
+      ],
+      temperature: 0.7,
+      max_tokens: 100
+    });
+
+    const summary = completion.choices[0].message.content;
+    
+    // Get next chat number for this business
     const chatNumber = await getNextChatNumber(businessId);
     
-    // We'll generate the summary later when we implement the AI summary feature
-    const summary = "Chat started..."; // Placeholder
-    
+    // Store the completed chat
+    const chatId = crypto.randomUUID();
     await db.run(
       `INSERT INTO chats (id, businessId, chatNumber, summary, messages) 
        VALUES (?, ?, ?, ?, ?)`,
@@ -400,21 +433,14 @@ Remember: Be concise and professional. No long explanations unless providing a f
         businessId,
         chatNumber,
         summary,
-        JSON.stringify(history)
+        JSON.stringify(messages)
       ]
     );
 
-    // Send response with chat ID for future reference
-    res.json({ 
-      message: completion.choices[0].message.content,
-      chatId
-    });
+    res.json({ success: true, chatId });
   } catch (error) {
-    console.error('OpenAI Error:', error);
-    res.status(500).json({ 
-      message: 'Failed to generate quote',
-      error: error.message 
-    });
+    console.error('Chat completion error:', error);
+    res.status(500).json({ message: 'Failed to save chat' });
   }
 });
 

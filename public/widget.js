@@ -240,6 +240,56 @@
     return;
   }
 
+  // Chat session management
+  let currentChatId = localStorage.getItem('currentChatId');
+  let messageHistory = [];
+  
+  // Load existing chat if it exists
+  const savedMessages = localStorage.getItem(`chat_${businessId}`);
+  if (savedMessages) {
+    try {
+      messageHistory = JSON.parse(savedMessages);
+    } catch (e) {
+      console.error('Failed to load saved chat:', e);
+    }
+  }
+
+  // Save chat to localStorage
+  function saveChat() {
+    localStorage.setItem(`chat_${businessId}`, JSON.stringify(messageHistory));
+  }
+
+  // Complete and save chat to server
+  async function completeChat() {
+    if (messageHistory.length === 0) return;
+    
+    try {
+      await fetch('https://quoteai-backend.onrender.com/chats/complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          businessId,
+          messages: messageHistory,
+        }),
+      });
+      
+      // Clear local storage after successful save
+      localStorage.removeItem(`chat_${businessId}`);
+      localStorage.removeItem('currentChatId');
+    } catch (error) {
+      console.error('Failed to save chat:', error);
+    }
+  }
+
+  // Add beforeunload handler
+  window.addEventListener('beforeunload', () => {
+    if (messageHistory.length > 0) {
+      completeChat();
+    }
+  });
+
   // Create widget HTML
   const widgetHTML = `
     <div class="quoteai-widget">
@@ -329,11 +379,14 @@
     const text = textarea.value.trim();
     if (!text) return;
 
-    // Add user message
+    // Add user message to UI and history
     const userMessage = document.createElement('div');
     userMessage.className = 'quoteai-message user';
     userMessage.textContent = text;
     messages.appendChild(userMessage);
+    
+    messageHistory.push({ role: 'user', content: text });
+    saveChat();
 
     // Clear input and reset height
     textarea.value = '';
@@ -359,11 +412,15 @@
 
       const data = await response.json();
 
-      // Add bot message
+      // Add bot message to UI and history
       const botMessage = document.createElement('div');
       botMessage.className = 'quoteai-message bot';
       botMessage.textContent = data.message;
       messages.appendChild(botMessage);
+      
+      messageHistory.push({ role: 'assistant', content: data.message });
+      saveChat();
+      
       messages.scrollTop = messages.scrollHeight;
     } catch (error) {
       console.error('Failed to get response:', error);
@@ -371,6 +428,10 @@
       errorMessage.className = 'quoteai-message bot';
       errorMessage.textContent = 'Sorry, I encountered an error. Please try again.';
       messages.appendChild(errorMessage);
+      
+      messageHistory.push({ role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' });
+      saveChat();
+      
       messages.scrollTop = messages.scrollHeight;
     }
   }
