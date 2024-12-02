@@ -415,6 +415,9 @@
       saveChat();
       
       messages.scrollTop = messages.scrollHeight;
+      
+      // Complete chat after successful quote
+      completeChat();
     } catch (error) {
       console.error('Failed to get response:', error);
       const errorMessage = document.createElement('div');
@@ -478,7 +481,10 @@
     if (window.innerWidth <= 768) {
       document.body.style.overflow = '';
     }
-    // Don't clear messages, just hide the UI
+    // Complete chat when closing
+    if (messageHistory.length > 0) {
+      completeChat();
+    }
   });
 
   sendButton.addEventListener('click', sendMessage);
