@@ -63,11 +63,12 @@
 
     @media (max-width: 768px) {
       .quoteai-chat {
-        width: 100%;
-        height: 100%;
-        bottom: 0;
-        right: 0;
-        border-radius: 0;
+        width: 92%;
+        height: 92%;
+        max-height: 92vh;
+        bottom: 4%;
+        right: 4%;
+        border-radius: 12px;
       }
     }
 
@@ -139,7 +140,7 @@
       }
     }
 
-    .quoteai-input input {
+    .quoteai-input textarea {
       flex: 1;
       padding: 12px 16px;
       border: 1px solid #e5e7eb;
@@ -148,9 +149,15 @@
       font-size: 16px;
       -webkit-appearance: none;
       appearance: none;
+      resize: none;
+      min-height: 48px;
+      max-height: 120px;
+      line-height: 1.5;
+      font-family: inherit;
+      overflow-y: auto;
     }
 
-    .quoteai-input input:focus {
+    .quoteai-input textarea:focus {
       border-color: #2563eb;
       box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
     }
@@ -165,6 +172,7 @@
       font-size: 16px;
       -webkit-tap-highlight-color: transparent;
       white-space: nowrap;
+      align-self: flex-end;
     }
 
     .quoteai-input button:hover {
@@ -223,11 +231,11 @@
           </div>
         </div>
         <div class="quoteai-input">
-          <input 
-            type="text" 
+          <textarea 
             placeholder="Describe your project..."
             aria-label="Type your message"
-          >
+            rows="1"
+          ></textarea>
           <button type="button">Send</button>
         </div>
       </div>
@@ -244,9 +252,17 @@
   const toggleButton = widget.querySelector('.quoteai-button');
   const chat = widget.querySelector('.quoteai-chat');
   const closeButton = widget.querySelector('.quoteai-close');
-  const input = widget.querySelector('input');
+  const textarea = widget.querySelector('textarea');
   const sendButton = widget.querySelector('.quoteai-input button');
   const messages = widget.querySelector('.quoteai-messages');
+
+  // Auto-resize textarea
+  function adjustTextareaHeight() {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+  }
+
+  textarea.addEventListener('input', adjustTextareaHeight);
 
   // Handle mobile keyboard
   function handleMobileKeyboard() {
@@ -259,7 +275,7 @@
     }
   }
 
-  input.addEventListener('focus', handleMobileKeyboard);
+  textarea.addEventListener('focus', handleMobileKeyboard);
 
   // Toggle chat
   toggleButton.addEventListener('click', () => {
@@ -278,7 +294,7 @@
 
   // Send message
   async function sendMessage() {
-    const text = input.value.trim();
+    const text = textarea.value.trim();
     if (!text) return;
 
     // Add user message
@@ -287,8 +303,9 @@
     userMessage.textContent = text;
     messages.appendChild(userMessage);
 
-    // Clear input
-    input.value = '';
+    // Clear input and reset height
+    textarea.value = '';
+    textarea.style.height = '48px';
     messages.scrollTop = messages.scrollHeight;
 
     try {
@@ -327,8 +344,9 @@
   }
 
   sendButton.addEventListener('click', sendMessage);
-  input.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
+  textarea.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       sendMessage();
     }
   });
