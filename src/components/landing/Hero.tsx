@@ -13,11 +13,11 @@ export function Hero() {
               <span className="font-semibold">PricePilot</span>
             </div>
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-              Automate Your Pricing with AI Precision
+              Instant Estimates on Autopilot
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-600">
-              Transform your business with intelligent, automated pricing. PricePilot learns from your expertise to deliver accurate estimates 24/7, helping you close deals faster and grow your business.
-            </p>
+            Simply upload details about your past jobs and pricing, and we handle the rest. PricePilot automatically creates a smart chatbot that provides accurate estimates 24/7, helping you close deals faster and grow your business—no tech skills required.
+              </p>
             <div className="mt-10 flex items-center gap-x-6">
               <Link
                 to="/signup"
