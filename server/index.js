@@ -135,13 +135,7 @@ setupDatabase().catch(console.error);
 
 // Middleware
 const corsOptions = {
-  origin: [
-    'http://localhost:5173',
-    'https://starlit-churros-bd6ab7.netlify.app',
-    'https://ridefsa.org',
-    'https://www.ridefsa.org'
-  ],
-  credentials: true,
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
