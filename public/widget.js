@@ -281,7 +281,7 @@
   async function completeChat() {
     if (messageHistory.length === 0 || isCompletingChat) return;
     
-    isCompletingChat = true; // Set flag before attempting completion
+    isCompletingChat = true;
     
     try {
       await fetch('https://quoteai-backend.onrender.com/chats/complete', {
@@ -297,10 +297,10 @@
       
       // Clear local storage after successful save
       localStorage.removeItem(`chat_${businessId}`);
-      localStorage.removeItem('currentChatId');
+      messageHistory = [];
     } catch (error) {
       console.error('Failed to save chat:', error);
-      isCompletingChat = false; // Reset flag if save fails
+      isCompletingChat = false;
     }
   }
 
@@ -309,16 +309,16 @@
     if (messageHistory.length > 0 && !isCompletingChat) {
       // Use sync request to ensure it completes before page unload
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', 'https://quoteai-backend.onrender.com/chats/complete', false); // false makes it synchronous
+      xhr.open('POST', 'https://quoteai-backend.onrender.com/chats/complete', false);
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.send(JSON.stringify({
         businessId,
         messages: messageHistory,
       }));
       
-      // Clear storage regardless of success (prevents duplicate attempts)
+      // Clear storage
       localStorage.removeItem(`chat_${businessId}`);
-      localStorage.removeItem('currentChatId');
+      messageHistory = [];
     }
   });
 
@@ -393,11 +393,24 @@
 
   // Toggle chat
   toggleButton.addEventListener('click', () => {
+    // Check if there's a saved chat
+    const savedMessages = localStorage.getItem(`chat_${businessId}`);
+    
+    if (!savedMessages) {
+      // Start fresh chat
+      messageHistory = [];
+      const messagesContainer = widget.querySelector('.quoteai-messages');
+      messagesContainer.innerHTML = `
+        <div class="quoteai-message bot">
+          Hi! I can help you get an instant estimate. Just describe what you need.
+        </div>
+      `;
+    }
+
     chat.classList.add('open');
     if (window.innerWidth <= 768) {
       document.body.style.overflow = 'hidden';
     }
-    // Scroll to bottom when opening chat
     messages.scrollTop = messages.scrollHeight;
   });
 
