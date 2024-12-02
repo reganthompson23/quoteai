@@ -19,7 +19,7 @@ export function ChatDetail() {
 
   const deleteChat = useMutation({
     mutationFn: async () => {
-      await fetch(`${api.API_URL}/chats/${id}/delete`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/chats/${id}/delete`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -27,7 +27,7 @@ export function ChatDetail() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQuery(['chats']);
+      queryClient.invalidateQueries(['chats']);
       navigate('/dashboard/chats');
     },
   });

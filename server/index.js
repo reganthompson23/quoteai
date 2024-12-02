@@ -67,6 +67,19 @@ async function setupDatabase() {
 
     // Create tables if they don't exist
     console.log('Creating tables...');
+    
+    // Add isDeleted column to chats if it doesn't exist
+    try {
+      await db.exec(`
+        ALTER TABLE chats 
+        ADD COLUMN isDeleted BOOLEAN DEFAULT 0;
+      `);
+      console.log('Added isDeleted column to chats table');
+    } catch (error) {
+      // Column might already exist, which is fine
+      console.log('isDeleted column might already exist:', error.message);
+    }
+
     await db.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
