@@ -159,7 +159,14 @@ setupDatabase().catch(console.error);
 
 // Middleware
 const corsOptions = {
-  origin: '*',
+  origin: [
+    'https://ridefsa.org',
+    'http://ridefsa.org',
+    'https://www.ridefsa.org',
+    'http://www.ridefsa.org',
+    'http://localhost:3000',
+    'http://localhost:5173'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };

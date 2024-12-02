@@ -284,7 +284,7 @@
     isCompletingChat = true;
     
     try {
-      const response = await fetch(`${window.location.protocol}//${window.location.host}/chats/complete`, {
+      const response = await fetch('https://quoteai-backend.onrender.com/chats/complete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -313,7 +313,7 @@
     if (messageHistory.length > 0 && !isCompletingChat) {
       // Use sync request to ensure it completes before page unload
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', `${window.location.protocol}//${window.location.host}/chats/complete`, false);
+      xhr.open('POST', 'https://quoteai-backend.onrender.com/chats/complete', false);
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.send(JSON.stringify({
         businessId,
@@ -447,7 +447,7 @@
 
     try {
       // Send to API
-      const response = await fetch(`${window.location.protocol}//${window.location.host}/quote/generate`, {
+      const response = await fetch('https://quoteai-backend.onrender.com/quote/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
