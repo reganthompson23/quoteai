@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth';
+import { api } from '../../lib/api';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -14,7 +15,9 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { loginAsDemo } = useAuthStore();
+  const { login } = useAuthStore();
+  const [error, setError] = useState('');
+  
   const {
     register,
     handleSubmit,
@@ -28,9 +31,13 @@ export function LoginPage() {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    if (data.email === 'regan@syndicatestore.com.au' && data.password === 'test123456') {
-      loginAsDemo();
+    try {
+      setError('');
+      const response = await api.login(data.email, data.password);
+      login(response.token, response.user);
       navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Failed to login');
     }
   };
 
@@ -47,6 +54,12 @@ export function LoginPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {error && (
+            <div className="mb-4 p-2 text-sm text-red-700 bg-red-100 rounded">
+              {error}
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label
