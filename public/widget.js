@@ -290,6 +290,7 @@
 
   // Chat session management
   let messageHistory = [];
+  let chatId = localStorage.getItem(`chatId_${businessId}`);
   
   // Load existing chat if it exists
   const savedMessages = localStorage.getItem(`chat_${businessId}`);
@@ -309,6 +310,7 @@
     } catch (e) {
       console.error('Failed to load saved chat:', e);
       localStorage.removeItem(`chat_${businessId}`);
+      localStorage.removeItem(`chatId_${businessId}`);
     }
   }
 
@@ -320,7 +322,7 @@
       
       // Save to server
       try {
-        await fetch('https://quoteai-backend.onrender.com/chats/complete', {
+        const response = await fetch('https://quoteai-backend.onrender.com/chats/complete', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -328,8 +330,16 @@
           body: JSON.stringify({
             businessId,
             messages: messageHistory,
+            chatId: chatId
           })
         });
+
+        // If this is a new chat, store the chat ID
+        if (!chatId) {
+          const data = await response.json();
+          chatId = data.chatId;
+          localStorage.setItem(`chatId_${businessId}`, chatId);
+        }
       } catch (error) {
         console.error('Failed to save chat to server:', error);
       }
@@ -427,6 +437,8 @@
     if (!savedMessages) {
       // Start fresh chat
       messageHistory = [];
+      chatId = null;
+      localStorage.removeItem(`chatId_${businessId}`);
       const messagesContainer = widget.querySelector('.quoteai-messages');
       messagesContainer.innerHTML = `
         <div class="quoteai-message bot">
