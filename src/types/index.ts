@@ -21,3 +21,20 @@ export interface PricingRule {
   description: string;
   isActive: boolean;
 }
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface Chat {
+  id: string;
+  businessId: string;
+  chatNumber: number;
+  summary: string;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  messages: ChatMessage[];
+  createdAt: string;
+}

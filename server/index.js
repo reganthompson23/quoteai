@@ -104,6 +104,29 @@ async function setupDatabase() {
     `);
     console.log('Rules table created');
 
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS chats (
+        id TEXT PRIMARY KEY,
+        businessId TEXT,
+        chatNumber INTEGER,
+        summary TEXT,
+        contactName TEXT,
+        contactEmail TEXT,
+        contactPhone TEXT,
+        messages TEXT,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (businessId) REFERENCES users(id)
+      );
+    `);
+    console.log('Chats table created');
+
+    // Create index for chat numbers per business
+    await db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_chats_business 
+      ON chats(businessId, chatNumber);
+    `);
+    console.log('Chat indices created');
+
     // Verify tables were created
     const finalTables = await db.all("SELECT name FROM sqlite_master WHERE type='table';");
     console.log('Final tables:', finalTables.map(t => t.name).join(', '));
@@ -362,7 +385,30 @@ Remember: Be concise and professional. No long explanations unless providing a f
       history.splice(0, history.length - 10);
     }
 
-    res.json({ message: completion.choices[0].message.content });
+    // Store the chat in the database
+    const chatId = crypto.randomUUID();
+    const chatNumber = await getNextChatNumber(businessId);
+    
+    // We'll generate the summary later when we implement the AI summary feature
+    const summary = "Chat started..."; // Placeholder
+    
+    await db.run(
+      `INSERT INTO chats (id, businessId, chatNumber, summary, messages) 
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        chatId,
+        businessId,
+        chatNumber,
+        summary,
+        JSON.stringify(history)
+      ]
+    );
+
+    // Send response with chat ID for future reference
+    res.json({ 
+      message: completion.choices[0].message.content,
+      chatId
+    });
   } catch (error) {
     console.error('OpenAI Error:', error);
     res.status(500).json({ 
@@ -402,3 +448,60 @@ app.get('/admin/users', authenticateToken, isAdmin, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+// Chat management endpoints
+app.get('/chats', authenticateToken, async (req, res) => {
+  try {
+    const chats = await db.all(
+      'SELECT id, chatNumber, summary, contactName, contactEmail, contactPhone, createdAt FROM chats WHERE businessId = ? ORDER BY createdAt DESC',
+      [req.user.id]
+    );
+    res.json(chats);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.get('/chats/:id', authenticateToken, async (req, res) => {
+  try {
+    const chat = await db.get(
+      'SELECT * FROM chats WHERE id = ? AND businessId = ?',
+      [req.params.id, req.user.id]
+    );
+    
+    if (!chat) {
+      return res.status(404).json({ message: 'Chat not found' });
+    }
+
+    // Parse the messages JSON string back to an array
+    chat.messages = JSON.parse(chat.messages);
+    
+    res.json(chat);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Admin endpoint to view all chats
+app.get('/admin/chats', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const chats = await db.all(`
+      SELECT c.*, u.businessName, u.email as businessEmail 
+      FROM chats c
+      JOIN users u ON c.businessId = u.id
+      ORDER BY c.createdAt DESC
+    `);
+    res.json(chats);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Helper function to get next chat number for a business
+async function getNextChatNumber(businessId) {
+  const result = await db.get(
+    'SELECT MAX(chatNumber) as maxNumber FROM chats WHERE businessId = ?',
+    [businessId]
+  );
+  return (result.maxNumber || 0) + 1;
+}

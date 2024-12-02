@@ -1,12 +1,13 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { LayoutGrid, FileText, Settings, MessageSquare } from 'lucide-react';
+import { LayoutGrid, FileText, Settings, MessageSquare, MessageCircle } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const navigation = [
   { name: 'Overview', href: '/dashboard', icon: LayoutGrid },
   { name: 'Jobs', href: '/dashboard/jobs', icon: FileText },
   { name: 'Rules', href: '/dashboard/pricing', icon: Settings },
+  { name: 'Chats', href: '/dashboard/chats', icon: MessageCircle },
   { name: 'Widget Preview', href: '/dashboard/widget', icon: MessageSquare },
 ];
 

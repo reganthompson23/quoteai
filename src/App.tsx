@@ -8,6 +8,8 @@ import { JobForm } from './components/jobs/JobForm';
 import { PricingRules } from './components/pricing/PricingRules';
 import { RuleForm } from './components/pricing/RuleForm';
 import { WidgetPreview } from './components/widget/WidgetPreview';
+import { ChatList } from './components/chats/ChatList';
+import { ChatDetail } from './components/chats/ChatDetail';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { SignupPage } from './pages/auth/SignupPage';
@@ -53,6 +55,8 @@ function App() {
               <Route path="pricing" element={<PricingRules />} />
               <Route path="pricing/new" element={<RuleForm />} />
               <Route path="widget" element={<WidgetPreview />} />
+              <Route path="chats" element={<ChatList />} />
+              <Route path="chats/:id" element={<ChatDetail />} />
             </Route>
           </Routes>
         </div>

@@ -58,6 +58,11 @@ export const api = {
       body: JSON.stringify(rule),
     }),
 
+  // Chats
+  getChats: () => fetchApi('/chats'),
+  
+  getChat: (chatId: string) => fetchApi(`/chats/${chatId}`),
+
   // AI Quote Generation
   generateQuote: (data: { businessId: string; description: string }) =>
     fetchApi('/quote/generate', {
