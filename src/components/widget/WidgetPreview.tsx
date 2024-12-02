@@ -32,7 +32,7 @@ export function WidgetPreview() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !user?.id) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -46,7 +46,7 @@ export function WidgetPreview() {
 
     try {
       const response = await api.generateQuote({
-        businessId: user?.id || '',
+        businessId: user.id,
         description: input,
       });
 
@@ -70,6 +70,14 @@ export function WidgetPreview() {
     }
   };
 
+  if (!user?.id) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-red-600">Please log in to access the widget preview.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto">
@@ -85,7 +93,7 @@ export function WidgetPreview() {
           <div className="px-4 py-3 border-b bg-blue-600 rounded-t-lg">
             <h2 className="text-lg font-semibold text-white">Get an Instant Quote</h2>
             <p className="text-sm text-blue-100">
-              Powered by {user?.businessName || 'QuoteAI'}
+              Powered by {user.businessName}
             </p>
           </div>
 
@@ -150,10 +158,10 @@ export function WidgetPreview() {
           </p>
           <div className="bg-gray-50 rounded-md p-4 relative group">
             <code className="text-sm text-gray-800 block">
-              &lt;script src="https://quoteai.com/widget.js" data-business-id="{user?.id}"&gt;&lt;/script&gt;
+              &lt;script src="https://starlit-churros-bd6ab7.netlify.app/widget.js" data-business-id="{user.id}"&gt;&lt;/script&gt;
             </code>
             <button 
-              onClick={() => navigator.clipboard.writeText(`<script src="https://quoteai.com/widget.js" data-business-id="${user?.id}"></script>`)}
+              onClick={() => navigator.clipboard.writeText(`<script src="https://starlit-churros-bd6ab7.netlify.app/widget.js" data-business-id="${user.id}"></script>`)}
               className="absolute right-2 top-2 px-2 py-1 text-xs bg-blue-600 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
             >
               Copy

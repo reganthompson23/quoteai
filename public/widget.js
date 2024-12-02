@@ -104,6 +104,12 @@
     .quoteai-input button:hover {
       background: #1d4ed8;
     }
+    .quoteai-error {
+      color: #dc2626;
+      font-size: 14px;
+      text-align: center;
+      padding: 8px;
+    }
   `;
 
   // Create and inject styles
@@ -113,7 +119,12 @@
 
   // Get business ID from script tag
   const script = document.currentScript;
-  const businessId = script.getAttribute('data-business-id') || 'demo-user';
+  const businessId = script.getAttribute('data-business-id');
+
+  if (!businessId) {
+    console.error('QuoteAI Widget Error: Missing data-business-id attribute');
+    return;
+  }
 
   // Create widget HTML
   const widgetHTML = `
@@ -194,6 +205,10 @@
           description: text,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate quote');
+      }
 
       const data = await response.json();
 
