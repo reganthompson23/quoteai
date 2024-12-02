@@ -335,8 +335,7 @@
         body: JSON.stringify({
           businessId,
           messages: messageHistory,
-        }),
-        credentials: 'include'
+        })
       });
 
       if (!response.ok) {
@@ -397,8 +396,7 @@
         body: JSON.stringify({
           businessId,
           description: text,
-        }),
-        credentials: 'include'
+        })
       });
 
       if (!response.ok) {
