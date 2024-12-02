@@ -290,7 +290,6 @@
 
   // Chat session management
   let messageHistory = [];
-  let isCompletingChat = false;
   
   // Load existing chat if it exists
   const savedMessages = localStorage.getItem(`chat_${businessId}`);
@@ -313,59 +312,29 @@
     }
   }
 
-  // Save chat to localStorage
-  function saveChat() {
+  // Save chat to localStorage and server
+  async function saveChat() {
     if (messageHistory.length > 0) {
+      // Save to localStorage
       localStorage.setItem(`chat_${businessId}`, JSON.stringify(messageHistory));
-    }
-  }
-
-  // Complete and save chat to server
-  async function completeChat() {
-    if (messageHistory.length === 0 || isCompletingChat) return;
-    
-    isCompletingChat = true;
-    
-    try {
-      const response = await fetch('https://quoteai-backend.onrender.com/chats/complete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          businessId,
-          messages: messageHistory,
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save chat');
+      
+      // Save to server
+      try {
+        await fetch('https://quoteai-backend.onrender.com/chats/complete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            businessId,
+            messages: messageHistory,
+          })
+        });
+      } catch (error) {
+        console.error('Failed to save chat to server:', error);
       }
-      
-      // Clear local storage after successful save
-      localStorage.removeItem(`chat_${businessId}`);
-      messageHistory = [];
-    } catch (error) {
-      console.error('Failed to save chat:', error);
-      isCompletingChat = false;
     }
   }
-
-  // Add beforeunload handler
-  window.addEventListener('beforeunload', (event) => {
-    if (messageHistory.length > 0 && !isCompletingChat) {
-      navigator.sendBeacon('https://quoteai-backend.onrender.com/chats/complete', 
-        JSON.stringify({
-          businessId,
-          messages: messageHistory,
-        })
-      );
-      
-      // Clear storage
-      localStorage.removeItem(`chat_${businessId}`);
-      messageHistory = [];
-    }
-  });
 
   // Send message
   async function sendMessage() {
@@ -379,7 +348,7 @@
     messages.appendChild(userMessage);
     
     messageHistory.push({ role: 'user', content: text });
-    saveChat();
+    await saveChat();
 
     // Clear input and reset height
     textarea.value = '';
@@ -412,12 +381,9 @@
       messages.appendChild(botMessage);
       
       messageHistory.push({ role: 'assistant', content: data.message });
-      saveChat();
+      await saveChat();
       
       messages.scrollTop = messages.scrollHeight;
-      
-      // Complete chat after successful quote
-      completeChat();
     } catch (error) {
       console.error('Failed to get response:', error);
       const errorMessage = document.createElement('div');
@@ -426,7 +392,7 @@
       messages.appendChild(errorMessage);
       
       messageHistory.push({ role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' });
-      saveChat();
+      await saveChat();
       
       messages.scrollTop = messages.scrollHeight;
     }
@@ -483,7 +449,7 @@
     }
     // Complete chat when closing
     if (messageHistory.length > 0) {
-      completeChat();
+      saveChat();
     }
   });
 
