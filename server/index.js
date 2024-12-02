@@ -334,6 +334,12 @@ app.post('/quote/generate', async (req, res) => {
 
     const { businessId, description } = req.body;
 
+    // Get business info
+    const business = await db.get(
+      'SELECT businessName, industry FROM users WHERE id = ?',
+      [businessId || 'demo-user']
+    );
+
     // Get or initialize conversation history
     if (!conversationHistory.has(businessId)) {
       conversationHistory.set(businessId, []);
@@ -367,7 +373,7 @@ app.post('/quote/generate', async (req, res) => {
       messages: [
         {
           role: "system",
-          content: `You are a professional quoting assistant for a painting business. Keep your responses brief and conversational.
+          content: `You are a professional quoting assistant for ${business.businessName}, a business in the ${business.industry} industry. Keep your responses brief and conversational.
 
 Key Instructions:
 1. When information is missing, ask 2-3 short, specific questions at most
