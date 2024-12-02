@@ -399,11 +399,12 @@ Remember: Be concise and professional. No long explanations unless providing a f
 // Chat completion endpoint
 app.post('/chats/complete', async (req, res) => {
   try {
-    const { businessId, messages } = req.body;
+    const { businessId, messages, chatId } = req.body;
     
     console.log('Received chat completion request:', {
       businessId,
       messageCount: messages?.length,
+      chatId
     });
     
     if (!messages || messages.length === 0) {
@@ -433,26 +434,39 @@ app.post('/chats/complete', async (req, res) => {
     const summary = completion.choices[0].message.content;
     console.log('Generated summary:', summary);
     
-    // Get next chat number for this business
-    const chatNumber = await getNextChatNumber(businessId);
-    console.log('Next chat number:', chatNumber);
-    
-    // Store the completed chat
-    const chatId = crypto.randomUUID();
-    await db.run(
-      `INSERT INTO chats (id, businessId, chatNumber, summary, messages) 
-       VALUES (?, ?, ?, ?, ?)`,
-      [
-        chatId,
-        businessId,
-        chatNumber,
-        summary,
-        JSON.stringify(messages)
-      ]
-    );
-
-    console.log('Chat saved successfully:', chatId);
-    res.json({ success: true, chatId });
+    if (chatId) {
+      // Update existing chat
+      await db.run(
+        `UPDATE chats 
+         SET summary = ?, messages = ?
+         WHERE id = ? AND businessId = ?`,
+        [
+          summary,
+          JSON.stringify(messages),
+          chatId,
+          businessId
+        ]
+      );
+      console.log('Chat updated successfully:', chatId);
+      res.json({ success: true, chatId });
+    } else {
+      // Create new chat
+      const newChatId = crypto.randomUUID();
+      const chatNumber = await getNextChatNumber(businessId);
+      await db.run(
+        `INSERT INTO chats (id, businessId, chatNumber, summary, messages) 
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          newChatId,
+          businessId,
+          chatNumber,
+          summary,
+          JSON.stringify(messages)
+        ]
+      );
+      console.log('New chat created:', newChatId);
+      res.json({ success: true, chatId: newChatId });
+    }
   } catch (error) {
     console.error('Chat completion error:', error);
     res.status(500).json({ 
