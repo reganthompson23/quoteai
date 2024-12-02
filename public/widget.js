@@ -250,14 +250,31 @@
   if (savedMessages) {
     try {
       messageHistory = JSON.parse(savedMessages);
+      
+      // Display saved messages in UI when widget loads
+      const messagesContainer = widget.querySelector('.quoteai-messages');
+      messageHistory.forEach(msg => {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `quoteai-message ${msg.role === 'user' ? 'user' : 'bot'}`;
+        messageDiv.textContent = msg.content;
+        messagesContainer.appendChild(messageDiv);
+      });
+      
+      // Scroll to bottom of messages
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
     } catch (e) {
       console.error('Failed to load saved chat:', e);
+      // If loading fails, clear the corrupted storage
+      localStorage.removeItem(`chat_${businessId}`);
+      localStorage.removeItem('currentChatId');
     }
   }
 
   // Save chat to localStorage
   function saveChat() {
-    localStorage.setItem(`chat_${businessId}`, JSON.stringify(messageHistory));
+    if (messageHistory.length > 0) {
+      localStorage.setItem(`chat_${businessId}`, JSON.stringify(messageHistory));
+    }
   }
 
   // Complete and save chat to server
@@ -380,6 +397,8 @@
     if (window.innerWidth <= 768) {
       document.body.style.overflow = 'hidden';
     }
+    // Scroll to bottom when opening chat
+    messages.scrollTop = messages.scrollHeight;
   });
 
   closeButton.addEventListener('click', () => {
@@ -387,6 +406,7 @@
     if (window.innerWidth <= 768) {
       document.body.style.overflow = '';
     }
+    // Don't clear messages, just hide the UI
   });
 
   // Send message
