@@ -115,7 +115,8 @@ async function setupDatabase() {
         contactPhone TEXT,
         messages TEXT,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (businessId) REFERENCES users(id)
+        FOREIGN KEY (businessId) REFERENCES users(id),
+        UNIQUE(businessId, chatNumber)
       );
     `);
     console.log('Chats table created');

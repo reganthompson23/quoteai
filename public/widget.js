@@ -243,6 +243,7 @@
   // Chat session management
   let currentChatId = localStorage.getItem('currentChatId');
   let messageHistory = [];
+  let isCompletingChat = false; // Add flag to prevent duplicate submissions
   
   // Load existing chat if it exists
   const savedMessages = localStorage.getItem(`chat_${businessId}`);
@@ -261,7 +262,9 @@
 
   // Complete and save chat to server
   async function completeChat() {
-    if (messageHistory.length === 0) return;
+    if (messageHistory.length === 0 || isCompletingChat) return;
+    
+    isCompletingChat = true; // Set flag before attempting completion
     
     try {
       await fetch('https://quoteai-backend.onrender.com/chats/complete', {
@@ -280,13 +283,25 @@
       localStorage.removeItem('currentChatId');
     } catch (error) {
       console.error('Failed to save chat:', error);
+      isCompletingChat = false; // Reset flag if save fails
     }
   }
 
-  // Add beforeunload handler
-  window.addEventListener('beforeunload', () => {
-    if (messageHistory.length > 0) {
-      completeChat();
+  // Add beforeunload handler with sync XMLHttpRequest
+  window.addEventListener('beforeunload', (event) => {
+    if (messageHistory.length > 0 && !isCompletingChat) {
+      // Use sync request to ensure it completes before page unload
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', 'https://quoteai-backend.onrender.com/chats/complete', false); // false makes it synchronous
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.send(JSON.stringify({
+        businessId,
+        messages: messageHistory,
+      }));
+      
+      // Clear storage regardless of success (prevents duplicate attempts)
+      localStorage.removeItem(`chat_${businessId}`);
+      localStorage.removeItem('currentChatId');
     }
   });
 
