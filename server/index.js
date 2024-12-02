@@ -137,7 +137,9 @@ setupDatabase().catch(console.error);
 const corsOptions = {
   origin: [
     'http://localhost:5173',
-    'https://starlit-churros-bd6ab7.netlify.app'
+    'https://starlit-churros-bd6ab7.netlify.app',
+    'https://ridefsa.org',
+    'https://www.ridefsa.org'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
