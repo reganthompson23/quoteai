@@ -401,8 +401,19 @@ app.post('/chats/complete', async (req, res) => {
   try {
     const { businessId, messages } = req.body;
     
+    console.log('Received chat completion request:', {
+      businessId,
+      messageCount: messages?.length,
+    });
+    
     if (!messages || messages.length === 0) {
+      console.log('No messages provided');
       return res.status(400).json({ message: 'No messages provided' });
+    }
+
+    if (!businessId) {
+      console.log('No businessId provided');
+      return res.status(400).json({ message: 'No businessId provided' });
     }
 
     // Generate a summary using OpenAI
@@ -420,9 +431,11 @@ app.post('/chats/complete', async (req, res) => {
     });
 
     const summary = completion.choices[0].message.content;
+    console.log('Generated summary:', summary);
     
     // Get next chat number for this business
     const chatNumber = await getNextChatNumber(businessId);
+    console.log('Next chat number:', chatNumber);
     
     // Store the completed chat
     const chatId = crypto.randomUUID();
@@ -438,10 +451,14 @@ app.post('/chats/complete', async (req, res) => {
       ]
     );
 
+    console.log('Chat saved successfully:', chatId);
     res.json({ success: true, chatId });
   } catch (error) {
     console.error('Chat completion error:', error);
-    res.status(500).json({ message: 'Failed to save chat' });
+    res.status(500).json({ 
+      message: 'Failed to save chat',
+      error: error.message 
+    });
   }
 });
 
