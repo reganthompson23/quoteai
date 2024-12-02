@@ -113,7 +113,7 @@
 
   // Get business ID from script tag
   const script = document.currentScript;
-  const businessId = script.getAttribute('data-business-id');
+  const businessId = script.getAttribute('data-business-id') || 'demo-user';
 
   // Create widget HTML
   const widgetHTML = `
@@ -184,7 +184,7 @@
 
     try {
       // Send to API
-      const response = await fetch('https://quoteai-backend.onre.r.com/quote/generate', {
+      const response = await fetch('https://quoteai-backend.onrender.com/quote/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
