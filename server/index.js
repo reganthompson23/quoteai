@@ -115,6 +115,7 @@ async function setupDatabase() {
         contactPhone TEXT,
         messages TEXT,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        isDeleted BOOLEAN DEFAULT 0,
         FOREIGN KEY (businessId) REFERENCES users(id),
         UNIQUE(businessId, chatNumber)
       );
@@ -511,7 +512,7 @@ app.get('/admin/users', authenticateToken, isAdmin, async (req, res) => {
 app.get('/chats', authenticateToken, async (req, res) => {
   try {
     const chats = await db.all(
-      'SELECT id, chatNumber, summary, contactName, contactEmail, contactPhone, createdAt FROM chats WHERE businessId = ? ORDER BY createdAt DESC',
+      'SELECT id, chatNumber, summary, contactName, contactEmail, contactPhone, createdAt FROM chats WHERE businessId = ? AND isDeleted = 0 ORDER BY createdAt DESC',
       [req.user.id]
     );
     res.json(chats);
@@ -540,7 +541,21 @@ app.get('/chats/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Admin endpoint to view all chats
+// Add delete chat endpoint
+app.post('/chats/:id/delete', authenticateToken, async (req, res) => {
+  try {
+    // Soft delete the chat
+    await db.run(
+      'UPDATE chats SET isDeleted = 1 WHERE id = ? AND businessId = ?',
+      [req.params.id, req.user.id]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Admin endpoint to view all chats (including deleted ones)
 app.get('/admin/chats', authenticateToken, isAdmin, async (req, res) => {
   try {
     const chats = await db.all(`

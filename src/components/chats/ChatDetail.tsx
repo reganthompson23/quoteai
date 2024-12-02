@@ -1,17 +1,44 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Mail, Phone, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, Mail, Phone, User, Trash2 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Chat } from '../../types';
 
 export function ChatDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
   const { data: chat, isLoading, error } = useQuery<Chat>({
     queryKey: ['chat', id],
     queryFn: () => api.getChat(id!),
     enabled: !!id,
   });
+
+  const deleteChat = useMutation({
+    mutationFn: async () => {
+      await fetch(`${api.API_URL}/chats/${id}/delete`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQuery(['chats']);
+      navigate('/dashboard/chats');
+    },
+  });
+
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    deleteChat.mutate();
+  };
 
   if (isLoading) {
     return (
@@ -32,13 +59,23 @@ export function ChatDetail() {
   return (
     <div>
       <div className="mb-6">
-        <Link
-          to="/dashboard/chats"
-          className="text-blue-600 hover:text-blue-800 flex items-center gap-1 mb-4"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Chats
-        </Link>
+        <div className="flex justify-between items-start">
+          <Link
+            to="/dashboard/chats"
+            className="text-blue-600 hover:text-blue-800 flex items-center gap-1 mb-4"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Chats
+          </Link>
+
+          <button
+            onClick={handleDelete}
+            className="text-gray-600 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
+            title="Delete chat"
+          >
+            <Trash2 className="h-5 w-5" />
+          </button>
+        </div>
 
         <div className="flex justify-between items-start">
           <div>
@@ -105,6 +142,32 @@ export function ChatDetail() {
           ))}
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Chat</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this chat? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteDialog(false)}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-md"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
