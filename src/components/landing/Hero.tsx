@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Building2, Clock, PieChart, MessageSquare } from 'lucide-react';
+import { Gauge, ArrowRight } from 'lucide-react';
 
 export function Hero() {
   return (
@@ -8,32 +8,36 @@ export function Hero() {
       <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center gap-12">
           <div className="lg:w-1/2">
+            <div className="flex items-center gap-2 text-blue-600 mb-6">
+              <Gauge className="h-6 w-6" />
+              <span className="font-semibold">PricePilot</span>
+            </div>
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-              AI-Powered Quotes for Your Business
+              Automate Your Pricing with AI Precision
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-600">
-              Transform your business with instant, accurate quotes powered by AI. Learn from your past jobs and provide 24/7 pricing to your customers.
+              Transform your business with intelligent, automated pricing. PricePilot learns from your expertise to deliver accurate estimates 24/7, helping you close deals faster and grow your business.
             </p>
             <div className="mt-10 flex items-center gap-x-6">
               <Link
                 to="/signup"
                 className="rounded-md bg-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
               >
-                Get Started
+                Start Free Trial
               </Link>
               <Link
                 to="/demo"
-                className="text-lg font-semibold leading-6 text-gray-900 hover:text-gray-700"
+                className="group text-lg font-semibold leading-6 text-gray-900 hover:text-blue-600 flex items-center gap-2"
               >
-                Live Demo <span aria-hidden="true">→</span>
+                See it in action <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>
           <div className="lg:w-1/2">
             <div className="rounded-xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:-m-4 lg:rounded-2xl">
               <img
-                src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2426"
-                alt="Dashboard preview"
+                src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2400"
+                alt="PricePilot Dashboard"
                 className="rounded-lg shadow-2xl ring-1 ring-gray-900/10"
               />
             </div>
