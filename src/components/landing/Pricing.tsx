@@ -98,7 +98,6 @@ function FeatureItem({ feature, isBlue = false }: { feature: Feature; isBlue?: b
       }
     }
 
-    // Only add the listener if the tooltip is open
     if (isTooltipOpen) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
@@ -112,8 +111,8 @@ function FeatureItem({ feature, isBlue = false }: { feature: Feature; isBlue?: b
         aria-hidden="true" 
       />
       <div className="flex-1">
-        <div className="flex items-center gap-1.5">
-          <span className={isBlue ? 'text-blue-100' : 'text-gray-600'}>
+        <div className="flex items-start gap-1.5">
+          <span className={`${isBlue ? 'text-blue-100' : 'text-gray-600'} flex-1`}>
             {feature.title}
           </span>
           <button
@@ -121,7 +120,7 @@ function FeatureItem({ feature, isBlue = false }: { feature: Feature; isBlue?: b
               e.stopPropagation();
               setIsTooltipOpen(!isTooltipOpen);
             }}
-            className="inline-flex items-center focus:outline-none"
+            className="inline-flex items-center focus:outline-none flex-shrink-0 mt-0.5"
             aria-label="Show feature details"
           >
             <HelpCircle className={`h-4 w-4 ${
@@ -176,11 +175,10 @@ export function Pricing() {
               Start Free Trial
             </Link>
             <ul role="list" className="mt-8 space-y-3 text-sm leading-6">
-              {growthFeatures.map((feature, index) => (
+              {growthFeatures.map((feature) => (
                 <FeatureItem 
                   key={feature.title} 
                   feature={feature}
-                  index={index}
                 />
               ))}
             </ul>
@@ -208,12 +206,11 @@ export function Pricing() {
               Get Started
             </Link>
             <ul role="list" className="mt-8 space-y-3 text-sm leading-6">
-              {transformFeatures.map((feature, index) => (
+              {transformFeatures.map((feature) => (
                 <FeatureItem 
                   key={feature.title} 
                   feature={feature}
                   isBlue
-                  index={index}
                 />
               ))}
             </ul>
