@@ -36,7 +36,7 @@ export function Hero() {
           <div className="lg:w-1/2">
             <div className="rounded-xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:-m-4 lg:rounded-2xl">
               <img
-                src="/images/heroimage.jpeg"
+                src="/images/heroimage.jpg"
                 alt="PricePilot Dashboard"
                 className="rounded-lg shadow-2xl ring-1 ring-gray-900/10"
               />
