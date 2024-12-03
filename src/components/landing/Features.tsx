@@ -1,26 +1,26 @@
 import React from 'react';
-import { Brain, Gauge, BarChart, MessageSquare } from 'lucide-react';
+import { MessageSquare, Zap, Brain, BarChart } from 'lucide-react';
 
 const features = [
   {
-    name: 'AI-Powered Precision',
-    description: 'Our advanced AI engine learns from your pricing history to deliver consistently accurate estimates.',
+    name: 'Smart Lead Capture',
+    description: 'Automatically collect project requirements and contact details from every website visitor, ensuring no opportunity slips away.',
+    icon: MessageSquare,
+  },
+  {
+    name: 'Instant Estimates',
+    description: 'Provide accurate estimates 24/7 based on your pricing structure and project scope—no more late-night quote requests sitting in your inbox.',
+    icon: Zap,
+  },
+  {
+    name: 'Custom Learning',
+    description: 'Your bot learns your exact pricing logic and business rules, delivering estimates that match how you would price each job.',
     icon: Brain,
   },
   {
-    name: 'Real-Time Automation',
-    description: 'Instantly generate precise quotes based on your business rules and market conditions.',
-    icon: Gauge,
-  },
-  {
-    name: 'Business Intelligence',
-    description: 'Track performance metrics and gain actionable insights to optimize your pricing strategy.',
+    name: 'Growth Analytics',
+    description: 'Track conversion rates, popular services, and customer interactions to optimize your pricing and grow your business.',
     icon: BarChart,
-  },
-  {
-    name: 'Smart Chat Interface',
-    description: 'Engage customers 24/7 with our intelligent chat widget that speaks your business language.',
-    icon: MessageSquare,
   },
 ];
 
@@ -30,13 +30,13 @@ export function Features() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:text-center">
           <h2 className="text-base font-semibold leading-7 text-blue-600">
-            Automated Precision
+            From Website Visits to Qualified Leads
           </h2>
           <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Streamline Your Pricing Process
+            Never Miss an Opportunity
           </p>
           <p className="mt-6 text-lg leading-8 text-gray-600">
-            PricePilot combines AI intelligence with your business expertise to deliver accurate, consistent pricing across all channels.
+            Convert every inquiry into a detailed project scope and qualified lead—all while providing instant estimates that match your pricing structure.
           </p>
         </div>
         <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
