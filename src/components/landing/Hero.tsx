@@ -12,8 +12,8 @@ export function Hero() {
               Instant Estimates on Autopilot
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-600">
-            Simply upload details about your past jobs and pricing, and we handle the rest. PricePilot automatically creates a smart chatbot that provides accurate estimates 24/7, helping you close deals faster and grow your business—no tech skills required.
-              </p>
+              Transform your pricing docs into an intelligent estimate bot in minutes, ready to serve customers 24/7. Turn every website visit into a qualified lead with automated project scoping and instant estimates.
+            </p>
             <div className="mt-10 flex items-center gap-x-6">
               <Link
                 to="/signup"
