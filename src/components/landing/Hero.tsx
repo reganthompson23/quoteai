@@ -5,13 +5,9 @@ import { Gauge, ArrowRight } from 'lucide-react';
 export function Hero() {
   return (
     <div className="relative overflow-hidden bg-white">
-      <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
+      <div className="mx-auto max-w-7xl px-6 py-12 sm:py-16 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center gap-12">
           <div className="lg:w-1/2">
-            <div className="flex items-center gap-2 text-blue-600 mb-6">
-              <Gauge className="h-6 w-6" />
-              <span className="font-semibold">PricePilot</span>
-            </div>
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
               Instant Estimates on Autopilot
             </h1>
