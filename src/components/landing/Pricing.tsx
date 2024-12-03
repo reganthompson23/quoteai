@@ -12,7 +12,7 @@ const growthFeatures: Feature[] = [
   {
     title: 'Unlimited free trial in admin dashboard',
     description: 'Test and configure your estimate bot without any time limits',
-    explanation: 'Access all features in your admin dashboard indefinitely. Only start paying when you're ready to embed the widget on your website and start collecting real leads.'
+    explanation: 'Access all features in your admin dashboard indefinitely. Only start paying when you\'re ready to embed the widget on your website and start collecting real leads.'
   },
   {
     title: 'AI-powered estimate bot with custom pricing rules',
@@ -32,7 +32,7 @@ const growthFeatures: Feature[] = [
   {
     title: 'Self-service or assisted widget setup',
     description: 'Easy implementation, your way',
-    explanation: 'Choose to implement the widget yourself with our step-by-step guide, or let us handle the technical setup for you. Either way, you'll be up and running quickly.'
+    explanation: 'Choose to implement the widget yourself with our step-by-step guide, or let us handle the technical setup for you. Either way, you\'ll be up and running quickly.'
   },
   {
     title: 'Email support',
@@ -55,7 +55,7 @@ const transformFeatures: Feature[] = [
   {
     title: 'Expert bot configuration & training',
     description: 'Hands-on setup and optimization',
-    explanation: 'We work directly with you to understand your business and configure the bot perfectly. We'll train it with your pricing structure and business rules for optimal performance.'
+    explanation: 'We work directly with you to understand your business and configure the bot perfectly. We\'ll train it with your pricing structure and business rules for optimal performance.'
   },
   {
     title: 'Business-specific integrations (booking, payments)',
