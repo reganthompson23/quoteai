@@ -4,15 +4,10 @@ import { Check } from 'lucide-react';
 
 const growthFeatures = [
   'Unlimited free trial in admin dashboard',
-  'AI-powered estimate bot',
-  'Custom pricing rules engine',
-  'Lead capture & qualification',
-  'Customer interaction analytics',
+  'AI-powered estimate bot with custom pricing rules',
+  'Automated lead capture & qualification',
   'Project requirement collection',
-  'Contact detail automation',
-  'Self-service widget installation',
-  'Optional assisted setup',
-  'Guided bot training support',
+  'Self-service or assisted widget setup',
   'Email support',
 ];
 
@@ -20,15 +15,9 @@ const transformFeatures = [
   'Everything in Growth, plus:',
   'Custom website design & development',
   'Expert bot configuration & training',
-  'Business-specific integrations',
-  'Online booking systems',
-  'Payment processing',
-  'Calendar scheduling',
-  'SEO optimization',
-  'Content strategy',
-  'Monthly performance review',
-  'Priority support',
-  'Ongoing optimization',
+  'Business-specific integrations (booking, payments)',
+  'SEO optimization & content strategy',
+  'Monthly performance review & priority support',
 ];
 
 export function Pricing() {
@@ -46,18 +35,18 @@ export function Pricing() {
 
         <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 items-center gap-y-6 sm:mt-20 sm:gap-y-0 lg:max-w-4xl lg:grid-cols-2">
           {/* Growth Plan */}
-          <div className="rounded-3xl p-8 ring-1 ring-gray-200 lg:rounded-l-3xl lg:rounded-r-none">
+          <div className="relative rounded-3xl p-8 ring-1 ring-gray-200 lg:rounded-l-3xl lg:rounded-r-none h-full">
             <h3 className="text-lg font-semibold leading-8 text-blue-600">
               Growth Plan
             </h3>
-            <p className="mt-4 text-sm leading-6 text-gray-600">
+            <p className="mt-4 text-sm leading-6 text-gray-600 min-h-[48px]">
               Everything you need to automate estimates
             </p>
             <p className="mt-6 flex items-baseline gap-x-1">
               <span className="text-4xl font-bold tracking-tight text-gray-900">$10</span>
               <span className="text-sm font-semibold leading-6 text-gray-600">/month</span>
             </p>
-            <p className="mt-2 text-sm leading-6 text-gray-600">
+            <p className="mt-2 text-sm leading-6 text-gray-600 min-h-[48px]">
               Start free, pay only when you're ready to add the widget to your site
             </p>
             <Link
@@ -77,18 +66,18 @@ export function Pricing() {
           </div>
 
           {/* Transform Plan */}
-          <div className="rounded-3xl p-8 ring-1 ring-gray-200 bg-blue-600 lg:rounded-l-none lg:rounded-r-3xl">
+          <div className="relative rounded-3xl p-8 ring-1 ring-gray-200 bg-blue-600 lg:rounded-l-none lg:rounded-r-3xl h-full">
             <h3 className="text-lg font-semibold leading-8 text-white">
               Transform Plan
             </h3>
-            <p className="mt-4 text-sm leading-6 text-blue-100">
+            <p className="mt-4 text-sm leading-6 text-blue-100 min-h-[48px]">
               Complete digital transformation for your business
             </p>
             <p className="mt-6 flex items-baseline gap-x-1">
               <span className="text-4xl font-bold tracking-tight text-white">$100</span>
               <span className="text-sm font-semibold leading-6 text-blue-100">/month</span>
             </p>
-            <p className="mt-2 text-sm leading-6 text-blue-100">
+            <p className="mt-2 text-sm leading-6 text-blue-100 min-h-[48px]">
               Perfect for businesses wanting a complete digital upgrade
             </p>
             <Link
