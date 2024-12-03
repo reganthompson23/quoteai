@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, HelpCircle } from 'lucide-react';
 
@@ -74,66 +74,66 @@ const transformFeatures: Feature[] = [
   },
 ];
 
-function FeatureTooltip({ isOpen, content, position = 'right' }: { isOpen: boolean; content: string; position?: 'right' | 'top' | 'left' }) {
+function FeatureTooltip({ isOpen, content }: { isOpen: boolean; content: string }) {
   if (!isOpen) return null;
-
-  const positionClasses = {
-    right: 'left-full top-0 ml-2',
-    top: '-top-2 left-1/2 -translate-x-1/2 -translate-y-full',
-    left: 'right-full top-0 mr-2'
-  };
-
-  const arrowClasses = {
-    right: 'left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 transform rotate-0',
-    top: 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 transform rotate-45',
-    left: 'right-0 top-1/2 -translate-x-1/2 -translate-y-1/2 transform rotate-180'
-  };
   
   return (
-    <div className={`absolute z-10 w-64 p-3 rounded-lg bg-gray-900 text-white text-sm shadow-lg ${positionClasses[position]}`}>
+    <div className="absolute left-0 top-full mt-2 w-64 z-10 p-3 rounded-lg bg-gray-900 text-white text-sm shadow-lg">
       {content}
-      <div className={`absolute ${arrowClasses[position]}`}>
-        <div className="h-3 w-3 rotate-45 bg-gray-900" />
+      <div className="absolute left-4 -top-2">
+        <div className="h-3 w-3 -rotate-45 bg-gray-900" />
       </div>
     </div>
   );
 }
 
-function FeatureItem({ feature, isBlue = false, index }: { feature: Feature; isBlue?: boolean; index: number }) {
+function FeatureItem({ feature, isBlue = false }: { feature: Feature; isBlue?: boolean }) {
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  const itemRef = useRef<HTMLLIElement>(null);
 
-  // Determine tooltip position based on index and screen size
-  const getTooltipPosition = () => {
-    // For mobile, always show on top
-    if (typeof window !== 'undefined' && window.innerWidth < 640) {
-      return 'top';
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (itemRef.current && !itemRef.current.contains(event.target as Node)) {
+        setIsTooltipOpen(false);
+      }
     }
-    
-    // For desktop, alternate between left and right based on which pricing column
-    return isBlue ? 'left' : 'right';
-  };
+
+    // Only add the listener if the tooltip is open
+    if (isTooltipOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [isTooltipOpen]);
   
   return (
-    <li className="flex gap-x-3 relative group">
+    <li ref={itemRef} className="flex gap-x-3 relative group">
       <Check 
         className={`h-6 w-5 flex-none ${isBlue ? 'text-white' : 'text-blue-600'}`} 
         aria-hidden="true" 
       />
       <div className="flex-1">
-        <span className={isBlue ? 'text-blue-100' : 'text-gray-600'}>
-          {feature.title}
-        </span>
-        <button
-          onClick={() => setIsTooltipOpen(!isTooltipOpen)}
-          className="inline-flex items-center ml-1.5 focus:outline-none"
-          aria-label="Show feature details"
-        >
-          <HelpCircle className={`h-4 w-4 ${isBlue ? 'text-blue-200 hover:text-blue-100' : 'text-gray-400 hover:text-gray-500'}`} />
-        </button>
+        <div className="flex items-center gap-1.5">
+          <span className={isBlue ? 'text-blue-100' : 'text-gray-600'}>
+            {feature.title}
+          </span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsTooltipOpen(!isTooltipOpen);
+            }}
+            className="inline-flex items-center focus:outline-none"
+            aria-label="Show feature details"
+          >
+            <HelpCircle className={`h-4 w-4 ${
+              isBlue 
+                ? 'text-blue-200 hover:text-blue-100' 
+                : 'text-gray-400 hover:text-gray-500'
+            }`} />
+          </button>
+        </div>
         <FeatureTooltip 
           isOpen={isTooltipOpen} 
           content={feature.explanation}
-          position={getTooltipPosition()}
         />
       </div>
     </li>
