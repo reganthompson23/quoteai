@@ -74,39 +74,67 @@ const transformFeatures: Feature[] = [
   },
 ];
 
-function FeatureTooltip({ isOpen, content }: { isOpen: boolean; content: string }) {
+function FeatureTooltip({ isOpen, content, position = 'right' }: { isOpen: boolean; content: string; position?: 'right' | 'top' | 'left' }) {
   if (!isOpen) return null;
+
+  const positionClasses = {
+    right: 'left-full top-0 ml-2',
+    top: '-top-2 left-1/2 -translate-x-1/2 -translate-y-full',
+    left: 'right-full top-0 mr-2'
+  };
+
+  const arrowClasses = {
+    right: 'left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 transform rotate-0',
+    top: 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 transform rotate-45',
+    left: 'right-0 top-1/2 -translate-x-1/2 -translate-y-1/2 transform rotate-180'
+  };
   
   return (
-    <div className="absolute left-full ml-2 w-64 z-10 p-3 rounded-lg bg-gray-900 text-white text-sm shadow-lg">
+    <div className={`absolute z-10 w-64 p-3 rounded-lg bg-gray-900 text-white text-sm shadow-lg ${positionClasses[position]}`}>
       {content}
-      <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 transform">
+      <div className={`absolute ${arrowClasses[position]}`}>
         <div className="h-3 w-3 rotate-45 bg-gray-900" />
       </div>
     </div>
   );
 }
 
-function FeatureItem({ feature, isBlue = false }: { feature: Feature; isBlue?: boolean }) {
+function FeatureItem({ feature, isBlue = false, index }: { feature: Feature; isBlue?: boolean; index: number }) {
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+
+  // Determine tooltip position based on index and screen size
+  const getTooltipPosition = () => {
+    // For mobile, always show on top
+    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+      return 'top';
+    }
+    
+    // For desktop, alternate between left and right based on which pricing column
+    return isBlue ? 'left' : 'right';
+  };
   
   return (
-    <li 
-      className="flex gap-x-3 relative group cursor-help"
-      onMouseEnter={() => setIsTooltipOpen(true)}
-      onMouseLeave={() => setIsTooltipOpen(false)}
-      onClick={() => setIsTooltipOpen(!isTooltipOpen)}
-    >
+    <li className="flex gap-x-3 relative group">
       <Check 
         className={`h-6 w-5 flex-none ${isBlue ? 'text-white' : 'text-blue-600'}`} 
         aria-hidden="true" 
       />
-      <div>
+      <div className="flex-1">
         <span className={isBlue ? 'text-blue-100' : 'text-gray-600'}>
           {feature.title}
         </span>
-        <HelpCircle className={`inline-block ml-1 h-4 w-4 ${isBlue ? 'text-blue-200' : 'text-gray-400'} sm:hidden`} />
-        <FeatureTooltip isOpen={isTooltipOpen} content={feature.explanation} />
+        <button
+          onClick={() => setIsTooltipOpen(!isTooltipOpen)}
+          className="inline-flex items-center ml-1.5 focus:outline-none"
+          aria-label="Show feature details"
+        >
+          <HelpCircle className={`h-4 w-4 ${isBlue ? 'text-blue-200 hover:text-blue-100' : 'text-gray-400 hover:text-gray-500'}`} />
+        </button>
+        <FeatureTooltip 
+          isOpen={isTooltipOpen} 
+          content={feature.explanation}
+          position={getTooltipPosition()}
+        />
       </div>
     </li>
   );
@@ -148,8 +176,12 @@ export function Pricing() {
               Start Free Trial
             </Link>
             <ul role="list" className="mt-8 space-y-3 text-sm leading-6">
-              {growthFeatures.map((feature) => (
-                <FeatureItem key={feature.title} feature={feature} />
+              {growthFeatures.map((feature, index) => (
+                <FeatureItem 
+                  key={feature.title} 
+                  feature={feature}
+                  index={index}
+                />
               ))}
             </ul>
           </div>
@@ -176,8 +208,13 @@ export function Pricing() {
               Get Started
             </Link>
             <ul role="list" className="mt-8 space-y-3 text-sm leading-6">
-              {transformFeatures.map((feature) => (
-                <FeatureItem key={feature.title} feature={feature} isBlue />
+              {transformFeatures.map((feature, index) => (
+                <FeatureItem 
+                  key={feature.title} 
+                  feature={feature}
+                  isBlue
+                  index={index}
+                />
               ))}
             </ul>
           </div>
