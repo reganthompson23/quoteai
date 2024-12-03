@@ -1,24 +1,116 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check } from 'lucide-react';
+import { Check, HelpCircle } from 'lucide-react';
 
-const growthFeatures = [
-  'Unlimited free trial in admin dashboard',
-  'AI-powered estimate bot with custom pricing rules',
-  'Automated lead capture & qualification',
-  'Project requirement collection',
-  'Self-service or assisted widget setup',
-  'Email support',
+interface Feature {
+  title: string;
+  description: string;
+  explanation: string;
+}
+
+const growthFeatures: Feature[] = [
+  {
+    title: 'Unlimited free trial in admin dashboard',
+    description: 'Test and configure your estimate bot without any time limits',
+    explanation: 'Access all features in your admin dashboard indefinitely. Only start paying when you're ready to embed the widget on your website and start collecting real leads.'
+  },
+  {
+    title: 'AI-powered estimate bot with custom pricing rules',
+    description: 'Your intelligent assistant that knows your pricing',
+    explanation: 'Train the AI with your specific pricing structure and business rules. The bot learns how you price different scenarios and applies this knowledge consistently across all customer interactions.'
+  },
+  {
+    title: 'Automated lead capture & qualification',
+    description: 'Never miss a potential customer',
+    explanation: 'Every website visitor interaction is captured with contact details and project requirements. The bot qualifies leads by collecting key information before providing estimates.'
+  },
+  {
+    title: 'Project requirement collection',
+    description: 'Detailed scope gathering from every lead',
+    explanation: 'The bot intelligently asks questions to understand project scope, ensuring you get all the information needed to provide accurate estimates. No more back-and-forth emails.'
+  },
+  {
+    title: 'Self-service or assisted widget setup',
+    description: 'Easy implementation, your way',
+    explanation: 'Choose to implement the widget yourself with our step-by-step guide, or let us handle the technical setup for you. Either way, you'll be up and running quickly.'
+  },
+  {
+    title: 'Email support',
+    description: 'Help when you need it',
+    explanation: 'Get assistance with any questions or issues via email. Our team is here to help you make the most of your estimate bot.'
+  },
 ];
 
-const transformFeatures = [
-  'Everything in Growth, plus:',
-  'Custom website design & development',
-  'Expert bot configuration & training',
-  'Business-specific integrations (booking, payments)',
-  'SEO optimization & content strategy',
-  'Monthly performance review & priority support',
+const transformFeatures: Feature[] = [
+  {
+    title: 'Everything in Growth, plus:',
+    description: 'All Growth features included',
+    explanation: 'Get all the powerful features from the Growth plan, plus everything listed below for a complete business transformation.'
+  },
+  {
+    title: 'Custom website design & development',
+    description: 'Professional web presence',
+    explanation: 'Get a modern, professionally designed website that converts visitors into customers. We handle everything from design to development, optimized for your business.'
+  },
+  {
+    title: 'Expert bot configuration & training',
+    description: 'Hands-on setup and optimization',
+    explanation: 'We work directly with you to understand your business and configure the bot perfectly. We'll train it with your pricing structure and business rules for optimal performance.'
+  },
+  {
+    title: 'Business-specific integrations (booking, payments)',
+    description: 'Seamless business tools',
+    explanation: 'Connect your estimate bot with booking systems, payment processors, and other tools specific to your business. Create a smooth end-to-end experience for your customers.'
+  },
+  {
+    title: 'SEO optimization & content strategy',
+    description: 'Attract more customers',
+    explanation: 'We optimize your website for search engines and develop a content strategy that brings more qualified leads to your business. Includes keyword research and implementation.'
+  },
+  {
+    title: 'Monthly performance review & priority support',
+    description: 'Ongoing optimization',
+    explanation: 'Regular check-ins to review bot performance, lead quality, and conversion rates. Get priority support for any issues and continuous improvements based on real data.'
+  },
 ];
+
+function FeatureTooltip({ isOpen, content }: { isOpen: boolean; content: string }) {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="absolute left-full ml-2 w-64 z-10 p-3 rounded-lg bg-gray-900 text-white text-sm shadow-lg">
+      {content}
+      <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 transform">
+        <div className="h-3 w-3 rotate-45 bg-gray-900" />
+      </div>
+    </div>
+  );
+}
+
+function FeatureItem({ feature, isBlue = false }: { feature: Feature; isBlue?: boolean }) {
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  
+  return (
+    <li 
+      className="flex gap-x-3 relative group cursor-help"
+      onMouseEnter={() => setIsTooltipOpen(true)}
+      onMouseLeave={() => setIsTooltipOpen(false)}
+      onClick={() => setIsTooltipOpen(!isTooltipOpen)}
+    >
+      <Check 
+        className={`h-6 w-5 flex-none ${isBlue ? 'text-white' : 'text-blue-600'}`} 
+        aria-hidden="true" 
+      />
+      <div>
+        <span className={isBlue ? 'text-blue-100' : 'text-gray-600'}>
+          {feature.title}
+        </span>
+        <HelpCircle className={`inline-block ml-1 h-4 w-4 ${isBlue ? 'text-blue-200' : 'text-gray-400'} sm:hidden`} />
+        <FeatureTooltip isOpen={isTooltipOpen} content={feature.explanation} />
+      </div>
+    </li>
+  );
+}
 
 export function Pricing() {
   return (
@@ -55,12 +147,9 @@ export function Pricing() {
             >
               Start Free Trial
             </Link>
-            <ul role="list" className="mt-8 space-y-3 text-sm leading-6 text-gray-600">
+            <ul role="list" className="mt-8 space-y-3 text-sm leading-6">
               {growthFeatures.map((feature) => (
-                <li key={feature} className="flex gap-x-3">
-                  <Check className="h-6 w-5 flex-none text-blue-600" aria-hidden="true" />
-                  {feature}
-                </li>
+                <FeatureItem key={feature.title} feature={feature} />
               ))}
             </ul>
           </div>
@@ -86,12 +175,9 @@ export function Pricing() {
             >
               Get Started
             </Link>
-            <ul role="list" className="mt-8 space-y-3 text-sm leading-6 text-blue-100">
+            <ul role="list" className="mt-8 space-y-3 text-sm leading-6">
               {transformFeatures.map((feature) => (
-                <li key={feature} className="flex gap-x-3">
-                  <Check className="h-6 w-5 flex-none text-white" aria-hidden="true" />
-                  {feature}
-                </li>
+                <FeatureItem key={feature.title} feature={feature} isBlue />
               ))}
             </ul>
           </div>
