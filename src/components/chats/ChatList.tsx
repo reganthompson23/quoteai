@@ -44,6 +44,9 @@ export function ChatList() {
                 Chat ID
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Customer
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Summary
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -63,17 +66,23 @@ export function ChatList() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   Chat #{chat.chatNumber.toString().padStart(5, '0')}
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <User className={`h-8 w-8 rounded-full p-1 ${chat.contactName ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`} />
+                    </div>
+                    <div className="ml-3">
+                      <div className="text-sm font-medium text-gray-900">
+                        {chat.contactName || 'Anonymous Customer'}
+                      </div>
+                    </div>
+                  </div>
+                </td>
                 <td className="px-6 py-4 text-sm text-gray-500 max-w-md truncate">
                   {chat.summary}
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-col gap-1">
-                    {chat.contactName && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <User className="h-4 w-4" />
-                        {chat.contactName}
-                      </div>
-                    )}
                     {chat.contactEmail && (
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Mail className="h-4 w-4" />
@@ -86,7 +95,7 @@ export function ChatList() {
                         {chat.contactPhone}
                       </div>
                     )}
-                    {!chat.contactName && !chat.contactEmail && !chat.contactPhone && (
+                    {!chat.contactEmail && !chat.contactPhone && (
                       <span className="text-sm text-gray-400">No contact info provided</span>
                     )}
                   </div>

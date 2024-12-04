@@ -80,7 +80,17 @@ export function ChatDetail() {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Chat #{chat.chatNumber.toString().padStart(5, '0')}
+              {chat.contactName ? (
+                <div className="flex items-center gap-2">
+                  <User className="h-6 w-6 text-blue-600" />
+                  <span>{chat.contactName}</span>
+                  <span className="text-gray-400 text-lg">
+                    (Chat #{chat.chatNumber.toString().padStart(5, '0')})
+                  </span>
+                </div>
+              ) : (
+                <>Chat #{chat.chatNumber.toString().padStart(5, '0')}</>
+              )}
             </h1>
             <p className="text-sm text-gray-600 mt-1">
               {new Date(chat.createdAt).toLocaleString()}
@@ -90,12 +100,12 @@ export function ChatDetail() {
           <div className="bg-white shadow-sm rounded-lg p-4 min-w-[250px]">
             <h3 className="font-semibold text-gray-900 mb-3">Contact Details</h3>
             <div className="space-y-2">
-              {chat.contactName && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <User className="h-4 w-4" />
-                  {chat.contactName}
+              {chat.contactName ? (
+                <div className="flex items-center gap-2 text-sm">
+                  <User className="h-4 w-4 text-blue-600" />
+                  <span className="font-medium text-gray-900">{chat.contactName}</span>
                 </div>
-              )}
+              ) : null}
               {chat.contactEmail && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Mail className="h-4 w-4" />
