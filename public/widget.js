@@ -351,6 +351,10 @@
     const text = textarea.value.trim();
     if (!text) return;
 
+    // Clear input and reset height immediately
+    textarea.value = '';
+    textarea.style.height = '48px';
+
     // Add user message to UI and history
     const userMessage = document.createElement('div');
     userMessage.className = 'quoteai-message user';
@@ -360,9 +364,6 @@
     messageHistory.push({ role: 'user', content: text });
     await saveChat();
 
-    // Clear input and reset height
-    textarea.value = '';
-    textarea.style.height = '48px';
     messages.scrollTop = messages.scrollHeight;
 
     try {
