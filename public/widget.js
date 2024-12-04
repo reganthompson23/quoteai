@@ -292,26 +292,21 @@
   let messageHistory = [];
   let chatId = localStorage.getItem(`chatId_${businessId}`);
   
-  // Load existing chat if it exists
-  const savedMessages = localStorage.getItem(`chat_${businessId}`);
-  if (savedMessages) {
-    try {
-      messageHistory = JSON.parse(savedMessages);
-      
-      // Display saved messages in UI
-      messageHistory.forEach(msg => {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `quoteai-message ${msg.role === 'user' ? 'user' : 'bot'}`;
-        messageDiv.textContent = msg.content;
-        messages.appendChild(messageDiv);
-      });
-      
+  // Helper function to add message and scroll in one paint
+  function addMessageToUI(content, isUser) {
+    // Create message element but don't append yet
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `quoteai-message ${isUser ? 'user' : 'bot'}`;
+    messageDiv.textContent = content;
+
+    // Use requestAnimationFrame to batch DOM operations
+    requestAnimationFrame(() => {
+      // Add message and scroll in the same frame
+      messages.appendChild(messageDiv);
       messages.scrollTop = messages.scrollHeight;
-    } catch (e) {
-      console.error('Failed to load saved chat:', e);
-      localStorage.removeItem(`chat_${businessId}`);
-      localStorage.removeItem(`chatId_${businessId}`);
-    }
+    });
+
+    return messageDiv;
   }
 
   // Save chat to localStorage and server
@@ -356,15 +351,9 @@
     textarea.style.height = '48px';
 
     // Add user message to UI and history
-    const userMessage = document.createElement('div');
-    userMessage.className = 'quoteai-message user';
-    userMessage.textContent = text;
-    messages.appendChild(userMessage);
-    
+    addMessageToUI(text, true);
     messageHistory.push({ role: 'user', content: text });
     await saveChat();
-
-    messages.scrollTop = messages.scrollHeight;
 
     try {
       // Send to API
@@ -386,26 +375,14 @@
       const data = await response.json();
 
       // Add bot message to UI and history
-      const botMessage = document.createElement('div');
-      botMessage.className = 'quoteai-message bot';
-      botMessage.textContent = data.message;
-      messages.appendChild(botMessage);
-      
+      addMessageToUI(data.message, false);
       messageHistory.push({ role: 'assistant', content: data.message });
       await saveChat();
-      
-      messages.scrollTop = messages.scrollHeight;
     } catch (error) {
       console.error('Failed to get response:', error);
-      const errorMessage = document.createElement('div');
-      errorMessage.className = 'quoteai-message bot';
-      errorMessage.textContent = 'Sorry, I encountered an error. Please try again.';
-      messages.appendChild(errorMessage);
-      
+      addMessageToUI('Sorry, I encountered an error. Please try again.', false);
       messageHistory.push({ role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' });
       await saveChat();
-      
-      messages.scrollTop = messages.scrollHeight;
     }
   }
 
@@ -473,4 +450,27 @@
       sendMessage();
     }
   });
+
+  // Load existing chat if it exists
+  const savedMessages = localStorage.getItem(`chat_${businessId}`);
+  if (savedMessages) {
+    try {
+      messageHistory = JSON.parse(savedMessages);
+      
+      // Display saved messages in UI
+      requestAnimationFrame(() => {
+        messageHistory.forEach(msg => {
+          const messageDiv = document.createElement('div');
+          messageDiv.className = `quoteai-message ${msg.role === 'user' ? 'user' : 'bot'}`;
+          messageDiv.textContent = msg.content;
+          messages.appendChild(messageDiv);
+        });
+        messages.scrollTop = messages.scrollHeight;
+      });
+    } catch (e) {
+      console.error('Failed to load saved chat:', e);
+      localStorage.removeItem(`chat_${businessId}`);
+      localStorage.removeItem(`chatId_${businessId}`);
+    }
+  }
 })();
