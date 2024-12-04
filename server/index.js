@@ -330,18 +330,24 @@ function extractContactInfo(message) {
   const emailRegex = /[\w.-]+@[\w.-]+\.\w+/;
   const phoneRegex = /(?:\+?61|0)[2-478](?:[ -]?[0-9]){8}/; // Australian format
   
+  const email = message.match(emailRegex)?.[0];
+  const phone = message.match(phoneRegex)?.[0];
+  
   // Enhanced name extraction patterns
   const namePatterns = [
+    // Explicit name declarations
     /my name is (?:([A-Za-z\s]+))[\.,]?/i,
     /i'm (?:([A-Za-z\s]+))[\.,]?/i,
     /i am (?:([A-Za-z\s]+))[\.,]?/i,
     /this is (?:([A-Za-z\s]+))[\.,]?/i,
     /(?:call me|i go by) (?:([A-Za-z\s]+))[\.,]?/i,
-    /name['']?s (?:([A-Za-z\s]+))[\.,]?/i
+    /name['']?s (?:([A-Za-z\s]+))[\.,]?/i,
+    // More flexible patterns
+    /(?:^|\s)(?:i'?m|this is) ([A-Za-z\s]+)(?:\s|$)/i,
+    /([A-Za-z\s]+) (?:here|speaking)(?:\s|$)/i,
+    // Catchall for any capitalized name-like patterns
+    /(?:^|\s)([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)(?:\s|$)/
   ];
-
-  const email = message.match(emailRegex)?.[0];
-  const phone = message.match(phoneRegex)?.[0];
   
   // Try each name pattern until we find a match
   let name = null;
@@ -351,6 +357,17 @@ function extractContactInfo(message) {
       name = match[1].trim();
       break;
     }
+  }
+
+  // If no name found but email exists, try to extract name from email
+  if (!name && email) {
+    const emailName = email.split('@')[0];
+    // Convert email format to proper name (e.g., "john.doe" -> "John Doe")
+    const properName = emailName
+      .split(/[._-]/)
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(' ');
+    name = properName;
   }
 
   return {
@@ -506,6 +523,23 @@ app.post('/chats/complete', async (req, res) => {
           email: info.email || extracted.email,
           phone: info.phone || extracted.phone
         };
+      }
+      // Check AI responses for name acknowledgments
+      if (msg.role === 'assistant') {
+        const acknowledgmentPatterns = [
+          /Thanks,?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
+          /Hello,?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
+          /Hi,?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
+          /(?:Hello|Hi|Hey|Thanks|Thank you),?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i
+        ];
+        
+        for (const pattern of acknowledgmentPatterns) {
+          const match = msg.content.match(pattern);
+          if (match && match[1]) {
+            info.name = info.name || match[1].trim();
+            break;
+          }
+        }
       }
       return info;
     }, { name: null, email: null, phone: null });
