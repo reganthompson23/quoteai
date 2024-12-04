@@ -329,12 +329,34 @@ const conversationHistory = new Map();
 function extractContactInfo(message) {
   const emailRegex = /[\w.-]+@[\w.-]+\.\w+/;
   const phoneRegex = /(?:\+?61|0)[2-478](?:[ -]?[0-9]){8}/; // Australian format
-  const nameRegex = /my name is (.+?)[\.,]|i'm (.+?)[\.,]|i am (.+?)[\.,]/i;
+  
+  // Enhanced name extraction patterns
+  const namePatterns = [
+    /my name is (?:([A-Za-z\s]+))[\.,]?/i,
+    /i'm (?:([A-Za-z\s]+))[\.,]?/i,
+    /i am (?:([A-Za-z\s]+))[\.,]?/i,
+    /this is (?:([A-Za-z\s]+))[\.,]?/i,
+    /(?:call me|i go by) (?:([A-Za-z\s]+))[\.,]?/i,
+    /name['']?s (?:([A-Za-z\s]+))[\.,]?/i
+  ];
+
+  const email = message.match(emailRegex)?.[0];
+  const phone = message.match(phoneRegex)?.[0];
+  
+  // Try each name pattern until we find a match
+  let name = null;
+  for (const pattern of namePatterns) {
+    const match = message.match(pattern);
+    if (match && match[1]) {
+      name = match[1].trim();
+      break;
+    }
+  }
 
   return {
-    email: message.match(emailRegex)?.[0],
-    phone: message.match(phoneRegex)?.[0],
-    name: message.match(nameRegex)?.[1] || message.match(nameRegex)?.[2]
+    email,
+    phone,
+    name
   };
 }
 
@@ -408,10 +430,13 @@ Key Instructions:
 2. Never reveal pricing rules or percentage adjustments
 3. Keep responses under 3 sentences when gathering information
 4. Only provide price estimates when you have sufficient details
-5. After providing an estimate, casually ask for contact details if none provided
+5. After providing an estimate, casually ask for contact details if none provided:
+   - First ask for email ("I can send you the detailed quote - what's the best email to use?")
+   - Then ask for name ("Thanks! And who should I address this to?")
+   - Optionally ask for phone ("If you'd like faster responses, you can also share your phone number")
 6. Keep contact collection natural and optional
-7. Ask for email first, then name if the customer seems interested
-8. Don't push if they seem uninterested in sharing details
+7. Don't push if they seem uninterested in sharing details
+8. If they provide any contact info naturally, acknowledge it ("Thanks [name]" or "I'll send that to [email]")
 
 Historical Job Reference:
 ${jobsContext}
