@@ -335,15 +335,19 @@ function extractContactInfo(message) {
   
   // Enhanced name extraction patterns, ordered by priority
   const namePatterns = [
-    // Highest priority: Explicit name statements
+    // Highest priority: Corrections and explicit statements
+    /actually (?:i'?m|my name is|it'?s|its) (?:([A-Za-z\s]+))[\.,]?/i,
+    /actually (?:([A-Za-z\s]+))[\.,]?/i,
     /my name is (?:([A-Za-z\s]+))[\.,]?/i,
     /name is (?:([A-Za-z\s]+))[\.,]?/i,
     /(?:([A-Za-z\s]+)) is my name[\.,]?/i,
-    /(?:^|\s)i'?m (?:([A-Za-z\s]+))[\.,]?/i,
+    
     // Medium priority: Conversational introductions
+    /(?:^|\s)i'?m (?:([A-Za-z\s]+))[\.,]?/i,
     /this is (?:([A-Za-z\s]+))[\.,]?/i,
     /(?:call me|i go by) (?:([A-Za-z\s]+))[\.,]?/i,
     /([A-Za-z\s]+) (?:here|speaking)[\.,]?/i,
+    
     // Lower priority: Inferred patterns
     /(?:^|\s)(?:i'?m|this is) ([A-Za-z\s]+)(?:\s|$)/i,
     /(?:^|\s)([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)(?:\s|$)/
@@ -351,16 +355,26 @@ function extractContactInfo(message) {
   
   let name = null;
   let nameFromHighPriorityPattern = false;
+  let isCorrection = false;
+
+  // First check for corrections (messages starting with "actually")
+  if (message.toLowerCase().trim().startsWith('actually')) {
+    isCorrection = true;
+  }
 
   for (const pattern of namePatterns) {
     const match = message.match(pattern);
     if (match && match[1]) {
       const newName = match[1].trim();
-      // Use this name if it's our first match, it's a full name, or it's from a high-priority pattern
-      if (!name || newName.includes(' ') || namePatterns.indexOf(pattern) < 4) {
+      // Always use the name if:
+      // 1. It's a correction ("actually...")
+      // 2. It's our first name match
+      // 3. It's a full name (contains space)
+      // 4. It's from a high-priority pattern
+      if (isCorrection || !name || newName.includes(' ') || namePatterns.indexOf(pattern) < 5) {
         name = newName;
-        nameFromHighPriorityPattern = namePatterns.indexOf(pattern) < 4;
-        if (nameFromHighPriorityPattern || name.includes(' ')) break;
+        nameFromHighPriorityPattern = namePatterns.indexOf(pattern) < 5;
+        if (isCorrection || nameFromHighPriorityPattern || name.includes(' ')) break;
       }
     }
   }
