@@ -216,6 +216,39 @@
       text-align: center;
       padding: 8px;
     }
+
+    .quoteai-typing {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 16px;
+      background: #f3f4f6;
+      border-radius: 18px 18px 18px 4px;
+      margin-bottom: 12px;
+      width: fit-content;
+    }
+
+    .quoteai-typing span {
+      width: 6px;
+      height: 6px;
+      background: #94a3b8;
+      border-radius: 50%;
+      animation: typing 1.4s infinite;
+      opacity: 0.4;
+    }
+
+    .quoteai-typing span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .quoteai-typing span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
   `;
 
   // Create and inject styles
@@ -341,6 +374,16 @@
     }
   }
 
+  // Helper function to show/hide typing indicator
+  function showTypingIndicator() {
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'quoteai-typing';
+    typingDiv.innerHTML = '<span></span><span></span><span></span>';
+    messages.appendChild(typingDiv);
+    messages.scrollTop = messages.scrollHeight;
+    return typingDiv;
+  }
+
   // Send message
   async function sendMessage() {
     const text = textarea.value.trim();
@@ -354,6 +397,9 @@
     addMessageToUI(text, true);
     messageHistory.push({ role: 'user', content: text });
     await saveChat();
+
+    // Show typing indicator
+    const typingIndicator = showTypingIndicator();
 
     try {
       // Send to API
@@ -374,12 +420,18 @@
 
       const data = await response.json();
 
+      // Remove typing indicator
+      typingIndicator.remove();
+
       // Add bot message to UI and history
       addMessageToUI(data.message, false);
       messageHistory.push({ role: 'assistant', content: data.message });
       await saveChat();
     } catch (error) {
       console.error('Failed to get response:', error);
+      // Remove typing indicator
+      typingIndicator.remove();
+      
       addMessageToUI('Sorry, I encountered an error. Please try again.', false);
       messageHistory.push({ role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' });
       await saveChat();
