@@ -332,67 +332,11 @@ function extractContactInfo(message) {
   
   const email = message.match(emailRegex)?.[0];
   const phone = message.match(phoneRegex)?.[0];
-  
-  // Enhanced name extraction patterns, ordered by priority
-  const namePatterns = [
-    // Highest priority: Corrections and explicit statements
-    /actually (?:i'?m|my name is|it'?s|its) (?:([A-Za-z\s]+))[\.,]?/i,
-    /actually (?:([A-Za-z\s]+))[\.,]?/i,
-    /my name is (?:([A-Za-z\s]+))[\.,]?/i,
-    /name is (?:([A-Za-z\s]+))[\.,]?/i,
-    /(?:([A-Za-z\s]+)) is my name[\.,]?/i,
-    
-    // Medium priority: Conversational introductions
-    /(?:^|\s)i'?m (?:([A-Za-z\s]+))[\.,]?/i,
-    /this is (?:([A-Za-z\s]+))[\.,]?/i,
-    /(?:call me|i go by) (?:([A-Za-z\s]+))[\.,]?/i,
-    /([A-Za-z\s]+) (?:here|speaking)[\.,]?/i,
-    
-    // Lower priority: Inferred patterns
-    /(?:^|\s)(?:i'?m|this is) ([A-Za-z\s]+)(?:\s|$)/i,
-    /(?:^|\s)([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)(?:\s|$)/
-  ];
-  
-  let name = null;
-  let nameFromHighPriorityPattern = false;
-  let isCorrection = false;
-
-  // First check for corrections (messages starting with "actually")
-  if (message.toLowerCase().trim().startsWith('actually')) {
-    isCorrection = true;
-  }
-
-  for (const pattern of namePatterns) {
-    const match = message.match(pattern);
-    if (match && match[1]) {
-      const newName = match[1].trim();
-      // Always use the name if:
-      // 1. It's a correction ("actually...")
-      // 2. It's our first name match
-      // 3. It's a full name (contains space)
-      // 4. It's from a high-priority pattern
-      if (isCorrection || !name || newName.includes(' ') || namePatterns.indexOf(pattern) < 5) {
-        name = newName;
-        nameFromHighPriorityPattern = namePatterns.indexOf(pattern) < 5;
-        if (isCorrection || nameFromHighPriorityPattern || name.includes(' ')) break;
-      }
-    }
-  }
-
-  // Only fall back to email-based name if we didn't find a high-priority name
-  if (!name && !nameFromHighPriorityPattern && email) {
-    const emailName = email.split('@')[0];
-    const properName = emailName
-      .split(/[._-]/)
-      .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-      .join(' ');
-    name = properName;
-  }
 
   return {
     email,
     phone,
-    name
+    name: null // Name will be extracted by AI
   };
 }
 
@@ -537,40 +481,42 @@ app.post('/chats/complete', async (req, res) => {
     const contactInfo = messages.reduce((info, msg) => {
       if (msg.role === 'user') {
         const extracted = extractContactInfo(msg.content);
-        
-        // Explicit name statements should override previous names
-        const hasExplicitName = msg.content.toLowerCase().includes('my name is') || 
-                               msg.content.toLowerCase().includes('is my name') ||
-                               msg.content.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*) here$/i);
-        
         return {
-          // If it's an explicit name statement, use the new name
-          name: hasExplicitName ? extracted.name : (info.name || extracted.name),
+          name: info.name, // Keep existing name for now
           email: info.email || extracted.email,
           phone: info.phone || extracted.phone
         };
       }
-      // Check AI responses for name acknowledgments
-      if (msg.role === 'assistant') {
-        const acknowledgmentPatterns = [
-          /Thanks,?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
-          /Hello,?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
-          /Hi,?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
-          /(?:Hello|Hi|Hey|Thanks|Thank you),?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
-          /your name,?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i
-        ];
-        
-        for (const pattern of acknowledgmentPatterns) {
-          const match = msg.content.match(pattern);
-          if (match && match[1]) {
-            // Only use AI's acknowledgment if we don't have a name yet
-            info.name = info.name || match[1].trim();
-            break;
-          }
-        }
-      }
       return info;
     }, { name: null, email: null, phone: null });
+
+    // Use AI to determine the customer's name from the conversation
+    const nameCompletion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: `You are a name extraction specialist. Analyze the conversation and determine the customer's most current name.
+          
+Rules:
+1. If someone corrects their name, use the correction
+2. If multiple names are given, use the most recent one
+3. Return null if no name is provided
+4. Ignore the AI assistant's name suggestions
+5. Only extract the customer's actual name, not titles or honorifics
+6. Format names with proper capitalization
+
+Return ONLY the name as a string, or null if no name found. No other text or explanation.`
+        },
+        ...messages
+      ],
+      temperature: 0,
+      max_tokens: 50
+    });
+
+    // Extract name from AI response
+    const aiSuggestedName = nameCompletion.choices[0].message.content.trim();
+    contactInfo.name = aiSuggestedName === 'null' ? null : aiSuggestedName;
 
     // Generate a summary using OpenAI
     const completion = await openai.chat.completions.create({
