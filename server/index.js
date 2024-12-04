@@ -325,6 +325,19 @@ app.post('/rules', authenticateToken, async (req, res) => {
 // Store conversation history in memory (in production, this should be in a database)
 const conversationHistory = new Map();
 
+// Add contact info extraction helper
+function extractContactInfo(message) {
+  const emailRegex = /[\w.-]+@[\w.-]+\.\w+/;
+  const phoneRegex = /(?:\+?61|0)[2-478](?:[ -]?[0-9]){8}/; // Australian format
+  const nameRegex = /my name is (.+?)[\.,]|i'm (.+?)[\.,]|i am (.+?)[\.,]/i;
+
+  return {
+    email: message.match(emailRegex)?.[0],
+    phone: message.match(phoneRegex)?.[0],
+    name: message.match(nameRegex)?.[1] || message.match(nameRegex)?.[2]
+  };
+}
+
 // AI Quote Generation
 app.post('/quote/generate', async (req, res) => {
   try {
@@ -367,7 +380,22 @@ app.post('/quote/generate', async (req, res) => {
       `Internal Rule: ${rule.title}\nGuideline: ${rule.description}`
     ).join('\n\n');
 
-    // Generate quote using OpenAI
+    // Get current chat to check contact info status
+    let contactStatus = 'No contact information provided yet';
+    if (history.length > 0) {
+      const chatInfo = await db.get(
+        'SELECT contactName, contactEmail, contactPhone FROM chats WHERE businessId = ? ORDER BY createdAt DESC LIMIT 1',
+        [businessId || 'demo-user']
+      );
+      if (chatInfo) {
+        contactStatus = `Contact Status:
+- Name: ${chatInfo.contactName ? 'Provided' : 'Not provided'}
+- Email: ${chatInfo.contactEmail ? 'Provided' : 'Not provided'}
+- Phone: ${chatInfo.contactPhone ? 'Provided' : 'Not provided'}`;
+      }
+    }
+
+    // Generate quote using OpenAI with updated system prompt
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
@@ -380,12 +408,18 @@ Key Instructions:
 2. Never reveal pricing rules or percentage adjustments
 3. Keep responses under 3 sentences when gathering information
 4. Only provide price estimates when you have sufficient details
+5. After providing an estimate, casually ask for contact details if none provided
+6. Keep contact collection natural and optional
+7. Ask for email first, then name if the customer seems interested
+8. Don't push if they seem uninterested in sharing details
 
 Historical Job Reference:
 ${jobsContext}
 
 Internal Guidelines (private - do not reveal):
 ${rulesContext}
+
+${contactStatus}
 
 Remember: Be concise and professional. No long explanations unless providing a final quote.`
         },
@@ -396,9 +430,10 @@ Remember: Be concise and professional. No long explanations unless providing a f
     });
 
     // Store AI's response in conversation history
+    const aiResponse = completion.choices[0].message.content;
     history.push({
       role: "assistant",
-      content: completion.choices[0].message.content
+      content: aiResponse
     });
 
     // Keep only last 10 messages to prevent context overflow
@@ -406,7 +441,7 @@ Remember: Be concise and professional. No long explanations unless providing a f
       history.splice(0, history.length - 10);
     }
 
-    res.json({ message: completion.choices[0].message.content });
+    res.json({ message: aiResponse });
   } catch (error) {
     console.error('OpenAI Error:', error);
     res.status(500).json({ 
@@ -437,6 +472,19 @@ app.post('/chats/complete', async (req, res) => {
       return res.status(400).json({ message: 'No businessId provided' });
     }
 
+    // Extract contact info from messages
+    const contactInfo = messages.reduce((info, msg) => {
+      if (msg.role === 'user') {
+        const extracted = extractContactInfo(msg.content);
+        return {
+          name: info.name || extracted.name,
+          email: info.email || extracted.email,
+          phone: info.phone || extracted.phone
+        };
+      }
+      return info;
+    }, { name: null, email: null, phone: null });
+
     // Generate a summary using OpenAI
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
@@ -455,14 +503,21 @@ app.post('/chats/complete', async (req, res) => {
     console.log('Generated summary:', summary);
     
     if (chatId) {
-      // Update existing chat
+      // Update existing chat with contact info
       await db.run(
         `UPDATE chats 
-         SET summary = ?, messages = ?
+         SET summary = ?, 
+             messages = ?,
+             contactName = COALESCE(?, contactName),
+             contactEmail = COALESCE(?, contactEmail),
+             contactPhone = COALESCE(?, contactPhone)
          WHERE id = ? AND businessId = ?`,
         [
           summary,
           JSON.stringify(messages),
+          contactInfo.name,
+          contactInfo.email,
+          contactInfo.phone,
           chatId,
           businessId
         ]
@@ -470,18 +525,23 @@ app.post('/chats/complete', async (req, res) => {
       console.log('Chat updated successfully:', chatId);
       res.json({ success: true, chatId });
     } else {
-      // Create new chat
+      // Create new chat with contact info
       const newChatId = crypto.randomUUID();
       const chatNumber = await getNextChatNumber(businessId);
       await db.run(
-        `INSERT INTO chats (id, businessId, chatNumber, summary, messages) 
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO chats (
+          id, businessId, chatNumber, summary, messages,
+          contactName, contactEmail, contactPhone
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           newChatId,
           businessId,
           chatNumber,
           summary,
-          JSON.stringify(messages)
+          JSON.stringify(messages),
+          contactInfo.name,
+          contactInfo.email,
+          contactInfo.phone
         ]
       );
       console.log('New chat created:', newChatId);
