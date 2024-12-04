@@ -477,27 +477,41 @@ app.post('/chats/complete', async (req, res) => {
       return res.status(400).json({ message: 'No businessId provided' });
     }
 
-    // Extract contact info from messages
+    // Extract basic contact info from messages
     const contactInfo = messages.reduce((info, msg) => {
       if (msg.role === 'user') {
         const extracted = extractContactInfo(msg.content);
         return {
-          name: info.name, // Keep existing name for now
           email: info.email || extracted.email,
           phone: info.phone || extracted.phone
         };
       }
       return info;
-    }, { name: null, email: null, phone: null });
+    }, { email: null, phone: null });
 
-    // Use AI to determine the customer's name from the conversation
-    const nameCompletion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: `You are a name extraction specialist. Analyze the conversation and determine the customer's most current name.
-          
+    // Get the last few messages to check for name-related content
+    const recentMessages = messages.slice(-3);
+    const lastUserMessage = recentMessages.find(m => m.role === 'user')?.content?.toLowerCase() || '';
+    
+    // Only run name extraction if:
+    // 1. It's a new chat (no chatId)
+    // 2. The recent messages contain name-related keywords
+    const shouldExtractName = !chatId || 
+      lastUserMessage.includes('name') ||
+      lastUserMessage.includes('actually') ||
+      lastUserMessage.includes('i am') ||
+      lastUserMessage.includes("i'm") ||
+      lastUserMessage.includes('call me');
+
+    if (shouldExtractName) {
+      // Use AI to determine the customer's name from the conversation
+      const nameCompletion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: `You are a name extraction specialist. Analyze the conversation and determine the customer's most current name.
+            
 Rules:
 1. If someone corrects their name, use the correction
 2. If multiple names are given, use the most recent one
@@ -507,16 +521,17 @@ Rules:
 6. Format names with proper capitalization
 
 Return ONLY the name as a string, or null if no name found. No other text or explanation.`
-        },
-        ...messages
-      ],
-      temperature: 0,
-      max_tokens: 50
-    });
+          },
+          ...messages
+        ],
+        temperature: 0,
+        max_tokens: 50
+      });
 
-    // Extract name from AI response
-    const aiSuggestedName = nameCompletion.choices[0].message.content.trim();
-    contactInfo.name = aiSuggestedName === 'null' ? null : aiSuggestedName;
+      // Extract name from AI response
+      const aiSuggestedName = nameCompletion.choices[0].message.content.trim();
+      contactInfo.name = aiSuggestedName === 'null' ? null : aiSuggestedName;
+    }
 
     // Generate a summary using OpenAI
     const completion = await openai.chat.completions.create({
@@ -536,29 +551,46 @@ Return ONLY the name as a string, or null if no name found. No other text or exp
     console.log('Generated summary:', summary);
     
     if (chatId) {
-      // Update existing chat with contact info
-      await db.run(
-        `UPDATE chats 
-         SET summary = ?, 
-             messages = ?,
-             contactName = CASE WHEN ? IS NOT NULL THEN ? ELSE contactName END,
-             contactEmail = CASE WHEN ? IS NOT NULL THEN ? ELSE contactEmail END,
-             contactPhone = CASE WHEN ? IS NOT NULL THEN ? ELSE contactPhone END
-         WHERE id = ? AND businessId = ?`,
-        [
-          summary,
-          JSON.stringify(messages),
-          contactInfo.name, contactInfo.name,
-          contactInfo.email, contactInfo.email,
-          contactInfo.phone, contactInfo.phone,
-          chatId,
-          businessId
-        ]
-      );
+      // Update existing chat
+      const updateQuery = shouldExtractName
+        ? `UPDATE chats 
+           SET summary = ?, 
+               messages = ?,
+               contactName = CASE WHEN ? IS NOT NULL THEN ? ELSE contactName END,
+               contactEmail = CASE WHEN ? IS NOT NULL THEN ? ELSE contactEmail END,
+               contactPhone = CASE WHEN ? IS NOT NULL THEN ? ELSE contactPhone END
+           WHERE id = ? AND businessId = ?`
+        : `UPDATE chats 
+           SET summary = ?, 
+               messages = ?,
+               contactEmail = CASE WHEN ? IS NOT NULL THEN ? ELSE contactEmail END,
+               contactPhone = CASE WHEN ? IS NOT NULL THEN ? ELSE contactPhone END
+           WHERE id = ? AND businessId = ?`;
+
+      const updateParams = shouldExtractName
+        ? [
+            summary,
+            JSON.stringify(messages),
+            contactInfo.name, contactInfo.name,
+            contactInfo.email, contactInfo.email,
+            contactInfo.phone, contactInfo.phone,
+            chatId,
+            businessId
+          ]
+        : [
+            summary,
+            JSON.stringify(messages),
+            contactInfo.email, contactInfo.email,
+            contactInfo.phone, contactInfo.phone,
+            chatId,
+            businessId
+          ];
+
+      await db.run(updateQuery, updateParams);
       console.log('Chat updated successfully:', chatId);
       res.json({ success: true, chatId });
     } else {
-      // Create new chat with contact info
+      // Create new chat
       const newChatId = crypto.randomUUID();
       const chatNumber = await getNextChatNumber(businessId);
       await db.run(
