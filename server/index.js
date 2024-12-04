@@ -533,16 +533,16 @@ app.post('/chats/complete', async (req, res) => {
         `UPDATE chats 
          SET summary = ?, 
              messages = ?,
-             contactName = COALESCE(?, contactName),
-             contactEmail = COALESCE(?, contactEmail),
-             contactPhone = COALESCE(?, contactPhone)
+             contactName = CASE WHEN ? IS NOT NULL THEN ? ELSE contactName END,
+             contactEmail = CASE WHEN ? IS NOT NULL THEN ? ELSE contactEmail END,
+             contactPhone = CASE WHEN ? IS NOT NULL THEN ? ELSE contactPhone END
          WHERE id = ? AND businessId = ?`,
         [
           summary,
           JSON.stringify(messages),
-          contactInfo.name,
-          contactInfo.email,
-          contactInfo.phone,
+          contactInfo.name, contactInfo.name,
+          contactInfo.email, contactInfo.email,
+          contactInfo.phone, contactInfo.phone,
           chatId,
           businessId
         ]
