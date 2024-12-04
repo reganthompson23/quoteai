@@ -333,36 +333,41 @@ function extractContactInfo(message) {
   const email = message.match(emailRegex)?.[0];
   const phone = message.match(phoneRegex)?.[0];
   
-  // Enhanced name extraction patterns
+  // Enhanced name extraction patterns, ordered by priority
   const namePatterns = [
-    // Explicit name declarations
+    // Highest priority: Explicit name statements
     /my name is (?:([A-Za-z\s]+))[\.,]?/i,
-    /i'm (?:([A-Za-z\s]+))[\.,]?/i,
-    /i am (?:([A-Za-z\s]+))[\.,]?/i,
+    /name is (?:([A-Za-z\s]+))[\.,]?/i,
+    /(?:([A-Za-z\s]+)) is my name[\.,]?/i,
+    /(?:^|\s)i'?m (?:([A-Za-z\s]+))[\.,]?/i,
+    // Medium priority: Conversational introductions
     /this is (?:([A-Za-z\s]+))[\.,]?/i,
     /(?:call me|i go by) (?:([A-Za-z\s]+))[\.,]?/i,
-    /name['']?s (?:([A-Za-z\s]+))[\.,]?/i,
-    // More flexible patterns
+    /([A-Za-z\s]+) (?:here|speaking)[\.,]?/i,
+    // Lower priority: Inferred patterns
     /(?:^|\s)(?:i'?m|this is) ([A-Za-z\s]+)(?:\s|$)/i,
-    /([A-Za-z\s]+) (?:here|speaking)(?:\s|$)/i,
-    // Catchall for any capitalized name-like patterns
     /(?:^|\s)([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)(?:\s|$)/
   ];
   
-  // Try each name pattern until we find a match
   let name = null;
+  let nameFromHighPriorityPattern = false;
+
   for (const pattern of namePatterns) {
     const match = message.match(pattern);
     if (match && match[1]) {
-      name = match[1].trim();
-      break;
+      const newName = match[1].trim();
+      // Use this name if it's our first match, it's a full name, or it's from a high-priority pattern
+      if (!name || newName.includes(' ') || namePatterns.indexOf(pattern) < 4) {
+        name = newName;
+        nameFromHighPriorityPattern = namePatterns.indexOf(pattern) < 4;
+        if (nameFromHighPriorityPattern || name.includes(' ')) break;
+      }
     }
   }
 
-  // If no name found but email exists, try to extract name from email
-  if (!name && email) {
+  // Only fall back to email-based name if we didn't find a high-priority name
+  if (!name && !nameFromHighPriorityPattern && email) {
     const emailName = email.split('@')[0];
-    // Convert email format to proper name (e.g., "john.doe" -> "John Doe")
     const properName = emailName
       .split(/[._-]/)
       .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
@@ -518,8 +523,15 @@ app.post('/chats/complete', async (req, res) => {
     const contactInfo = messages.reduce((info, msg) => {
       if (msg.role === 'user') {
         const extracted = extractContactInfo(msg.content);
+        
+        // Explicit name statements should override previous names
+        const hasExplicitName = msg.content.toLowerCase().includes('my name is') || 
+                               msg.content.toLowerCase().includes('is my name') ||
+                               msg.content.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*) here$/i);
+        
         return {
-          name: info.name || extracted.name,
+          // If it's an explicit name statement, use the new name
+          name: hasExplicitName ? extracted.name : (info.name || extracted.name),
           email: info.email || extracted.email,
           phone: info.phone || extracted.phone
         };
@@ -530,12 +542,14 @@ app.post('/chats/complete', async (req, res) => {
           /Thanks,?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
           /Hello,?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
           /Hi,?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
-          /(?:Hello|Hi|Hey|Thanks|Thank you),?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i
+          /(?:Hello|Hi|Hey|Thanks|Thank you),?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
+          /your name,?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i
         ];
         
         for (const pattern of acknowledgmentPatterns) {
           const match = msg.content.match(pattern);
           if (match && match[1]) {
+            // Only use AI's acknowledgment if we don't have a name yet
             info.name = info.name || match[1].trim();
             break;
           }
