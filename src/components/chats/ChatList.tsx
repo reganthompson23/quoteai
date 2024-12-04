@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Mail, Phone, User, ArrowRight } from 'lucide-react';
+import { Mail, Phone, User } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Chat } from '../../types';
 
@@ -55,16 +55,18 @@ export function ChatList() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {chats?.map((chat) => (
               <tr key={chat.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  Chat #{chat.chatNumber.toString().padStart(5, '0')}
+                  <Link
+                    to={`/dashboard/chats/${chat.id}`}
+                    className="text-gray-900 hover:text-blue-600"
+                  >
+                    Chat #{chat.chatNumber.toString().padStart(5, '0')}
+                  </Link>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
@@ -102,15 +104,6 @@ export function ChatList() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(chat.createdAt).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <Link
-                    to={`/dashboard/chats/${chat.id}`}
-                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                  >
-                    View Details
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
                 </td>
               </tr>
             ))}
