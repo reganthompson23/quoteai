@@ -14,18 +14,18 @@ export default function PetesWebsite() {
           />
         </div>
         <div className="relative max-w-5xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold mb-4 drop-shadow-lg">Pete's Painting</h1>
-          <p className="text-xl opacity-90 drop-shadow-lg">Professional Painting Services - Interior & Exterior</p>
+          <h1 className="text-4xl font-bold mb-4 text-shadow-tight">Pete's Painting</h1>
+          <p className="text-xl opacity-90 text-shadow-tight">Professional Painting Services - Interior & Exterior</p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
-            <div className="flex items-center gap-2 drop-shadow-lg">
+            <div className="flex items-center gap-2 text-shadow-tight">
               <Phone className="h-5 w-5" />
               <span>(02) 9876 5432</span>
             </div>
-            <div className="flex items-center gap-2 drop-shadow-lg">
+            <div className="flex items-center gap-2 text-shadow-tight">
               <Mail className="h-5 w-5" />
               <span>info@petespainting.com.au</span>
             </div>
-            <div className="flex items-center gap-2 drop-shadow-lg">
+            <div className="flex items-center gap-2 text-shadow-tight">
               <MapPin className="h-5 w-5" />
               <span>Sydney, Australia</span>
             </div>
