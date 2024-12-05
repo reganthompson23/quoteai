@@ -3,7 +3,7 @@ import { Phone, Mail, MapPin } from 'lucide-react';
 
 export default function PetesWebsite() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white relative">
       {/* Hero Section */}
       <header className="relative text-white">
         <div className="absolute inset-0 bg-black/20">

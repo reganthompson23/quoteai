@@ -8,10 +8,18 @@ export default function WidgetDemo() {
     script.src = '/widget.js';
     script.setAttribute('data-business-id', 'petes-demo');
     script.setAttribute('data-auto-open', 'true');
+    script.setAttribute('data-preview-mode', 'true');
     document.body.appendChild(script);
+
+    // Force widget to open after a short delay to ensure it's loaded
+    const timer = setTimeout(() => {
+      const event = new CustomEvent('quoteai:open');
+      window.dispatchEvent(event);
+    }, 1000);
 
     return () => {
       // Cleanup widget when component unmounts
+      clearTimeout(timer);
       document.body.removeChild(script);
       const widget = document.querySelector('.quoteai-widget');
       if (widget && widget.parentElement) {
