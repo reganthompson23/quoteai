@@ -5,8 +5,15 @@ export default function PetesWebsite() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <header className="bg-blue-600 text-white">
-        <div className="max-w-5xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+      <header className="relative bg-blue-600 text-white">
+        <div className="absolute inset-0">
+          <img
+            src="/images/painting-hero.jpg"
+            alt="Professional painter at work"
+            className="w-full h-full object-cover opacity-30"
+          />
+        </div>
+        <div className="relative max-w-5xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-bold mb-4">Pete's Painting</h1>
           <p className="text-xl opacity-90">Professional Painting Services - Interior & Exterior</p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
@@ -61,28 +68,34 @@ export default function PetesWebsite() {
           <h2 className="text-3xl font-bold mb-8">Recent Projects</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div>
-              <div className="aspect-w-4 aspect-h-3 bg-gray-200 rounded-lg mb-4">
-                <div className="p-4 flex items-center justify-center text-gray-400">
-                  [Project Photo]
-                </div>
+              <div className="aspect-w-4 aspect-h-3 bg-gray-200 rounded-lg mb-4 overflow-hidden">
+                <img
+                  src="/images/victorian-home.jpg"
+                  alt="Victorian Heritage Home"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <h3 className="font-semibold">Victorian Heritage Home</h3>
               <p className="text-gray-600">Full interior and exterior restoration</p>
             </div>
             <div>
-              <div className="aspect-w-4 aspect-h-3 bg-gray-200 rounded-lg mb-4">
-                <div className="p-4 flex items-center justify-center text-gray-400">
-                  [Project Photo]
-                </div>
+              <div className="aspect-w-4 aspect-h-3 bg-gray-200 rounded-lg mb-4 overflow-hidden">
+                <img
+                  src="/images/apartment-complex.jpg"
+                  alt="Modern Apartment Complex"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <h3 className="font-semibold">Modern Apartment Complex</h3>
               <p className="text-gray-600">External repaint with weather protection</p>
             </div>
             <div>
-              <div className="aspect-w-4 aspect-h-3 bg-gray-200 rounded-lg mb-4">
-                <div className="p-4 flex items-center justify-center text-gray-400">
-                  [Project Photo]
-                </div>
+              <div className="aspect-w-4 aspect-h-3 bg-gray-200 rounded-lg mb-4 overflow-hidden">
+                <img
+                  src="/images/queenslander.jpg"
+                  alt="Queenslander Restoration"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <h3 className="font-semibold">Queenslander Restoration</h3>
               <p className="text-gray-600">Period-accurate restoration work</p>

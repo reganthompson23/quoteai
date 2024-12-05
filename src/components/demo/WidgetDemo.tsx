@@ -7,6 +7,7 @@ export default function WidgetDemo() {
     const script = document.createElement('script');
     script.src = '/widget.js';
     script.setAttribute('data-business-id', 'petes-demo');
+    script.setAttribute('data-auto-open', 'true');
     document.body.appendChild(script);
 
     return () => {
