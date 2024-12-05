@@ -13,6 +13,7 @@ import { ChatDetail } from './components/chats/ChatDetail';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { SignupPage } from './pages/auth/SignupPage';
+import { DemoPage } from './pages/DemoPage';
 import { useAuthStore } from './store/auth';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 
@@ -31,6 +32,7 @@ function App() {
           <Header />
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/demo" element={<DemoPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route 
