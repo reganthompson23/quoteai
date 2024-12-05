@@ -37,11 +37,11 @@ const DEMO_BUSINESS = {
 };
 
 const navigation = [
-  { name: 'Dashboard', href: '/demo', icon: LayoutGrid, end: true },
-  { name: 'Estimates', href: '/demo/estimates', icon: MessageSquare },
-  { name: 'Jobs', href: '/demo/jobs', icon: ClipboardList },
-  { name: 'Widget', href: '/demo/widget', icon: MonitorSmartphone },
-  { name: 'Settings', href: '/demo/settings', icon: Settings },
+  { name: 'Dashboard', href: '', icon: LayoutGrid, end: true },
+  { name: 'Estimates', href: 'estimates', icon: MessageSquare },
+  { name: 'Jobs', href: 'jobs', icon: ClipboardList },
+  { name: 'Widget', href: 'widget', icon: MonitorSmartphone },
+  { name: 'Settings', href: 'settings', icon: Settings },
 ];
 
 function DemoLayout({ children }: { children: React.ReactNode }) {
@@ -69,9 +69,10 @@ function DemoLayout({ children }: { children: React.ReactNode }) {
           <div className="w-64 flex-shrink-0">
             <nav className="space-y-1">
               {navigation.map((item) => {
+                const fullPath = `/demo/${item.href}`;
                 const isActive = item.end 
-                  ? location.pathname === item.href
-                  : location.pathname.startsWith(item.href);
+                  ? location.pathname === '/demo'
+                  : location.pathname === fullPath;
                 return (
                   <Link
                     key={item.name}
@@ -138,11 +139,11 @@ export function DemoPage() {
   return (
     <DemoLayout>
       <Routes>
-        <Route path="/" element={<DemoDashboard />} />
-        <Route path="/estimates" element={<DemoEstimates />} />
-        <Route path="/jobs" element={<DemoJobs />} />
-        <Route path="/widget" element={<WidgetDemo />} />
-        <Route path="/settings" element={<DemoSettings />} />
+        <Route index element={<DemoDashboard />} />
+        <Route path="estimates" element={<DemoEstimates />} />
+        <Route path="jobs" element={<DemoJobs />} />
+        <Route path="widget" element={<WidgetDemo />} />
+        <Route path="settings" element={<DemoSettings />} />
       </Routes>
     </DemoLayout>
   );
