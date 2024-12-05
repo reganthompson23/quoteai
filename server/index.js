@@ -340,7 +340,7 @@ function extractContactInfo(message) {
   };
 }
 
-// Update demo business constants
+// Update demo business constants with accurate Australian pricing
 const DEMO_BUSINESS = {
   id: 'petes-demo',
   name: "Pete's Painting",
@@ -358,12 +358,14 @@ const DEMO_BUSINESS = {
     }
   ],
   baseRates: {
-    'interior-small': 2000,    // 1-2 rooms
-    'interior-medium': 4000,   // 3-4 rooms
-    'interior-large': 8000,    // 5+ rooms
-    'exterior-small': 5000,    // Single story
-    'exterior-medium': 10000,  // Two story
-    'exterior-large': 15000    // Three story
+    // Interior painting (based on standard 3x3.6m rooms)
+    'interior-small': 2800,    // 1-2 rooms + bathroom/laundry
+    'interior-medium': 5000,   // 3-bed house with 2 bath, kitchen, laundry
+    'interior-large': 9000,    // 4+ bedrooms, multiple living areas
+    // Exterior painting (based on square meterage)
+    'exterior-small': 5000,    // Single story (up to 150sqm)
+    'exterior-medium': 10000,  // Two story (up to 250sqm)
+    'exterior-large': 18000    // Three story or large (300sqm+)
   }
 };
 
@@ -427,8 +429,9 @@ Key Behaviors:
 4. Be enthusiastic but professional
 
 Pricing Guidelines (INTERNAL):
-- Interior: $2k-8k (1-5+ rooms)
-- Exterior: $5k-15k (1-3 stories)
+- Interior rooms: $500-750 per standard room
+- Full house interior: $5,000-9,000 (depending on size)
+- Exterior: $35-45 per square metre
 - Heritage: +20%
 - Multi-story external: +10% per story
 
@@ -439,7 +442,7 @@ Response Pattern:
 
 Example:
 User: "Need a quote for painting my house"
-You: "For a standard house interior, estimates typically start at $2,000. How many rooms were you looking to paint?"
+You: "For a standard 3-bedroom house interior, you're looking at around $5,000 including two bathrooms and kitchen. How many bedrooms did you need painted?"
 
 Remember: Quick value first, details later!
 ` : '';
