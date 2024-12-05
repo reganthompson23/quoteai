@@ -58,6 +58,51 @@ const MOCK_JOBS: Job[] = [
       'Weather damage repair included',
       'Traditional color palette'
     ]
+  },
+  {
+    id: 'job-4',
+    customerName: 'David Thompson',
+    description: '2-Bedroom Unit - Full Interior',
+    status: 'completed',
+    value: 4800,
+    completedDate: new Date(2024, 0, 12),
+    details: [
+      'Complete interior painting',
+      '2 bedrooms, 1 bathroom, kitchen, living room',
+      'Wall crack repairs in living room',
+      'Premium washable white paint throughout',
+      'Empty unit - no furniture moving required'
+    ]
+  },
+  {
+    id: 'job-5',
+    customerName: 'Lisa Martinez',
+    description: 'Two-Story House - Exterior Only',
+    status: 'completed',
+    value: 12500,
+    completedDate: new Date(2024, 0, 8),
+    details: [
+      'Weatherboard house exterior',
+      'Approximately 200 square meters',
+      'Walls, trims, and window frames',
+      'Surface preparation and spot sanding',
+      'White walls with dark grey trim'
+    ]
+  },
+  {
+    id: 'job-6',
+    customerName: 'James Anderson',
+    description: 'Single-Story House - Interior & Exterior Trim',
+    status: 'in_progress',
+    value: 15800,
+    startDate: new Date(2024, 0, 22),
+    details: [
+      '4 bedrooms, 2 bathrooms, living areas',
+      'Complete interior walls and ceilings',
+      'Exterior trim and fascia boards only',
+      'Minor plaster repairs included',
+      'Neutral color scheme throughout'
+    ]
   }
 ];
 

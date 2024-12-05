@@ -65,6 +65,66 @@ const MOCK_CHATS = [
         content: 'Thanks for the detailed quote. I\'ll discuss with my partner.'
       }
     ]
+  },
+  {
+    id: '4',
+    customerName: 'David Thompson',
+    createdAt: new Date(2024, 0, 12, 11, 20),
+    lastMessage: 'Perfect, that works for my budget. How soon can you start?',
+    messages: [
+      {
+        role: 'user',
+        content: 'I have a small 2-bedroom unit that needs painting inside. Two bedrooms, one bathroom, kitchen, and living room. There\'s a crack in the living room wall that needs patching. Unit is empty and I want standard white paint throughout.'
+      },
+      {
+        role: 'assistant',
+        content: 'For your 2-bedroom unit interior, our base rate would be $4,800. This includes all walls, ceilings, and trims in all rooms, crack repair in the living room, and premium washable white paint throughout. Since the unit is empty, we won\'t need to factor in furniture moving. We use high-quality paint that\'s easy to clean and will last for years. Would you like to proceed with scheduling?'
+      },
+      {
+        role: 'user',
+        content: 'Perfect, that works for my budget. How soon can you start?'
+      }
+    ]
+  },
+  {
+    id: '5',
+    customerName: 'Lisa Martinez',
+    createdAt: new Date(2024, 0, 8, 15, 30),
+    lastMessage: 'The quote sounds reasonable. I\'d like to go ahead with the white and grey color scheme.',
+    messages: [
+      {
+        role: 'user',
+        content: 'Need the exterior of my two-story weatherboard house painted. About 200 square meters, including walls, trims, and window frames. Some peeling paint needs sanding. Want white walls and dark grey trims.'
+      },
+      {
+        role: 'assistant',
+        content: 'For your two-story weatherboard house exterior (200 square meters), our quote would be $12,500. This covers all preparation work including sanding the peeling areas, premium exterior paint for the walls in white, and hard-wearing trim paint in dark grey. We\'ll also paint the window frames and front porch. The price includes all necessary equipment and a full clean-up after completion. Would you like to proceed with the white and grey color scheme?'
+      },
+      {
+        role: 'user',
+        content: 'The quote sounds reasonable. I\'d like to go ahead with the white and grey color scheme.'
+      }
+    ]
+  },
+  {
+    id: '6',
+    customerName: 'James Anderson',
+    createdAt: new Date(2024, 0, 22, 13, 15),
+    lastMessage: 'That\'s within our budget. When can you do an in-person inspection?',
+    messages: [
+      {
+        role: 'user',
+        content: 'Looking for a quote on my single-story 4-bedroom house. Need interior walls, ceilings, and trims painted, plus exterior fascia and window frames. Some plaster cracks need fixing inside.'
+      },
+      {
+        role: 'assistant',
+        content: 'For your 4-bedroom single-story house, we can provide a comprehensive package at $15,800. This includes all interior walls, ceilings, and trims, plaster crack repairs, and exterior trim work (fascia boards and window frames). We\'ll use premium paints suitable for each area, and all preparation work is included. Would you like to schedule an inspection to confirm the scope and discuss color options?'
+      },
+      {
+        role: 'user',
+        content: 'That\'s within our budget. When can you do an in-person inspection?'
+      }
+    ]
   }
 ];
 
