@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       textShadow: {
-        tight: '0 1px 2px rgba(0, 0, 0, 0.8), 0 1px 1px rgba(0, 0, 0, 0.8)',
+        tight: '0 2px 4px rgba(0, 0, 0, 0.9), 1px 1px 3px rgba(0, 0, 0, 0.9)',
       },
     },
   },
@@ -13,7 +13,7 @@ export default {
     function({ addUtilities }) {
       const newUtilities = {
         '.text-shadow-tight': {
-          textShadow: '0 1px 2px rgba(0, 0, 0, 0.8), 0 1px 1px rgba(0, 0, 0, 0.8)',
+          textShadow: '0 2px 4px rgba(0, 0, 0, 0.9), 1px 1px 3px rgba(0, 0, 0, 0.9)',
         },
       };
       addUtilities(newUtilities);

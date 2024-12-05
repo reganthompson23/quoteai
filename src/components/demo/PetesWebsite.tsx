@@ -6,11 +6,11 @@ export default function PetesWebsite() {
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <header className="relative text-white">
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-black/20">
           <img
             src="/images/demo-hero.jpg"
             alt="Professional painter at work"
-            className="w-full h-full object-cover opacity-90"
+            className="w-full h-full object-cover opacity-90 mix-blend-darken"
           />
         </div>
         <div className="relative max-w-5xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
@@ -18,15 +18,15 @@ export default function PetesWebsite() {
           <p className="text-xl opacity-90 text-shadow-tight">Professional Painting Services - Interior & Exterior</p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
             <div className="flex items-center gap-2 text-shadow-tight">
-              <Phone className="h-5 w-5" />
+              <Phone className="h-5 w-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
               <span>(02) 9876 5432</span>
             </div>
             <div className="flex items-center gap-2 text-shadow-tight">
-              <Mail className="h-5 w-5" />
+              <Mail className="h-5 w-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
               <span>info@petespainting.com.au</span>
             </div>
             <div className="flex items-center gap-2 text-shadow-tight">
-              <MapPin className="h-5 w-5" />
+              <MapPin className="h-5 w-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
               <span>Sydney, Australia</span>
             </div>
           </div>
