@@ -32,7 +32,7 @@ function App() {
           <Header />
           <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/demo" element={<DemoPage />} />
+            <Route path="/demo/*" element={<DemoPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route 
