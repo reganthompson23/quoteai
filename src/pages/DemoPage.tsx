@@ -4,7 +4,7 @@ import { ChatList } from '../components/demo/ChatList';
 import { PricingRules } from '../components/demo/PricingRules';
 import { Stats } from '../components/demo/Stats';
 import { JobList } from '../components/demo/JobList';
-import WidgetPreview from '../components/demo/WidgetPreview';
+import WidgetDemo from '../components/demo/WidgetDemo';
 import { 
   LayoutGrid, 
   MessageSquare, 
@@ -37,7 +37,7 @@ const DEMO_BUSINESS = {
 };
 
 const navigation = [
-  { name: 'Dashboard', href: '/demo', icon: LayoutGrid },
+  { name: 'Dashboard', href: '/demo', icon: LayoutGrid, end: true },
   { name: 'Estimates', href: '/demo/estimates', icon: MessageSquare },
   { name: 'Jobs', href: '/demo/jobs', icon: ClipboardList },
   { name: 'Widget', href: '/demo/widget', icon: MonitorSmartphone },
@@ -69,8 +69,9 @@ function DemoLayout({ children }: { children: React.ReactNode }) {
           <div className="w-64 flex-shrink-0">
             <nav className="space-y-1">
               {navigation.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.href;
+                const isActive = item.end 
+                  ? location.pathname === item.href
+                  : location.pathname.startsWith(item.href);
                 return (
                   <Link
                     key={item.name}
@@ -82,7 +83,7 @@ function DemoLayout({ children }: { children: React.ReactNode }) {
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
                     `}
                   >
-                    <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                    <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
                     {item.name}
                   </Link>
                 );
@@ -114,20 +115,34 @@ function DemoDashboard() {
   );
 }
 
+function DemoEstimates() {
+  return <ChatList fullWidth />;
+}
+
+function DemoJobs() {
+  return <JobList />;
+}
+
+function DemoSettings() {
+  return (
+    <div className="space-y-8">
+      <div className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Pricing Rules</h2>
+        <PricingRules rules={DEMO_BUSINESS.rules} />
+      </div>
+    </div>
+  );
+}
+
 export function DemoPage() {
   return (
     <DemoLayout>
       <Routes>
         <Route path="/" element={<DemoDashboard />} />
-        <Route path="/estimates" element={<ChatList fullWidth />} />
-        <Route path="/jobs" element={<JobList />} />
-        <Route path="/widget" element={<WidgetPreview businessId="demo" />} />
-        <Route path="/settings" element={
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Pricing Rules</h2>
-            <PricingRules rules={DEMO_BUSINESS.rules} />
-          </div>
-        } />
+        <Route path="/estimates" element={<DemoEstimates />} />
+        <Route path="/jobs" element={<DemoJobs />} />
+        <Route path="/widget" element={<WidgetDemo />} />
+        <Route path="/settings" element={<DemoSettings />} />
       </Routes>
     </DemoLayout>
   );
