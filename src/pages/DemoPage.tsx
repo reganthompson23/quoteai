@@ -4,7 +4,7 @@ import { ChatList } from '../components/demo/ChatList';
 import { PricingRules } from '../components/demo/PricingRules';
 import { Stats } from '../components/demo/Stats';
 import { JobList } from '../components/demo/JobList';
-import { WidgetPreview } from '../components/demo/WidgetPreview';
+import WidgetPreview from '../components/demo/WidgetPreview';
 import { 
   LayoutGrid, 
   MessageSquare, 

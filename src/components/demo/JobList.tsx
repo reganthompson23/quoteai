@@ -2,7 +2,18 @@ import React from 'react';
 import { format } from 'date-fns';
 import { CheckCircle, Clock } from 'lucide-react';
 
-const MOCK_JOBS = [
+interface Job {
+  id: string;
+  customerName: string;
+  description: string;
+  status: 'completed' | 'in_progress';
+  value: number;
+  completedDate?: Date;
+  startDate?: Date;
+  details: string[];
+}
+
+const MOCK_JOBS: Job[] = [
   {
     id: 'job-1',
     customerName: 'Sarah Johnson',
@@ -53,6 +64,16 @@ const MOCK_JOBS = [
 export function JobList() {
   const [expandedJob, setExpandedJob] = React.useState<string | null>(null);
 
+  const formatDate = (job: Job) => {
+    if (job.status === 'completed' && job.completedDate) {
+      return format(job.completedDate, 'MMM d, yyyy');
+    }
+    if (job.status === 'in_progress' && job.startDate) {
+      return format(job.startDate, 'MMM d, yyyy');
+    }
+    return '';
+  };
+
   return (
     <div className="bg-white shadow rounded-lg">
       <div className="px-4 py-5 sm:px-6 border-b">
@@ -81,11 +102,7 @@ export function JobList() {
                   <p className="text-sm font-medium text-gray-900">
                     ${job.value.toLocaleString()}
                   </p>
-                  <p className="text-xs text-gray-500">
-                    {job.status === 'completed' 
-                      ? format(job.completedDate, 'MMM d, yyyy')
-                      : format(job.startDate!, 'MMM d, yyyy')}
-                  </p>
+                  <p className="text-xs text-gray-500">{formatDate(job)}</p>
                 </div>
               </div>
               
