@@ -22,7 +22,7 @@ export function Hero() {
                 Start Free Trial
               </Link>
               <Link
-                to="/demo"
+                to="/demo/widget"
                 className="group text-lg font-semibold leading-6 text-gray-900 hover:text-blue-600 flex items-center gap-2"
               >
                 See it in action <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />

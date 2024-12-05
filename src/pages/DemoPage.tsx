@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, Routes, Route, useLocation } from 'react-router-dom';
+import { Link, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ChatList } from '../components/demo/ChatList';
 import { PricingRules } from '../components/demo/PricingRules';
 import { Stats } from '../components/demo/Stats';
@@ -8,165 +8,94 @@ import WidgetDemo from '../components/demo/WidgetDemo';
 import { 
   LayoutGrid, 
   MessageSquare, 
-  ClipboardList, 
-  Settings,
-  MonitorSmartphone
+  Settings, 
+  BarChart3,
+  MessageCircle
 } from 'lucide-react';
 
-const DEMO_BUSINESS = {
-  name: "Pete's Painting",
-  description: "Professional Painting Services - Interior & Exterior",
-  rules: [
-    {
-      id: 1,
-      name: "Heritage Listed Building",
-      description: "Additional care and specialized materials required",
-      adjustment: "20% increase",
-      type: "percentage",
-      value: 20
-    },
-    {
-      id: 2,
-      name: "Multi-Story External",
-      description: "Per story surcharge for external painting",
-      adjustment: "10% per story",
-      type: "percentage_per_unit",
-      value: 10
-    }
-  ]
-};
-
 const navigation = [
-  { name: 'Dashboard', href: '', icon: LayoutGrid, end: true },
-  { name: 'Estimates', href: 'estimates', icon: MessageSquare },
-  { name: 'Jobs', href: 'jobs', icon: ClipboardList },
-  { name: 'Widget', href: 'widget', icon: MonitorSmartphone },
-  { name: 'Settings', href: 'settings', icon: Settings },
+  { name: 'Widget Preview', href: '/demo/widget', icon: MessageCircle },
+  { name: 'Recent Jobs', href: '/demo/jobs', icon: LayoutGrid },
+  { name: 'Recent Estimates', href: '/demo/chats', icon: MessageSquare },
+  { name: 'Pricing Rules', href: '/demo/pricing', icon: Settings },
+  { name: 'Monthly Stats', href: '/demo/stats', icon: BarChart3 },
 ];
 
-function DemoLayout({ children }: { children: React.ReactNode }) {
+export function DemoPage() {
   const location = useLocation();
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">
-              {DEMO_BUSINESS.name}
-            </h1>
-            <p className="text-sm text-gray-500">{DEMO_BUSINESS.description}</p>
-          </div>
-          <div className="text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
-            Demo Account
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div className="flex flex-col sm:flex-row sm:gap-8">
-          {/* Desktop Sidebar Navigation */}
-          <div className="hidden sm:block w-64 flex-shrink-0">
-            <nav className="space-y-1">
+      <div className="hidden sm:fixed sm:inset-y-0 sm:flex sm:w-64 sm:flex-col">
+        <div className="flex min-h-0 flex-1 flex-col border-r border-gray-200 bg-white">
+          <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
+            <nav className="mt-5 flex-1 space-y-1 bg-white px-2">
               {navigation.map((item) => {
-                const fullPath = `/demo/${item.href}`;
-                const isActive = item.end 
-                  ? location.pathname === '/demo'
-                  : location.pathname === fullPath;
+                const Icon = item.icon;
                 return (
                   <Link
                     key={item.name}
                     to={item.href}
                     className={`
-                      flex items-center px-4 py-2 text-sm font-medium rounded-md
-                      ${isActive 
-                        ? 'bg-blue-50 text-blue-700' 
+                      group flex items-center px-2 py-2 text-sm font-medium rounded-md
+                      ${location.pathname === item.href
+                        ? 'bg-gray-100 text-gray-900'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
                     `}
                   >
-                    <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                    <Icon
+                      className={`
+                        mr-3 h-6 w-6 flex-shrink-0
+                        ${location.pathname === item.href
+                          ? 'text-gray-500'
+                          : 'text-gray-400 group-hover:text-gray-500'}
+                      `}
+                    />
                     {item.name}
                   </Link>
                 );
               })}
             </nav>
           </div>
-
-          {/* Main Content */}
-          <div className="flex-1 pb-16 sm:pb-0">
-            {children}
-          </div>
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <div className="sm:pl-64">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Routes>
+            <Route index element={<Navigate to="/demo/widget" replace />} />
+            <Route path="widget" element={<WidgetDemo />} />
+            <Route path="jobs" element={<JobList />} />
+            <Route path="chats" element={<ChatList />} />
+            <Route path="pricing" element={<PricingRules />} />
+            <Route path="stats" element={<Stats />} />
+          </Routes>
+        </div>
+      </div>
+
+      {/* Mobile navigation */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
         <div className="flex justify-around">
           {navigation.map((item) => {
-            const fullPath = `/demo/${item.href}`;
-            const isActive = item.end 
-              ? location.pathname === '/demo'
-              : location.pathname === fullPath;
+            const Icon = item.icon;
             return (
               <Link
                 key={item.name}
                 to={item.href}
                 className={`
-                  flex flex-col items-center px-2 py-3 text-xs font-medium
-                  ${isActive 
-                    ? 'text-blue-700' 
-                    : 'text-gray-600'}
+                  flex flex-col items-center px-2 py-2 text-xs font-medium
+                  ${location.pathname === item.href
+                    ? 'text-blue-600'
+                    : 'text-gray-600 hover:text-gray-900'}
                 `}
               >
-                <item.icon className="h-6 w-6 mb-1" />
+                <Icon className="h-6 w-6" />
                 {item.name}
               </Link>
             );
           })}
         </div>
-      </nav>
-    </div>
-  );
-}
-
-function DemoDashboard() {
-  return (
-    <div className="max-w-3xl mx-auto">
-      <Stats />
-    </div>
-  );
-}
-
-function DemoEstimates() {
-  return <ChatList fullWidth />;
-}
-
-function DemoJobs() {
-  return <JobList />;
-}
-
-function DemoSettings() {
-  return (
-    <div className="space-y-4 sm:space-y-8">
-      <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Pricing Rules</h2>
-        <PricingRules rules={DEMO_BUSINESS.rules} />
       </div>
     </div>
-  );
-}
-
-export function DemoPage() {
-  return (
-    <DemoLayout>
-      <Routes>
-        <Route index element={<DemoDashboard />} />
-        <Route path="estimates" element={<DemoEstimates />} />
-        <Route path="jobs" element={<DemoJobs />} />
-        <Route path="widget" element={<WidgetDemo />} />
-        <Route path="settings" element={<DemoSettings />} />
-      </Routes>
-    </DemoLayout>
   );
 } 
