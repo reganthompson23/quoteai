@@ -8,7 +8,7 @@ export default function PetesWebsite() {
       <header className="relative bg-blue-600 text-white">
         <div className="absolute inset-0">
           <img
-            src="/images/painting-hero.jpg"
+            src="/images/demo-hero.jpg"
             alt="Professional painter at work"
             className="w-full h-full object-cover opacity-30"
           />
@@ -70,7 +70,7 @@ export default function PetesWebsite() {
             <div>
               <div className="aspect-w-4 aspect-h-3 bg-gray-200 rounded-lg mb-4 overflow-hidden">
                 <img
-                  src="/images/victorian-home.jpg"
+                  src="/images/demo-victorian.jpg"
                   alt="Victorian Heritage Home"
                   className="w-full h-full object-cover"
                 />
@@ -81,7 +81,7 @@ export default function PetesWebsite() {
             <div>
               <div className="aspect-w-4 aspect-h-3 bg-gray-200 rounded-lg mb-4 overflow-hidden">
                 <img
-                  src="/images/apartment-complex.jpg"
+                  src="/images/demo-apartment.jpg"
                   alt="Modern Apartment Complex"
                   className="w-full h-full object-cover"
                 />
@@ -92,7 +92,7 @@ export default function PetesWebsite() {
             <div>
               <div className="aspect-w-4 aspect-h-3 bg-gray-200 rounded-lg mb-4 overflow-hidden">
                 <img
-                  src="/images/queenslander.jpg"
+                  src="/images/demo-queenslander.jpg"
                   alt="Queenslander Restoration"
                   className="w-full h-full object-cover"
                 />
