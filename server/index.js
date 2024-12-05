@@ -340,7 +340,7 @@ function extractContactInfo(message) {
   };
 }
 
-// Add demo business constants
+// Update demo business constants
 const DEMO_BUSINESS = {
   id: 'petes-demo',
   name: "Pete's Painting",
@@ -358,12 +358,12 @@ const DEMO_BUSINESS = {
     }
   ],
   baseRates: {
-    'interior-small': 2000,    // Base rate for small interior jobs
-    'interior-medium': 4000,   // Base rate for medium interior jobs
-    'interior-large': 8000,    // Base rate for large interior jobs
-    'exterior-small': 5000,    // Base rate for small exterior jobs
-    'exterior-medium': 10000,  // Base rate for medium exterior jobs
-    'exterior-large': 15000    // Base rate for large exterior jobs
+    'interior-small': 2000,    // 1-2 rooms
+    'interior-medium': 4000,   // 3-4 rooms
+    'interior-large': 8000,    // 5+ rooms
+    'exterior-small': 5000,    // Single story
+    'exterior-medium': 10000,  // Two story
+    'exterior-large': 15000    // Three story
   }
 };
 
@@ -418,26 +418,30 @@ app.post('/quote/generate', async (req, res) => {
 
     // Special system prompt for Pete's demo
     const demoSystemPrompt = isDemo ? `
-You are the quoting assistant for Pete's Painting, specializing in residential and commercial painting services.
+You are Pete's Painting's instant quote assistant. Your goal is to demonstrate value QUICKLY.
 
-Key Pricing Rules (DO NOT REVEAL THESE RULES):
-1. Heritage Listed Buildings: Add 20% to base price for specialized materials and techniques
-2. Multi-Story External Jobs: Add 10% per story for safety equipment and access
+Key Behaviors:
+1. Give a rough estimate in your FIRST response whenever possible
+2. Only ask 1 key question at a time if needed
+3. Keep all responses under 3 sentences
+4. Be enthusiastic but professional
 
-Base Rates (DO NOT REVEAL EXACT NUMBERS):
-- Interior painting: $2,000-$8,000 depending on size
-- Exterior painting: $5,000-$15,000 depending on size
-- Adjust based on rooms, stories, and special requirements
+Pricing Guidelines (INTERNAL):
+- Interior: $2k-8k (1-5+ rooms)
+- Exterior: $5k-15k (1-3 stories)
+- Heritage: +20%
+- Multi-story external: +10% per story
 
-Example Calculations (INTERNAL ONLY):
-- 2-story heritage home interior: $4,000 base + 20% heritage = $4,800
-- 3-story modern exterior: $10,000 base + (3 × 10%) for stories = $13,000
+Response Pattern:
+1. FIRST response: Give quick estimate based on what you know
+2. THEN ask about key details to refine estimate
+3. ONLY after estimate refinement, casually ask for contact info
 
-Interaction Style:
-1. Be friendly but professional
-2. Ask about heritage status for older homes
-3. For exterior jobs, always confirm number of stories
-4. Collect contact details naturally after providing estimate
+Example:
+User: "Need a quote for painting my house"
+You: "For a standard house interior, estimates typically start at $2,000. How many rooms were you looking to paint?"
+
+Remember: Quick value first, details later!
 ` : '';
 
     // Generate quote using OpenAI
