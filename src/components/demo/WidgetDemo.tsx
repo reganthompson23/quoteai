@@ -7,33 +7,23 @@ export default function WidgetDemo() {
     const script = document.createElement('script');
     script.src = '/widget.js';
     script.setAttribute('data-business-id', 'petes-demo');
-    script.setAttribute('data-auto-open', 'true');
-    script.setAttribute('data-preview-mode', 'true');
     
-    // Function to try opening the widget
-    const tryOpenWidget = () => {
-      // Try both methods of opening
-      window.dispatchEvent(new CustomEvent('quoteai:open'));
-      const widget = document.querySelector('.quoteai-widget');
-      if (widget) {
-        widget.classList.remove('hidden');
-        widget.classList.add('flex');
-      }
+    // Wait for script to load before trying to open widget
+    script.onload = () => {
+      // Give a small delay for widget to initialize
+      setTimeout(() => {
+        const widget = document.querySelector('.quoteai-chat');
+        if (widget) {
+          widget.classList.add('open');
+        }
+      }, 1000);
     };
-
-    // Try multiple times to ensure widget opens
-    const timers = [
-      setTimeout(tryOpenWidget, 500),
-      setTimeout(tryOpenWidget, 1000),
-      setTimeout(tryOpenWidget, 2000)
-    ];
 
     // Add script to document
     document.body.appendChild(script);
 
     return () => {
-      // Cleanup widget and timers when component unmounts
-      timers.forEach(timer => clearTimeout(timer));
+      // Cleanup widget when component unmounts
       document.body.removeChild(script);
       const widget = document.querySelector('.quoteai-widget');
       if (widget && widget.parentElement) {
