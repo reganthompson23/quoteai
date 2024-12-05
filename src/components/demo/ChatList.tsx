@@ -7,62 +7,62 @@ interface ChatListProps {
 
 const MOCK_CHATS = [
   {
-    id: 'demo-1',
+    id: '1',
     customerName: 'Sarah Johnson',
-    lastMessage: "That sounds perfect for my Victorian home. When can you start?",
     createdAt: new Date(2024, 0, 15, 14, 30),
+    lastMessage: 'That sounds perfect for my Victorian home. When can you start?',
     messages: [
       {
         role: 'user',
-        content: "Hi, I need a quote for painting my Victorian heritage listed home in Paddington. It's 2 stories, 4 bedrooms."
+        content: 'Hi, I need a quote for painting my heritage listed Victorian home. It\'s 2 stories, 4 bedrooms with a lot of detailed trim work.'
       },
       {
         role: 'assistant',
-        content: "I'd be happy to help you with a quote for your Victorian home. Since it's a heritage listed property, we'll need to use specific materials and techniques to preserve its character. For a 2-story, 4-bedroom Victorian home, our base rate would be $12,000. However, being heritage listed adds a 20% premium for specialized materials and extra care, bringing the estimate to $14,400. Would you like to discuss color schemes and timing?"
+        content: 'For a heritage listed 2-story Victorian home with 4 bedrooms, our base rate would be $23,750. Since this is a heritage listed property, we add a 20% surcharge for specialized materials and extra care required, bringing the total to $28,500. This includes full interior and exterior painting, period-appropriate colors, and all necessary preparation. Would you like to discuss specific color schemes?'
       },
       {
         role: 'user',
-        content: "That sounds perfect for my Victorian home. When can you start?"
+        content: 'That sounds perfect for my Victorian home. When can you start?'
       }
     ]
   },
   {
-    id: 'demo-2',
+    id: '2',
     customerName: 'Mike Chen',
-    lastMessage: "Great, looking forward to the modern look!",
     createdAt: new Date(2024, 0, 14, 9, 15),
+    lastMessage: 'Great, looking forward to the modern look!',
     messages: [
       {
         role: 'user',
-        content: "Looking for an exterior paint job on my 3-story modern apartment building."
+        content: 'Looking for an exterior paint job on my 3-story modern apartment building.'
       },
       {
         role: 'assistant',
-        content: "For a 3-story modern apartment building exterior, our base rate would be $15,000. Since this is an external paint job on a multi-story building, we add a 10% surcharge per story for safety equipment and access requirements. With 3 stories, that's a 30% addition, bringing the total estimate to $19,500. This includes preparation, premium weather-resistant paint, and all necessary equipment. Would you like to discuss color options?"
+        content: 'For a 3-story modern apartment building exterior, our base rate would be $25,000. Since this is an external paint job on a multi-story building, we add a 10% surcharge per story for safety equipment and access requirements. With 3 stories, that\'s a 30% addition, bringing the total estimate to $32,000. This includes preparation, premium weather-resistant paint, and all necessary equipment. Would you like to discuss color options?'
       },
       {
         role: 'user',
-        content: "Great, looking forward to the modern look!"
+        content: 'Great, looking forward to the modern look!'
       }
     ]
   },
   {
-    id: 'demo-3',
+    id: '3',
     customerName: 'Emma Wilson',
-    lastMessage: "Thanks for the detailed quote. I'll discuss with my partner.",
     createdAt: new Date(2024, 0, 13, 16, 45),
+    lastMessage: 'Thanks for the detailed quote. I\'ll discuss with my partner.',
     messages: [
       {
         role: 'user',
-        content: "Hi, I'm looking to get my Queenslander painted. It's heritage listed and needs some restoration work."
+        content: 'Need a quote for restoring and painting my heritage Queenslander home.'
       },
       {
         role: 'assistant',
-        content: "Hello! For a heritage listed Queenslander, we'll need to take special care with the restoration and painting process. Our base rate for a typical Queenslander is $14,000, and with the heritage listing, we add a 20% premium for specialized materials and techniques, bringing the estimate to $16,800. This includes preparation, repairs to any weather damage, and full exterior painting including the veranda and all trim work. Would you like more details about our heritage restoration process?"
+        content: 'For a heritage listed Queenslander restoration, our base rate would be $20,400. With the 20% heritage surcharge for specialized materials and techniques, the total comes to $24,500. This includes full exterior restoration, veranda and trim detail work, weather damage repair, and a traditional color scheme. Would you like more details about our heritage restoration process?'
       },
       {
         role: 'user',
-        content: "Thanks for the detailed quote. I'll discuss with my partner."
+        content: 'Thanks for the detailed quote. I\'ll discuss with my partner.'
       }
     ]
   }

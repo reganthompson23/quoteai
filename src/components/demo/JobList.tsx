@@ -19,7 +19,7 @@ const MOCK_JOBS: Job[] = [
     customerName: 'Sarah Johnson',
     description: 'Victorian Heritage Home - Interior & Exterior',
     status: 'completed',
-    value: 14400,
+    value: 28500,
     completedDate: new Date(2024, 0, 20),
     details: [
       'Heritage listed 2-story Victorian home',
@@ -34,7 +34,7 @@ const MOCK_JOBS: Job[] = [
     customerName: 'Mike Chen',
     description: 'Modern Apartment Building - Exterior',
     status: 'completed',
-    value: 19500,
+    value: 32000,
     completedDate: new Date(2024, 0, 18),
     details: [
       '3-story modern apartment complex',
@@ -49,7 +49,7 @@ const MOCK_JOBS: Job[] = [
     customerName: 'Emma Wilson',
     description: 'Queenslander Home Restoration',
     status: 'in_progress',
-    value: 16800,
+    value: 24500,
     startDate: new Date(2024, 0, 25),
     details: [
       'Heritage listed Queenslander',
