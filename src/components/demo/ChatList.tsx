@@ -5,124 +5,148 @@ interface ChatListProps {
   fullWidth?: boolean;
 }
 
-const MOCK_CHATS = [
+const MOCK_CHATS: Chat[] = [
   {
-    id: '1',
-    customerName: 'Sarah Johnson',
-    createdAt: new Date(2024, 0, 15, 14, 30),
-    lastMessage: 'That sounds perfect for my Victorian home. When can you start?',
-    messages: [
-      {
-        role: 'user',
-        content: 'Hi, I need a quote for painting my heritage listed Victorian home. It\'s 2 stories, 4 bedrooms with a lot of detailed trim work.'
-      },
-      {
-        role: 'assistant',
-        content: 'For a heritage listed 2-story Victorian home with 4 bedrooms, our base rate would be $23,750. Since this is a heritage listed property, we add a 20% surcharge for specialized materials and extra care required, bringing the total to $28,500. This includes full interior and exterior painting, period-appropriate colors, and all necessary preparation. Would you like to discuss specific color schemes?'
-      },
-      {
-        role: 'user',
-        content: 'That sounds perfect for my Victorian home. When can you start?'
-      }
-    ]
-  },
-  {
-    id: '2',
-    customerName: 'Mike Chen',
-    createdAt: new Date(2024, 0, 14, 9, 15),
-    lastMessage: 'Great, looking forward to the modern look!',
-    messages: [
-      {
-        role: 'user',
-        content: 'Looking for an exterior paint job on my 3-story modern apartment building.'
-      },
-      {
-        role: 'assistant',
-        content: 'For a 3-story modern apartment building exterior, our base rate would be $25,000. Since this is an external paint job on a multi-story building, we add a 10% surcharge per story for safety equipment and access requirements. With 3 stories, that\'s a 30% addition, bringing the total estimate to $32,000. This includes preparation, premium weather-resistant paint, and all necessary equipment. Would you like to discuss color options?'
-      },
-      {
-        role: 'user',
-        content: 'Great, looking forward to the modern look!'
-      }
-    ]
-  },
-  {
-    id: '3',
-    customerName: 'Emma Wilson',
-    createdAt: new Date(2024, 0, 13, 16, 45),
-    lastMessage: 'Thanks for the detailed quote. I\'ll discuss with my partner.',
-    messages: [
-      {
-        role: 'user',
-        content: 'Need a quote for restoring and painting my heritage Queenslander home.'
-      },
-      {
-        role: 'assistant',
-        content: 'For a heritage listed Queenslander restoration, our base rate would be $20,400. With the 20% heritage surcharge for specialized materials and techniques, the total comes to $24,500. This includes full exterior restoration, veranda and trim detail work, weather damage repair, and a traditional color scheme. Would you like more details about our heritage restoration process?'
-      },
-      {
-        role: 'user',
-        content: 'Thanks for the detailed quote. I\'ll discuss with my partner.'
-      }
-    ]
-  },
-  {
-    id: '4',
+    id: 'chat-1',
     customerName: 'David Thompson',
-    createdAt: new Date(2024, 0, 12, 11, 20),
-    lastMessage: 'Perfect, that works for my budget. How soon can you start?',
     messages: [
       {
-        role: 'user',
-        content: 'I have a small 2-bedroom unit that needs painting inside. Two bedrooms, one bathroom, kitchen, and living room. There\'s a crack in the living room wall that needs patching. Unit is empty and I want standard white paint throughout.'
+        id: '1',
+        type: 'customer',
+        content: 'Hi, I need a quote for painting my 2-bedroom unit.',
+        timestamp: new Date(2024, 0, 12, 11, 20)
       },
       {
-        role: 'assistant',
-        content: 'For your 2-bedroom unit interior, our base rate would be $4,800. This includes all walls, ceilings, and trims in all rooms, crack repair in the living room, and premium washable white paint throughout. Since the unit is empty, we won\'t need to factor in furniture moving. We use high-quality paint that\'s easy to clean and will last for years. Would you like to proceed with scheduling?'
+        id: '2',
+        type: 'business',
+        content: 'I can help with that. Would you like interior painting only?',
+        timestamp: new Date(2024, 0, 12, 11, 22)
       },
       {
-        role: 'user',
-        content: 'Perfect, that works for my budget. How soon can you start?'
+        id: '3',
+        type: 'customer',
+        content: 'Perfect, that works for my budget. How soon can you start?',
+        timestamp: new Date(2024, 0, 12, 11, 20)
       }
     ]
   },
   {
-    id: '5',
+    id: 'chat-2',
     customerName: 'Lisa Martinez',
-    createdAt: new Date(2024, 0, 8, 15, 30),
-    lastMessage: 'The quote sounds reasonable. I\'d like to go ahead with the white and grey color scheme.',
     messages: [
       {
-        role: 'user',
-        content: 'Need the exterior of my two-story weatherboard house painted. About 200 square meters, including walls, trims, and window frames. Some peeling paint needs sanding. Want white walls and dark grey trims.'
+        id: '1',
+        type: 'customer',
+        content: 'Looking for an exterior paint job quote for my two-story house.',
+        timestamp: new Date(2024, 0, 8, 15, 30)
       },
       {
-        role: 'assistant',
-        content: 'For your two-story weatherboard house exterior (200 square meters), our quote would be $12,500. This covers all preparation work including sanding the peeling areas, premium exterior paint for the walls in white, and hard-wearing trim paint in dark grey. We\'ll also paint the window frames and front porch. The price includes all necessary equipment and a full clean-up after completion. Would you like to proceed with the white and grey color scheme?'
+        id: '2',
+        type: 'business',
+        content: 'I can provide a quote. What colors were you thinking of?',
+        timestamp: new Date(2024, 0, 8, 15, 32)
       },
       {
-        role: 'user',
-        content: 'The quote sounds reasonable. I\'d like to go ahead with the white and grey color scheme.'
+        id: '3',
+        type: 'customer',
+        content: 'The quote sounds reasonable. I\'d like to go ahead with the white and grey color scheme.',
+        timestamp: new Date(2024, 0, 8, 15, 30)
       }
     ]
   },
   {
-    id: '6',
+    id: 'chat-3',
     customerName: 'James Anderson',
-    createdAt: new Date(2024, 0, 22, 13, 15),
-    lastMessage: 'That\'s within our budget. When can you do an in-person inspection?',
     messages: [
       {
-        role: 'user',
-        content: 'Looking for a quote on my single-story 4-bedroom house. Need interior walls, ceilings, and trims painted, plus exterior fascia and window frames. Some plaster cracks need fixing inside.'
+        id: '1',
+        type: 'customer',
+        content: 'Need a quote for interior and exterior trim painting.',
+        timestamp: new Date(2024, 0, 22, 13, 15)
       },
       {
-        role: 'assistant',
-        content: 'For your 4-bedroom single-story house, we can provide a comprehensive package at $15,800. This includes all interior walls, ceilings, and trims, plaster crack repairs, and exterior trim work (fascia boards and window frames). We\'ll use premium paints suitable for each area, and all preparation work is included. Would you like to schedule an inspection to confirm the scope and discuss color options?'
+        id: '2',
+        type: 'business',
+        content: 'I can help with that. Is this for a single-story house?',
+        timestamp: new Date(2024, 0, 22, 13, 17)
       },
       {
-        role: 'user',
-        content: 'That\'s within our budget. When can you do an in-person inspection?'
+        id: '3',
+        type: 'customer',
+        content: 'That\'s within our budget. When can you do an in-person inspection?',
+        timestamp: new Date(2024, 0, 22, 13, 15)
+      }
+    ]
+  },
+  {
+    id: 'chat-4',
+    customerName: 'Emma Wilson',
+    messages: [
+      {
+        id: '1',
+        type: 'customer',
+        content: 'Hi, I need a quote for my Queenslander restoration.',
+        timestamp: new Date(2024, 0, 13, 16, 45)
+      },
+      {
+        id: '2',
+        type: 'business',
+        content: 'I have experience with heritage homes. Would you like a full restoration quote?',
+        timestamp: new Date(2024, 0, 13, 16, 47)
+      },
+      {
+        id: '3',
+        type: 'customer',
+        content: 'Thanks for the detailed quote. I\'ll discuss with my partner.',
+        timestamp: new Date(2024, 0, 13, 16, 45)
+      }
+    ]
+  },
+  {
+    id: 'chat-5',
+    customerName: 'Sarah Johnson',
+    messages: [
+      {
+        id: '1',
+        type: 'customer',
+        content: 'Looking for a quote on my Victorian heritage home.',
+        timestamp: new Date(2024, 0, 15, 14, 30)
+      },
+      {
+        id: '2',
+        type: 'business',
+        content: 'I specialize in heritage homes. Would you like both interior and exterior?',
+        timestamp: new Date(2024, 0, 15, 14, 32)
+      },
+      {
+        id: '3',
+        type: 'customer',
+        content: 'That sounds perfect for my Victorian home. When can you start?',
+        timestamp: new Date(2024, 0, 15, 14, 30)
+      }
+    ]
+  },
+  {
+    id: 'chat-6',
+    customerName: 'Mike Chen',
+    messages: [
+      {
+        id: '1',
+        type: 'customer',
+        content: 'Need a quote for exterior painting of an apartment building.',
+        timestamp: new Date(2024, 0, 14, 9, 15)
+      },
+      {
+        id: '2',
+        type: 'business',
+        content: 'I can help with commercial projects. How many stories is the building?',
+        timestamp: new Date(2024, 0, 14, 9, 17)
+      },
+      {
+        id: '3',
+        type: 'customer',
+        content: 'Great, looking forward to the modern look!',
+        timestamp: new Date(2024, 0, 14, 9, 15)
       }
     ]
   }
@@ -146,10 +170,10 @@ export function ChatList({ fullWidth = false }: ChatListProps) {
               <div className="flex justify-between items-start">
                 <p className="text-sm font-medium text-blue-600">{chat.customerName}</p>
                 <p className="text-xs text-gray-500 ml-2">
-                  {format(chat.createdAt, 'MMM d, h:mm a')}
+                  {format(chat.messages[0].timestamp, 'MMM d, h:mm a')}
                 </p>
               </div>
-              <p className="text-sm text-gray-600 line-clamp-2">{chat.lastMessage}</p>
+              <p className="text-sm text-gray-600 line-clamp-2">{chat.messages[0].content}</p>
             </button>
             
             {selectedChat === chat.id && (
@@ -158,12 +182,12 @@ export function ChatList({ fullWidth = false }: ChatListProps) {
                   <div
                     key={idx}
                     className={`mb-3 ${
-                      message.role === 'user' ? 'text-right' : 'text-left'
+                      message.type === 'customer' ? 'text-right' : 'text-left'
                     }`}
                   >
                     <div
                       className={`inline-block rounded-lg px-3 py-2 sm:px-4 sm:py-2 max-w-[85%] ${
-                        message.role === 'user'
+                        message.type === 'customer'
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-200 text-gray-900'
                       }`}

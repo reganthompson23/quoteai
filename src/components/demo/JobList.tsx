@@ -16,51 +16,6 @@ interface Job {
 const MOCK_JOBS: Job[] = [
   {
     id: 'job-1',
-    customerName: 'Sarah Johnson',
-    description: 'Victorian Heritage Home - Interior & Exterior',
-    status: 'completed',
-    value: 28500,
-    completedDate: new Date(2024, 0, 20),
-    details: [
-      'Heritage listed 2-story Victorian home',
-      'Full interior and exterior painting',
-      'Period-appropriate color scheme',
-      'Special heritage-approved materials used',
-      '4 bedrooms, 2 bathrooms, living areas'
-    ]
-  },
-  {
-    id: 'job-2',
-    customerName: 'Mike Chen',
-    description: 'Modern Apartment Building - Exterior',
-    status: 'completed',
-    value: 32000,
-    completedDate: new Date(2024, 0, 18),
-    details: [
-      '3-story modern apartment complex',
-      'Full exterior repaint',
-      'Weather-resistant coating application',
-      'Safety equipment for height work',
-      'Modern gray and white color scheme'
-    ]
-  },
-  {
-    id: 'job-3',
-    customerName: 'Emma Wilson',
-    description: 'Queenslander Home Restoration',
-    status: 'in_progress',
-    value: 24500,
-    startDate: new Date(2024, 0, 25),
-    details: [
-      'Heritage listed Queenslander',
-      'Exterior restoration and repainting',
-      'Veranda and trim detail work',
-      'Weather damage repair included',
-      'Traditional color palette'
-    ]
-  },
-  {
-    id: 'job-4',
     customerName: 'David Thompson',
     description: '2-Bedroom Unit - Full Interior',
     status: 'completed',
@@ -75,7 +30,7 @@ const MOCK_JOBS: Job[] = [
     ]
   },
   {
-    id: 'job-5',
+    id: 'job-2',
     customerName: 'Lisa Martinez',
     description: 'Two-Story House - Exterior Only',
     status: 'completed',
@@ -90,7 +45,7 @@ const MOCK_JOBS: Job[] = [
     ]
   },
   {
-    id: 'job-6',
+    id: 'job-3',
     customerName: 'James Anderson',
     description: 'Single-Story House - Interior & Exterior Trim',
     status: 'in_progress',
@@ -102,6 +57,51 @@ const MOCK_JOBS: Job[] = [
       'Exterior trim and fascia boards only',
       'Minor plaster repairs included',
       'Neutral color scheme throughout'
+    ]
+  },
+  {
+    id: 'job-4',
+    customerName: 'Emma Wilson',
+    description: 'Queenslander Home Restoration',
+    status: 'in_progress',
+    value: 24500,
+    startDate: new Date(2024, 0, 25),
+    details: [
+      'Heritage listed Queenslander',
+      'Exterior restoration and repainting',
+      'Veranda and trim detail work',
+      'Weather damage repair included',
+      'Traditional color palette'
+    ]
+  },
+  {
+    id: 'job-5',
+    customerName: 'Sarah Johnson',
+    description: 'Victorian Heritage Home - Interior & Exterior',
+    status: 'completed',
+    value: 28500,
+    completedDate: new Date(2024, 0, 20),
+    details: [
+      'Heritage listed 2-story Victorian home',
+      'Full interior and exterior painting',
+      'Period-appropriate color scheme',
+      'Special heritage-approved materials used',
+      '4 bedrooms, 2 bathrooms, living areas'
+    ]
+  },
+  {
+    id: 'job-6',
+    customerName: 'Mike Chen',
+    description: 'Modern Apartment Building - Exterior',
+    status: 'completed',
+    value: 32000,
+    completedDate: new Date(2024, 0, 18),
+    details: [
+      '3-story modern apartment complex',
+      'Full exterior repaint',
+      'Weather-resistant coating application',
+      'Safety equipment for height work',
+      'Modern gray and white color scheme'
     ]
   }
 ];
