@@ -3,7 +3,7 @@ import PetesWebsite from './PetesWebsite';
 
 export default function WidgetDemo() {
   React.useEffect(() => {
-    // Load the widget script with demo configuration
+    // Load the widget script with Pete's demo configuration
     const script = document.createElement('script');
     script.src = '/widget.js';
     script.setAttribute('data-business-id', 'petes-demo');

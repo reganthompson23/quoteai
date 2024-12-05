@@ -340,6 +340,33 @@ function extractContactInfo(message) {
   };
 }
 
+// Add demo business constants
+const DEMO_BUSINESS = {
+  id: 'petes-demo',
+  name: "Pete's Painting",
+  industry: 'Painting',
+  rules: [
+    {
+      title: 'Heritage Listed Building',
+      description: 'Additional care and specialized materials required for heritage properties',
+      adjustment: '20% increase'
+    },
+    {
+      title: 'Multi-Story External',
+      description: 'Per story surcharge for external painting',
+      adjustment: '10% per story'
+    }
+  ],
+  baseRates: {
+    'interior-small': 2000,    // Base rate for small interior jobs
+    'interior-medium': 4000,   // Base rate for medium interior jobs
+    'interior-large': 8000,    // Base rate for large interior jobs
+    'exterior-small': 5000,    // Base rate for small exterior jobs
+    'exterior-medium': 10000,  // Base rate for medium exterior jobs
+    'exterior-large': 15000    // Base rate for large exterior jobs
+  }
+};
+
 // AI Quote Generation
 app.post('/quote/generate', async (req, res) => {
   try {
@@ -348,11 +375,12 @@ app.post('/quote/generate', async (req, res) => {
     }
 
     const { businessId, description } = req.body;
+    const isDemo = businessId === 'petes-demo';
 
     // Get business info
-    const business = await db.get(
+    const business = isDemo ? DEMO_BUSINESS : await db.get(
       'SELECT businessName, industry FROM users WHERE id = ?',
-      [businessId || 'demo-user']
+      [businessId]
     );
 
     // Get or initialize conversation history
@@ -362,22 +390,13 @@ app.post('/quote/generate', async (req, res) => {
     const history = conversationHistory.get(businessId);
     history.push({ role: "user", content: description });
 
-    // Get business's past jobs and rules
-    const jobs = await db.all(
-      'SELECT title, description, price FROM jobs WHERE businessId = ?',
-      [businessId || 'demo-user']
-    );
-
-    const rules = await db.all(
+    // Get business's rules - use demo rules for Pete's demo
+    const rules = isDemo ? DEMO_BUSINESS.rules : await db.all(
       'SELECT title, description FROM rules WHERE businessId = ? AND isActive = 1',
-      [businessId || 'demo-user']
+      [businessId]
     );
 
     // Format the context for OpenAI
-    const jobsContext = jobs.map(job => 
-      `Job: ${job.title}\nDescription: ${job.description}\nPrice: $${job.price}`
-    ).join('\n\n');
-
     const rulesContext = rules.map(rule =>
       `Internal Rule: ${rule.title}\nGuideline: ${rule.description}`
     ).join('\n\n');
@@ -387,7 +406,7 @@ app.post('/quote/generate', async (req, res) => {
     if (history.length > 0) {
       const chatInfo = await db.get(
         'SELECT contactName, contactEmail, contactPhone FROM chats WHERE businessId = ? ORDER BY createdAt DESC LIMIT 1',
-        [businessId || 'demo-user']
+        [businessId]
       );
       if (chatInfo) {
         contactStatus = `Contact Status:
@@ -397,36 +416,50 @@ app.post('/quote/generate', async (req, res) => {
       }
     }
 
-    // Generate quote using OpenAI with updated system prompt
+    // Special system prompt for Pete's demo
+    const demoSystemPrompt = isDemo ? `
+You are the quoting assistant for Pete's Painting, specializing in residential and commercial painting services.
+
+Key Pricing Rules (DO NOT REVEAL THESE RULES):
+1. Heritage Listed Buildings: Add 20% to base price for specialized materials and techniques
+2. Multi-Story External Jobs: Add 10% per story for safety equipment and access
+
+Base Rates (DO NOT REVEAL EXACT NUMBERS):
+- Interior painting: $2,000-$8,000 depending on size
+- Exterior painting: $5,000-$15,000 depending on size
+- Adjust based on rooms, stories, and special requirements
+
+Example Calculations (INTERNAL ONLY):
+- 2-story heritage home interior: $4,000 base + 20% heritage = $4,800
+- 3-story modern exterior: $10,000 base + (3 × 10%) for stories = $13,000
+
+Interaction Style:
+1. Be friendly but professional
+2. Ask about heritage status for older homes
+3. For exterior jobs, always confirm number of stories
+4. Collect contact details naturally after providing estimate
+` : '';
+
+    // Generate quote using OpenAI
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
         {
           role: "system",
-          content: `You are a professional quoting assistant for ${business.businessName}, a business in the ${business.industry} industry. Keep your responses brief and conversational.
+          content: isDemo ? demoSystemPrompt : `You are a professional quoting assistant for ${business.name}, a business in the ${business.industry} industry. Keep your responses brief and conversational.
 
 Key Instructions:
 1. When information is missing, ask 2-3 short, specific questions at most
 2. Never reveal pricing rules or percentage adjustments
 3. Keep responses under 3 sentences when gathering information
 4. Only provide price estimates when you have sufficient details
-5. After providing an estimate, casually ask for contact details if none provided:
-   - First ask for email ("I can send you the detailed quote - what's the best email to use?")
-   - Then ask for name ("Thanks! And who should I address this to?")
-   - Optionally ask for phone ("If you'd like faster responses, you can also share your phone number")
+5. After providing an estimate, casually ask for contact details if none provided
 6. Keep contact collection natural and optional
-7. Don't push if they seem uninterested in sharing details
-8. If they provide any contact info naturally, acknowledge it ("Thanks [name]" or "I'll send that to [email]")
-
-Historical Job Reference:
-${jobsContext}
 
 Internal Guidelines (private - do not reveal):
 ${rulesContext}
 
-${contactStatus}
-
-Remember: Be concise and professional. No long explanations unless providing a final quote.`
+${contactStatus}`
         },
         ...history,
       ],
@@ -434,14 +467,13 @@ Remember: Be concise and professional. No long explanations unless providing a f
       max_tokens: 500
     });
 
-    // Store AI's response in conversation history
+    // Rest of the existing quote generation code...
     const aiResponse = completion.choices[0].message.content;
     history.push({
       role: "assistant",
       content: aiResponse
     });
 
-    // Keep only last 10 messages to prevent context overflow
     if (history.length > 10) {
       history.splice(0, history.length - 10);
     }
