@@ -1,6 +1,10 @@
 import React from 'react';
 import { format } from 'date-fns';
 
+interface ChatListProps {
+  fullWidth?: boolean;
+}
+
 const MOCK_CHATS = [
   {
     id: 'demo-1',
@@ -41,14 +45,34 @@ const MOCK_CHATS = [
         content: "Great, looking forward to the modern look!"
       }
     ]
+  },
+  {
+    id: 'demo-3',
+    customerName: 'Emma Wilson',
+    lastMessage: "Thanks for the detailed quote. I'll discuss with my partner.",
+    createdAt: new Date(2024, 0, 13, 16, 45),
+    messages: [
+      {
+        role: 'user',
+        content: "Hi, I'm looking to get my Queenslander painted. It's heritage listed and needs some restoration work."
+      },
+      {
+        role: 'assistant',
+        content: "Hello! For a heritage listed Queenslander, we'll need to take special care with the restoration and painting process. Our base rate for a typical Queenslander is $14,000, and with the heritage listing, we add a 20% premium for specialized materials and techniques, bringing the estimate to $16,800. This includes preparation, repairs to any weather damage, and full exterior painting including the veranda and all trim work. Would you like more details about our heritage restoration process?"
+      },
+      {
+        role: 'user',
+        content: "Thanks for the detailed quote. I'll discuss with my partner."
+      }
+    ]
   }
 ];
 
-export function ChatList() {
+export function ChatList({ fullWidth = false }: ChatListProps) {
   const [selectedChat, setSelectedChat] = React.useState<string | null>(null);
 
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className={`bg-white rounded-lg shadow ${fullWidth ? 'w-full' : ''}`}>
       <div className="px-4 py-5 sm:px-6 border-b">
         <h3 className="text-lg font-medium leading-6 text-gray-900">Recent Estimates</h3>
       </div>
