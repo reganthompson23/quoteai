@@ -3,20 +3,42 @@ import PetesWebsite from './PetesWebsite';
 
 export default function WidgetDemo() {
   React.useEffect(() => {
+    // Function to try opening the widget
+    const openWidget = () => {
+      // Try finding the chat container
+      const chatContainer = document.querySelector('.quoteai-chat');
+      if (chatContainer) {
+        chatContainer.classList.add('open');
+      }
+      
+      // Try finding the widget button and click it
+      const widgetButton = document.querySelector('.quoteai-button');
+      if (widgetButton) {
+        (widgetButton as HTMLElement).click();
+      }
+
+      // Also dispatch the open event
+      window.dispatchEvent(new CustomEvent('quoteai:open'));
+    };
+
     // Load the widget script with Pete's demo configuration
     const script = document.createElement('script');
     script.src = '/widget.js';
     script.setAttribute('data-business-id', 'petes-demo');
     
-    // Wait for script to load before trying to open widget
+    // Try opening multiple times after script loads
     script.onload = () => {
-      // Give a small delay for widget to initialize
-      setTimeout(() => {
-        const widget = document.querySelector('.quoteai-chat');
-        if (widget) {
-          widget.classList.add('open');
-        }
-      }, 1000);
+      // Try immediately
+      openWidget();
+      
+      // Try after delays
+      const timers = [
+        setTimeout(openWidget, 1000),
+        setTimeout(openWidget, 2000),
+        setTimeout(openWidget, 3000)
+      ];
+
+      return () => timers.forEach(timer => clearTimeout(timer));
     };
 
     // Add script to document
