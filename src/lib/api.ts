@@ -69,4 +69,40 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+
+  async resetUserPassword(userId: string, temporaryPassword: string) {
+    const response = await fetch(`${API_URL}/admin/users/${userId}/reset-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify({ temporaryPassword }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to reset password');
+    }
+
+    return response.json();
+  },
+
+  async changePassword(data: { currentPassword?: string; newPassword: string }) {
+    const response = await fetch(`${API_URL}/auth/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to change password');
+    }
+
+    return response.json();
+  },
 };

@@ -61,6 +61,31 @@ async function setupDatabase() {
       driver: sqlite3.Database,
     });
 
+    // Create users table with needsPasswordChange column
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE,
+        password TEXT,
+        businessName TEXT,
+        industry TEXT,
+        needsPasswordChange BOOLEAN DEFAULT 0,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Add needsPasswordChange column if it doesn't exist
+    try {
+      await db.exec(`
+        ALTER TABLE users 
+        ADD COLUMN needsPasswordChange BOOLEAN DEFAULT 0;
+      `);
+      console.log('Added needsPasswordChange column to users table');
+    } catch (error) {
+      // Column might already exist, which is fine
+      console.log('needsPasswordChange column might already exist:', error.message);
+    }
+
     // Check if tables exist
     const existingTables = await db.all("SELECT name FROM sqlite_master WHERE type='table';");
     console.log('Existing tables:', existingTables.map(t => t.name).join(', '));
@@ -79,18 +104,6 @@ async function setupDatabase() {
       // Column might already exist, which is fine
       console.log('isDeleted column might already exist:', error.message);
     }
-
-    await db.exec(`
-      CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        email TEXT UNIQUE,
-        password TEXT,
-        businessName TEXT,
-        industry TEXT,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-    console.log('Users table created');
 
     await db.exec(`
       CREATE TABLE IF NOT EXISTS jobs (
@@ -259,6 +272,7 @@ app.post('/auth/login', async (req, res) => {
         email: user.email,
         businessName: user.businessName,
         industry: user.industry,
+        needsPasswordChange: user.needsPasswordChange
       },
     });
   } catch (error) {
@@ -761,3 +775,68 @@ async function getNextChatNumber(businessId) {
   );
   return (result.maxNumber || 0) + 1;
 }
+
+// Admin reset password endpoint
+app.post('/admin/users/:id/reset-password', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { temporaryPassword } = req.body;
+
+    if (!temporaryPassword || temporaryPassword.length < 8) {
+      return res.status(400).json({ message: 'Temporary password must be at least 8 characters' });
+    }
+
+    // Hash the temporary password
+    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+
+    // Update user's password and set needsPasswordChange flag
+    await db.run(
+      'UPDATE users SET password = ?, needsPasswordChange = 1 WHERE id = ?',
+      [hashedPassword, id]
+    );
+
+    res.json({ message: 'Password reset successful' });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(500).json({ message: 'Failed to reset password' });
+  }
+});
+
+// User change password endpoint
+app.post('/auth/change-password', authenticateToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    // Get user's current password
+    const user = await db.get('SELECT * FROM users WHERE id = ?', [userId]);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify current password unless it's a forced change
+    if (!user.needsPasswordChange) {
+      const validPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!validPassword) {
+        return res.status(401).json({ message: 'Current password is incorrect' });
+      }
+    }
+
+    // Validate new password
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({ message: 'New password must be at least 8 characters' });
+    }
+
+    // Hash and update the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await db.run(
+      'UPDATE users SET password = ?, needsPasswordChange = 0 WHERE id = ?',
+      [hashedPassword, userId]
+    );
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Password change error:', error);
+    res.status(500).json({ message: 'Failed to change password' });
+  }
+});

@@ -3,6 +3,7 @@ export interface User {
   email: string;
   businessName: string;
   industry: string;
+  needsPasswordChange?: boolean;
 }
 
 export interface Job {
