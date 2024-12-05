@@ -57,14 +57,14 @@ export default function WidgetDemo() {
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
       <div className="px-4 py-5 sm:px-6 border-b">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h3 className="text-lg font-medium leading-6 text-gray-900">Widget Preview</h3>
             <p className="mt-1 text-sm text-gray-500">
               This is how your customers will see the chat widget on your website.
             </p>
           </div>
-          <div className="text-sm text-blue-600">
+          <div className="text-sm text-blue-600 font-medium">
             Try asking about painting services!
           </div>
         </div>
@@ -76,7 +76,7 @@ export default function WidgetDemo() {
         </div>
       </div>
 
-      <div className="h-[800px] overflow-y-auto relative">
+      <div className="h-[600px] sm:h-[800px] overflow-y-auto relative">
         <PetesWebsite />
       </div>
     </div>
