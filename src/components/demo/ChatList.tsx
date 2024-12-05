@@ -73,7 +73,7 @@ export function ChatList({ fullWidth = false }: ChatListProps) {
 
   return (
     <div className={`bg-white rounded-lg shadow ${fullWidth ? 'w-full' : ''}`}>
-      <div className="px-4 py-5 sm:px-6 border-b">
+      <div className="px-4 py-4 sm:px-6 border-b">
         <h3 className="text-lg font-medium leading-6 text-gray-900">Recent Estimates</h3>
       </div>
       <ul className="divide-y divide-gray-200">
@@ -81,19 +81,19 @@ export function ChatList({ fullWidth = false }: ChatListProps) {
           <li key={chat.id}>
             <button
               onClick={() => setSelectedChat(chat.id === selectedChat ? null : chat.id)}
-              className="w-full px-4 py-4 sm:px-6 hover:bg-gray-50 flex flex-col gap-1 text-left"
+              className="w-full px-3 py-3 sm:px-6 sm:py-4 hover:bg-gray-50 flex flex-col gap-1 text-left"
             >
               <div className="flex justify-between items-start">
                 <p className="text-sm font-medium text-blue-600">{chat.customerName}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 ml-2">
                   {format(chat.createdAt, 'MMM d, h:mm a')}
                 </p>
               </div>
-              <p className="text-sm text-gray-600 truncate">{chat.lastMessage}</p>
+              <p className="text-sm text-gray-600 line-clamp-2">{chat.lastMessage}</p>
             </button>
             
             {selectedChat === chat.id && (
-              <div className="px-4 py-3 bg-gray-50">
+              <div className="px-3 py-3 sm:px-6 sm:py-4 bg-gray-50">
                 {chat.messages.map((message, idx) => (
                   <div
                     key={idx}
@@ -102,13 +102,13 @@ export function ChatList({ fullWidth = false }: ChatListProps) {
                     }`}
                   >
                     <div
-                      className={`inline-block rounded-lg px-4 py-2 max-w-[80%] ${
+                      className={`inline-block rounded-lg px-3 py-2 sm:px-4 sm:py-2 max-w-[85%] ${
                         message.role === 'user'
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-200 text-gray-900'
                       }`}
                     >
-                      <p className="text-sm">{message.content}</p>
+                      <p className="text-sm break-words">{message.content}</p>
                     </div>
                   </div>
                 ))}

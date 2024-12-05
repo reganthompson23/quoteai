@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Link, Routes, Route, useLocation } from 'react-router-dom';
 import { ChatList } from '../components/demo/ChatList';
 import { PricingRules } from '../components/demo/PricingRules';
 import { Stats } from '../components/demo/Stats';
@@ -49,10 +49,11 @@ function DemoLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header */}
       <header className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">
               {DEMO_BUSINESS.name}
             </h1>
             <p className="text-sm text-gray-500">{DEMO_BUSINESS.description}</p>
@@ -63,10 +64,10 @@ function DemoLayout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex gap-8">
-          {/* Sidebar Navigation */}
-          <div className="w-64 flex-shrink-0">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row sm:gap-8">
+          {/* Desktop Sidebar Navigation */}
+          <div className="hidden sm:block w-64 flex-shrink-0">
             <nav className="space-y-1">
               {navigation.map((item) => {
                 const fullPath = `/demo/${item.href}`;
@@ -93,22 +94,49 @@ function DemoLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="flex-1 pb-16 sm:pb-0">
             {children}
           </div>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+        <div className="flex justify-around">
+          {navigation.map((item) => {
+            const fullPath = `/demo/${item.href}`;
+            const isActive = item.end 
+              ? location.pathname === '/demo'
+              : location.pathname === fullPath;
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`
+                  flex flex-col items-center px-2 py-3 text-xs font-medium
+                  ${isActive 
+                    ? 'text-blue-700' 
+                    : 'text-gray-600'}
+                `}
+              >
+                <item.icon className="h-6 w-6 mb-1" />
+                {item.name}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }
 
 function DemoDashboard() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
       <div className="lg:col-span-2">
         <ChatList />
       </div>
-      <div className="space-y-8">
+      <div className="space-y-4 sm:space-y-8">
         <Stats />
         <PricingRules rules={DEMO_BUSINESS.rules} />
       </div>
@@ -126,7 +154,7 @@ function DemoJobs() {
 
 function DemoSettings() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8">
       <div className="bg-white shadow rounded-lg p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Pricing Rules</h2>
         <PricingRules rules={DEMO_BUSINESS.rules} />
