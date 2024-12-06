@@ -7,14 +7,17 @@ import {
   MessageSquare, 
   Settings, 
   MessageCircle,
-  PlusCircle
+  PlusCircle,
+  BarChart3,
+  UserCircle
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Jobs', href: '/dashboard/jobs', icon: LayoutGrid },
-  { name: 'Estimates', href: '/dashboard/chats', icon: MessageSquare },
+  { name: 'Chats', href: '/dashboard/chats', icon: MessageSquare },
   { name: 'Pricing Rules', href: '/dashboard/pricing', icon: Settings },
-  { name: 'Widget', href: '/dashboard/widget', icon: MessageCircle },
+  { name: 'Widget', href: '/dashboard/widget', icon: BarChart3 },
+  { name: 'Details', href: '/dashboard/details', icon: UserCircle },
 ];
 
 const actions = [

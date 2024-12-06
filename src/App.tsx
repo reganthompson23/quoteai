@@ -18,6 +18,7 @@ import { SignupPage } from './pages/auth/SignupPage';
 import { DemoPage } from './pages/DemoPage';
 import { useAuthStore } from './store/auth';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { Details } from './components/dashboard/Details';
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,7 @@ function App() {
               <Route path="widget" element={<WidgetPreview />} />
               <Route path="chats" element={<ChatList />} />
               <Route path="chats/:id" element={<ChatDetail />} />
+              <Route path="details" element={<Details />} />
             </Route>
           </Routes>
         </div>

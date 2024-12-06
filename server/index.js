@@ -67,7 +67,10 @@ async function setupDatabase() {
         id TEXT PRIMARY KEY,
         email TEXT UNIQUE,
         password TEXT,
+        name TEXT,
         businessName TEXT,
+        businessAddress TEXT,
+        phone TEXT,
         industry TEXT,
         needsPasswordChange BOOLEAN DEFAULT 0,
         viewed BOOLEAN DEFAULT 0,
@@ -75,16 +78,24 @@ async function setupDatabase() {
       );
     `);
 
-    // Add needsPasswordChange column if it doesn't exist
+    // Add new columns if they don't exist
     try {
       await db.exec(`
         ALTER TABLE users 
-        ADD COLUMN needsPasswordChange BOOLEAN DEFAULT 0;
+        ADD COLUMN name TEXT;
       `);
-      console.log('Added needsPasswordChange column to users table');
+      await db.exec(`
+        ALTER TABLE users 
+        ADD COLUMN businessAddress TEXT;
+      `);
+      await db.exec(`
+        ALTER TABLE users 
+        ADD COLUMN phone TEXT;
+      `);
+      console.log('Added new user columns');
     } catch (error) {
-      // Column might already exist, which is fine
-      console.log('needsPasswordChange column might already exist:', error.message);
+      // Columns might already exist, which is fine
+      console.log('Some columns might already exist:', error.message);
     }
 
     // Check if tables exist
@@ -922,5 +933,40 @@ app.post('/admin/users/:id/mark-viewed', authenticateToken, isAdmin, async (req,
   } catch (error) {
     console.error('Failed to mark user as viewed:', error);
     res.status(500).json({ message: 'Failed to mark user as viewed' });
+  }
+});
+
+// Add to routes section
+app.put('/auth/update-details', authenticateToken, async (req, res) => {
+  try {
+    const { name, businessName, businessAddress, phone, email, industry } = req.body;
+    const userId = req.user.id;
+
+    // If email is being changed, check if it's already taken
+    if (email !== req.user.email) {
+      const existingUser = await db.get('SELECT * FROM users WHERE email = ? AND id != ?', [email, userId]);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email already in use' });
+      }
+    }
+
+    // Update user details
+    await db.run(
+      `UPDATE users 
+       SET name = ?, businessName = ?, businessAddress = ?, phone = ?, email = ?, industry = ?
+       WHERE id = ?`,
+      [name, businessName, businessAddress, phone, email, industry, userId]
+    );
+
+    // Get updated user data
+    const updatedUser = await db.get(
+      'SELECT id, email, name, businessName, businessAddress, phone, industry, needsPasswordChange FROM users WHERE id = ?',
+      [userId]
+    );
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Failed to update user details:', error);
+    res.status(500).json({ message: 'Failed to update user details' });
   }
 });

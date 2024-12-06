@@ -155,4 +155,10 @@ export const api = {
 
     return response.json();
   },
+
+  updateUserDetails: (data: Partial<User>) =>
+    fetchApi('/auth/update-details', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
 };

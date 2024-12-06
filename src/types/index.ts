@@ -4,6 +4,9 @@ export interface User {
   businessName: string;
   industry: string;
   needsPasswordChange?: boolean;
+  name: string;
+  businessAddress?: string;
+  phone: string;
 }
 
 export interface Job {
