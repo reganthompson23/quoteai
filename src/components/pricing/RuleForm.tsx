@@ -13,36 +13,34 @@ export function RuleForm({ initialData }: RuleFormProps) {
   const [title, setTitle] = React.useState(initialData?.title || '');
   const [description, setDescription] = React.useState(initialData?.description || '');
   const [isActive, setIsActive] = React.useState(initialData?.isActive ?? true);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    setError(null);
+
+    const ruleData = {
+      title,
+      description,
+      isActive,
+    };
 
     try {
-      setIsSubmitting(true);
-      setError(null);
-
-      const ruleData = {
-        title,
-        description,
-        isActive,
-        ...(initialData && { id: initialData.id, businessId: initialData.businessId }),
-      };
-
       if (initialData) {
-        await updateRule.mutateAsync(ruleData as Rule);
+        await updateRule.mutateAsync({
+          ...ruleData,
+          id: initialData.id,
+          businessId: initialData.businessId,
+        });
       } else {
         await createRule.mutateAsync(ruleData);
       }
 
+      await new Promise(resolve => setTimeout(resolve, 100));
       navigate('/dashboard/pricing');
-    } catch (error) {
-      console.error('Failed to save rule:', error);
-      setError('Failed to save rule. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+    } catch (err) {
+      console.error('Failed to save rule:', err);
+      setError(err instanceof Error ? err.message : 'Failed to save rule. Please try again.');
     }
   };
 
@@ -71,7 +69,7 @@ export function RuleForm({ initialData }: RuleFormProps) {
           onChange={(e) => setTitle(e.target.value)}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           required
-          disabled={isSubmitting}
+          disabled={updateRule.isLoading || createRule.isLoading}
         />
       </div>
 
@@ -86,7 +84,7 @@ export function RuleForm({ initialData }: RuleFormProps) {
           rows={4}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           required
-          disabled={isSubmitting}
+          disabled={updateRule.isLoading || createRule.isLoading}
         />
       </div>
 
@@ -98,7 +96,7 @@ export function RuleForm({ initialData }: RuleFormProps) {
             checked={isActive}
             onChange={(e) => setIsActive(e.target.checked)}
             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            disabled={isSubmitting}
+            disabled={updateRule.isLoading || createRule.isLoading}
           />
           <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900">
             Rule is active
@@ -112,18 +110,18 @@ export function RuleForm({ initialData }: RuleFormProps) {
       <div className="flex gap-4">
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={updateRule.isLoading || createRule.isLoading}
           className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
         >
-          {isSubmitting 
-            ? (initialData ? 'Saving Changes...' : 'Creating Rule...') 
+          {updateRule.isLoading || createRule.isLoading
+            ? (initialData ? 'Saving Changes...' : 'Creating Rule...')
             : (initialData ? 'Save Changes' : 'Create Rule')
           }
         </button>
         <button
           type="button"
           onClick={() => navigate('/dashboard/pricing')}
-          disabled={isSubmitting}
+          disabled={updateRule.isLoading || createRule.isLoading}
           className="inline-flex justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
         >
           Cancel
