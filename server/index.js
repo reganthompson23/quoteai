@@ -445,24 +445,29 @@ const DEMO_BUSINESS = {
   rules: [
     {
       title: 'Heritage Listed Building',
-      description: 'Additional care and specialized materials required for heritage properties',
-      adjustment: '20% increase'
+      description: 'Additional care, permits, and specialized materials required for heritage properties',
+      adjustment: '25% increase'
     },
     {
       title: 'Multi-Story External',
-      description: 'Per story surcharge for external painting',
-      adjustment: '10% per story'
+      description: 'Per story surcharge for external painting due to scaffolding and safety requirements',
+      adjustment: '15% per story'
+    },
+    {
+      title: 'High-Prep Areas',
+      description: 'Areas with peeling paint, plaster repair, or heavy sanding',
+      adjustment: '$15-$25 per square metre extra'
     }
   ],
   baseRates: {
     // Interior painting (based on standard 3x3.6m rooms)
-    'interior-small': 2800,    // 1-2 rooms + bathroom/laundry
-    'interior-medium': 5000,   // 3-bed house with 2 bath, kitchen, laundry
+    'interior-small': 3000,    // 1-2 rooms + bathroom/laundry
+    'interior-medium': 6000,   // 3-bed house with 2 bath, kitchen, laundry
     'interior-large': 9000,    // 4+ bedrooms, multiple living areas
     // Exterior painting (based on square meterage)
-    'exterior-small': 5000,    // Single story (up to 150sqm)
-    'exterior-medium': 10000,  // Two story (up to 250sqm)
-    'exterior-large': 18000    // Three story or large (300sqm+)
+    'exterior-small': 6000,    // Single story (up to 150sqm)
+    'exterior-medium': 12000,  // Two story (up to 250sqm)
+    'exterior-large': 20000    // Three story or large (300sqm+)
   }
 };
 
@@ -526,20 +531,21 @@ Key Behaviors:
 4. Be enthusiastic but professional
 
 Pricing Guidelines (INTERNAL):
-- Interior rooms: $500-750 per standard room
-- Full house interior: $5,000-9,000 (depending on size)
-- Exterior: $35-45 per square metre
-- Heritage: +20%
-- Multi-story external: +10% per story
+- Interior rooms: $600-$750 per standard room
+- Full house interior: $6,000-$9,000 (depending on size)
+- Exterior: $40-$50 per square metre
+- Heritage: +25%
+- Multi-story external: +15% per story
+- High-prep areas: +$15-$25 per square metre
 
 Response Pattern:
-1. FIRST response: Give quick estimate based on what you know
-2. THEN ask about key details to refine estimate
-3. ONLY after estimate refinement, casually ask for contact info
+1. FIRST Response: Give clear and rounded estimates in one sentence based on available info
+2. THEN: Ask one specific, actionable question (e.g., "How many square metres is the exterior?" or "Do you need trims painted too?")
+3. AFTER Refinement: Offer next steps (e.g., "I'll finalize your quote after we confirm these details"). Only casually ask for contact info
 
 Example:
 User: "Need a quote for painting my house"
-You: "For a standard 3-bedroom house interior, you're looking at around $5,000 including two bathrooms and kitchen. How many bedrooms did you need painted?"
+You: "For a standard 3-bedroom house interior, you're looking at around $6,000 including two bathrooms and kitchen. How many bedrooms did you need painted?"
 
 Remember: Quick value first, details later!
 ` : '';
