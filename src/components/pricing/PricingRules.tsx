@@ -4,7 +4,14 @@ import { Link } from 'react-router-dom';
 import { useRules } from '../../hooks/useRules';
 
 export function PricingRules() {
-  const { rules } = useRules();
+  const { rules, updateRule } = useRules();
+
+  const handleToggleActive = async (rule) => {
+    await updateRule({
+      ...rule,
+      isActive: !rule.isActive
+    });
+  };
 
   return (
     <div>
@@ -52,20 +59,24 @@ export function PricingRules() {
                   {rule.description}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                  <button
+                    onClick={() => handleToggleActive(rule)}
+                    className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full cursor-pointer transition-colors ${
                       rule.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
+                        ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                     }`}
                   >
                     {rule.isActive ? 'Active' : 'Inactive'}
-                  </span>
+                  </button>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <button className="text-blue-600 hover:text-blue-900">
+                  <Link 
+                    to={`/dashboard/pricing/${rule.id}/edit`}
+                    className="text-blue-600 hover:text-blue-900"
+                  >
                     Edit
-                  </button>
+                  </Link>
                 </td>
               </tr>
             ))}

@@ -8,6 +8,7 @@ import { JobForm } from './components/jobs/JobForm';
 import { EditJob } from './components/jobs/EditJob';
 import { PricingRules } from './components/pricing/PricingRules';
 import { RuleForm } from './components/pricing/RuleForm';
+import { EditRule } from './components/pricing/EditRule';
 import { WidgetPreview } from './components/widget/WidgetPreview';
 import { ChatList } from './components/chats/ChatList';
 import { ChatDetail } from './components/chats/ChatDetail';
@@ -58,6 +59,7 @@ function App() {
               <Route path="jobs/:id/edit" element={<EditJob />} />
               <Route path="pricing" element={<PricingRules />} />
               <Route path="pricing/new" element={<RuleForm />} />
+              <Route path="pricing/:id/edit" element={<EditRule />} />
               <Route path="widget" element={<WidgetPreview />} />
               <Route path="chats" element={<ChatList />} />
               <Route path="chats/:id" element={<ChatDetail />} />

@@ -39,3 +39,6 @@ export interface Chat {
   messages: ChatMessage[];
   createdAt: string;
 }
+
+// Alias for PricingRule to maintain compatibility
+export type Rule = PricingRule;

@@ -64,6 +64,12 @@ export const api = {
       body: JSON.stringify(rule),
     }),
 
+  updateRule: (id: string, rule: Partial<PricingRule>) =>
+    fetchApi(`/rules/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(rule),
+    }),
+
   // Chats
   getChats: () => fetchApi('/chats'),
   
