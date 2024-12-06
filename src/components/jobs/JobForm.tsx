@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useJobs } from '../../hooks/useJobs';
+import { Job } from '../../types';
 
 const jobSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -14,9 +15,14 @@ const jobSchema = z.object({
 
 type JobFormData = z.infer<typeof jobSchema>;
 
-export function JobForm() {
+interface JobFormProps {
+  initialData?: Job;
+}
+
+export function JobForm({ initialData }: JobFormProps) {
   const navigate = useNavigate();
-  const { createJob } = useJobs();
+  const { createJob, updateJob } = useJobs();
+  const isEditing = !!initialData;
 
   const {
     register,
@@ -24,14 +30,23 @@ export function JobForm() {
     formState: { errors, isSubmitting },
   } = useForm<JobFormData>({
     resolver: zodResolver(jobSchema),
+    defaultValues: initialData ? {
+      title: initialData.title,
+      description: initialData.description,
+      price: initialData.price,
+    } : undefined,
   });
 
   const onSubmit = async (data: JobFormData) => {
     try {
-      await createJob.mutateAsync(data);
+      if (isEditing && initialData) {
+        await updateJob.mutateAsync({ id: initialData.id, data });
+      } else {
+        await createJob.mutateAsync(data);
+      }
       navigate('/dashboard/jobs');
     } catch (error) {
-      console.error('Failed to create job:', error);
+      console.error('Failed to save job:', error);
     }
   };
 
@@ -46,9 +61,14 @@ export function JobForm() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Jobs
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 mt-4">Add New Job</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mt-4">
+            {isEditing ? 'Edit Job' : 'Add New Job'}
+          </h1>
           <p className="mt-2 text-sm text-gray-600">
-            Add details about a completed job to help train the AI for future quotes
+            {isEditing 
+              ? 'Update the job details below'
+              : 'Add details about a completed job to help train the AI for future quotes'
+            }
           </p>
         </div>
 

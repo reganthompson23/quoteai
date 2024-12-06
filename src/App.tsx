@@ -16,6 +16,7 @@ import { SignupPage } from './pages/auth/SignupPage';
 import { DemoPage } from './pages/DemoPage';
 import { useAuthStore } from './store/auth';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { EditJob } from './components/jobs/EditJob';
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ function App() {
               <Route index element={<Navigate to="/dashboard/jobs" replace />} />
               <Route path="jobs" element={<JobList />} />
               <Route path="jobs/new" element={<JobForm />} />
+              <Route path="jobs/:id/edit" element={<EditJob />} />
               <Route path="pricing" element={<PricingRules />} />
               <Route path="pricing/new" element={<RuleForm />} />
               <Route path="widget" element={<WidgetPreview />} />

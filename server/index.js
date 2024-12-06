@@ -308,6 +308,32 @@ app.post('/jobs', authenticateToken, async (req, res) => {
   }
 });
 
+app.put('/jobs/:id', authenticateToken, async (req, res) => {
+  try {
+    const { title, description, price } = req.body;
+    const { id } = req.params;
+
+    // First check if the job exists and belongs to the user
+    const job = await db.get(
+      'SELECT * FROM jobs WHERE id = ? AND businessId = ?',
+      [id, req.user.id]
+    );
+
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    await db.run(
+      'UPDATE jobs SET title = ?, description = ?, price = ? WHERE id = ? AND businessId = ?',
+      [title, description, price, id, req.user.id]
+    );
+
+    res.json({ id, title, description, price });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Rules
 app.get('/rules', authenticateToken, async (req, res) => {
   try {

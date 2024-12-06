@@ -49,6 +49,12 @@ export const api = {
       body: JSON.stringify(job),
     }),
 
+  updateJob: (id: string, job: Partial<Job>) =>
+    fetchApi(`/jobs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(job),
+    }),
+
   // Rules
   getRules: () => fetchApi('/rules'),
   

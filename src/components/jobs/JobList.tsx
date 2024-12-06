@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useJobs } from '../../hooks/useJobs';
+import { Job } from '../../types';
 
 export function JobList() {
   const { jobs } = useJobs();
@@ -51,7 +52,7 @@ export function JobList() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {jobs.data?.map((job) => (
+            {jobs.data?.map((job: Job) => (
               <tr key={job.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(job.createdAt).toLocaleDateString()}
@@ -68,7 +69,9 @@ export function JobList() {
                   ${job.price.toLocaleString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 hover:text-blue-900">
-                  <button>Edit</button>
+                  <Link to={`/dashboard/jobs/${job.id}/edit`} className="hover:underline">
+                    Edit
+                  </Link>
                 </td>
               </tr>
             ))}
