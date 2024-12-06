@@ -32,11 +32,11 @@ export function Industries() {
           <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white to-transparent z-10"></div>
           
           {/* Scrolling container */}
-          <div className="flex animate-scroll-fast">
+          <div className="flex animate-scroll-faster sm:animate-scroll-fast">
             {duplicatedIndustries.map((industry, index) => (
               <div
                 key={`${industry}-${index}`}
-                className="flex-none px-6 py-3 bg-gray-50 border-r border-gray-100 min-w-[160px] flex items-center justify-center"
+                className="flex-none px-6 py-3 bg-gray-50 border-r border-gray-100 min-w-[160px] sm:min-w-[160px] flex items-center justify-center"
               >
                 <span className="text-sm font-medium text-gray-900">{industry}</span>
               </div>
