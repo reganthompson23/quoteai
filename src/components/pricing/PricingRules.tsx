@@ -2,15 +2,20 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useRules } from '../../hooks/useRules';
+import { Rule } from '../../types';
 
 export function PricingRules() {
   const { rules, updateRule } = useRules();
 
-  const handleToggleActive = async (rule) => {
-    await updateRule({
-      ...rule,
-      isActive: !rule.isActive
-    });
+  const handleToggleActive = async (rule: Rule) => {
+    try {
+      await updateRule.mutateAsync({
+        ...rule,
+        isActive: !rule.isActive
+      });
+    } catch (error) {
+      console.error('Failed to toggle rule:', error);
+    }
   };
 
   return (
@@ -50,7 +55,7 @@ export function PricingRules() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {rules.data?.map((rule) => (
+            {rules.data?.map((rule: Rule) => (
               <tr key={rule.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {rule.title}
