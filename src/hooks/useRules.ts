@@ -3,7 +3,7 @@ import { api } from '../lib/api';
 import { Rule } from '../types';
 import { useAuthStore } from '../store/auth';
 
-const DEMO_RULES: Rule[] = [
+let DEMO_RULES: Rule[] = [
   {
     id: '1',
     businessId: 'demo-user',
@@ -35,7 +35,7 @@ export function useRules() {
     queryKey: ['rules'],
     queryFn: () => {
       if (user?.id === 'demo-user') {
-        return Promise.resolve(DEMO_RULES);
+        return Promise.resolve([...DEMO_RULES]);
       }
       return api.getRules();
     },
@@ -51,7 +51,7 @@ export function useRules() {
           description: rule.description || '',
           isActive: rule.isActive ?? true,
         };
-        DEMO_RULES.unshift(newRule);
+        DEMO_RULES = [newRule, ...DEMO_RULES];
         return Promise.resolve(newRule);
       }
       return api.createRule(rule);
@@ -66,7 +66,11 @@ export function useRules() {
       if (user?.id === 'demo-user') {
         const ruleIndex = DEMO_RULES.findIndex(r => r.id === rule.id);
         if (ruleIndex !== -1) {
-          DEMO_RULES[ruleIndex] = rule;
+          DEMO_RULES = [
+            ...DEMO_RULES.slice(0, ruleIndex),
+            rule,
+            ...DEMO_RULES.slice(ruleIndex + 1)
+          ];
           return Promise.resolve(rule);
         }
         return Promise.reject(new Error('Rule not found'));

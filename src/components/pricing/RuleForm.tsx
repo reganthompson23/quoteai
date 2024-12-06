@@ -14,6 +14,7 @@ export function RuleForm({ initialData }: RuleFormProps) {
   const [description, setDescription] = React.useState(initialData?.description || '');
   const [isActive, setIsActive] = React.useState(initialData?.isActive ?? true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +22,8 @@ export function RuleForm({ initialData }: RuleFormProps) {
 
     try {
       setIsSubmitting(true);
+      setError(null);
+
       const ruleData = {
         title,
         description,
@@ -37,6 +40,7 @@ export function RuleForm({ initialData }: RuleFormProps) {
       navigate('/dashboard/pricing');
     } catch (error) {
       console.error('Failed to save rule:', error);
+      setError('Failed to save rule. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -49,6 +53,12 @@ export function RuleForm({ initialData }: RuleFormProps) {
           {initialData ? 'Edit Rule' : 'Create New Rule'}
         </h1>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+          {error}
+        </div>
+      )}
 
       <div>
         <label htmlFor="title" className="block text-sm font-medium text-gray-700">
