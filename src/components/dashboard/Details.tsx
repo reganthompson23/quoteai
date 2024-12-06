@@ -18,6 +18,20 @@ export function Details() {
     industry: user?.industry || '',
   });
 
+  // Update form data when user data changes
+  React.useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        businessName: user.businessName || '',
+        businessAddress: user.businessAddress || '',
+        phone: user.phone || '',
+        email: user.email || '',
+        industry: user.industry || '',
+      });
+    }
+  }, [user]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -32,11 +46,16 @@ export function Details() {
       setSuccess('Details updated successfully');
       setIsEditing(false);
     } catch (err) {
+      console.error('Failed to update details:', err);
       setError(err instanceof Error ? err.message : 'Failed to update details');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div>
@@ -81,7 +100,7 @@ export function Details() {
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={!isEditing}
+                disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
                 required
               />
@@ -96,7 +115,7 @@ export function Details() {
                 id="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                disabled={!isEditing}
+                disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
                 required
               />
@@ -111,7 +130,7 @@ export function Details() {
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                disabled={!isEditing}
+                disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
                 required
               />
@@ -126,7 +145,7 @@ export function Details() {
                 id="businessName"
                 value={formData.businessName}
                 onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-                disabled={!isEditing}
+                disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
                 required
               />
@@ -141,7 +160,7 @@ export function Details() {
                 id="industry"
                 value={formData.industry}
                 onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                disabled={!isEditing}
+                disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
                 required
               />
@@ -156,7 +175,7 @@ export function Details() {
                 id="businessAddress"
                 value={formData.businessAddress}
                 onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })}
-                disabled={!isEditing}
+                disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
               />
             </div>
@@ -169,12 +188,12 @@ export function Details() {
                 onClick={() => {
                   setIsEditing(false);
                   setFormData({
-                    name: user?.name || '',
-                    businessName: user?.businessName || '',
-                    businessAddress: user?.businessAddress || '',
-                    phone: user?.phone || '',
-                    email: user?.email || '',
-                    industry: user?.industry || '',
+                    name: user.name || '',
+                    businessName: user.businessName || '',
+                    businessAddress: user.businessAddress || '',
+                    phone: user.phone || '',
+                    email: user.email || '',
+                    industry: user.industry || '',
                   });
                 }}
                 disabled={isSubmitting}
