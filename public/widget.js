@@ -285,7 +285,7 @@
         <div class="quoteai-header">
           <div>
             <h3>Get An Instant Estimate</h3>
-            <p><a href="https://starlit-churros-bd6ab7.netlify.app" target="_blank">Powered by PricePilot</a></p>
+            <p><a href="https://pricepilot.chat" target="_blank">Powered by PricePilot</a></p>
             <p class="tagline">Accurate Estimates on Auto Pilot</p>
           </div>
           <button class="quoteai-close" aria-label="Close chat">✕</button>
