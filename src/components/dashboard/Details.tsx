@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/auth';
 import { api } from '../../lib/api';
 
 export function Details() {
-  const { user, updateUser } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const [isEditing, setIsEditing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
@@ -42,7 +42,7 @@ export function Details() {
       setSuccess(null);
 
       const updatedUser = await api.updateUserDetails(formData);
-      updateUser(updatedUser);
+      setUser(updatedUser);
       setSuccess('Details updated successfully');
       setIsEditing(false);
     } catch (err) {
