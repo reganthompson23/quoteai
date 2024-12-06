@@ -52,14 +52,12 @@ export function ChangePassword({ onClose, isModal = false }: ChangePasswordProps
 
       setSuccess(true);
 
-      // If this was a forced password change, redirect to dashboard
-      if (user?.needsPasswordChange) {
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1500);
-      } else if (onClose) {
-        setTimeout(onClose, 1500);
-      }
+      // After successful password change, log out and redirect to login page after a delay
+      setTimeout(() => {
+        logout();
+        navigate('/login');
+      }, 2000);
+
     } catch (err: any) {
       setError(err.message || 'Failed to change password');
     }
