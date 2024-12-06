@@ -5,22 +5,35 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');
   
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-      ...options.headers,
-    },
-  });
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+        ...options.headers,
+      },
+    });
 
-  const data = await response.json();
+    // First check if the response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      // If not JSON, get the text and throw it as an error
+      const text = await response.text();
+      throw new Error(`Server error: ${text.slice(0, 200)}...`);
+    }
 
-  if (!response.ok) {
-    throw new Error(data.message || 'An error occurred');
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'An error occurred');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
   }
-
-  return data;
 }
 
 export const api = {
@@ -67,7 +80,11 @@ export const api = {
   updateRule: (id: string, rule: Partial<PricingRule>) =>
     fetchApi(`/rules/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(rule),
+      body: JSON.stringify({
+        title: rule.title,
+        description: rule.description,
+        isActive: rule.isActive,
+      }),
     }),
 
   // Chats
