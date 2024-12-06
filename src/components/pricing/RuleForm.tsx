@@ -24,28 +24,38 @@ export function RuleForm({ initialData }: RuleFormProps) {
       setIsSubmitting(true);
       setError(null);
 
+      const ruleData = {
+        title,
+        description,
+        isActive,
+      };
+
+      console.log('Submitting rule:', initialData ? 'update' : 'create', ruleData);
+
       if (initialData) {
         // Update existing rule
         await updateRule.mutateAsync({
           id: initialData.id,
-          title,
-          description,
-          isActive,
+          ...ruleData,
           businessId: initialData.businessId,
         });
+        console.log('Rule updated successfully');
       } else {
         // Create new rule
-        await createRule.mutateAsync({
-          title,
-          description,
-          isActive,
-        });
+        await createRule.mutateAsync(ruleData);
+        console.log('Rule created successfully');
       }
 
       navigate('/dashboard/pricing');
     } catch (err) {
       console.error('Failed to save rule:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save rule. Please try again.');
+      if (err instanceof Error) {
+        setError(err.message);
+      } else if (err instanceof TypeError && err.message === 'Failed to fetch') {
+        setError('Network error: Please check your connection and try again');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }

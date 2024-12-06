@@ -4,9 +4,11 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');
+  const url = `${API_URL}${endpoint}`;
   
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    console.log(`Making ${options.method || 'GET'} request to:`, url);
+    console.log('Request options:', {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -15,15 +17,29 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
       },
     });
 
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+        ...options.headers,
+      },
+    });
+
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
     // First check if the response is JSON
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       // If not JSON, get the text and throw it as an error
       const text = await response.text();
+      console.error('Non-JSON response:', text);
       throw new Error(`Server error: ${text.slice(0, 200)}...`);
     }
 
     const data = await response.json();
+    console.log('Response data:', data);
 
     if (!response.ok) {
       throw new Error(data.message || 'An error occurred');
@@ -31,7 +47,7 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
 
     return data;
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('API Error for', url, ':', error);
     throw error;
   }
 }
@@ -79,8 +95,12 @@ export const api = {
 
   updateRule: (id: string, rule: Partial<PricingRule>) =>
     fetchApi(`/rules/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(rule),
+      method: 'PUT',
+      body: JSON.stringify({
+        title: rule.title,
+        description: rule.description,
+        isActive: rule.isActive,
+      }),
     }),
 
   // Chats
