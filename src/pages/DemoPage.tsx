@@ -25,8 +25,8 @@ export function DemoPage() {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="hidden sm:fixed sm:inset-y-0 sm:flex sm:w-64 sm:flex-col">
+    <div className="min-h-screen bg-gray-50 pt-16">
+      <div className="hidden sm:fixed sm:inset-y-0 sm:flex sm:w-64 sm:flex-col" style={{ top: '64px' }}>
         <div className="flex min-h-0 flex-1 flex-col border-r border-gray-200 bg-white">
           <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
             <nav className="mt-5 flex-1 space-y-1 bg-white px-2">

@@ -4,7 +4,7 @@ import { Gauge, ArrowRight } from 'lucide-react';
 
 export function Hero() {
   return (
-    <div className="relative overflow-hidden bg-white">
+    <div className="relative overflow-hidden bg-white pt-16">
       <div className="mx-auto max-w-7xl px-6 py-12 sm:py-16 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center gap-12">
           <div className="lg:w-1/2">
