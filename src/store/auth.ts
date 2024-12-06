@@ -10,25 +10,34 @@ interface AuthState {
   updateUser: (user: User) => void;
 }
 
+// Initialize state from localStorage
+const storedToken = localStorage.getItem('token');
+const storedUser = localStorage.getItem('user');
+const initialUser = storedUser ? JSON.parse(storedUser) : null;
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isAuthenticated: false,
-  token: localStorage.getItem('token'),
+  user: initialUser,
+  isAuthenticated: !!storedToken && !!initialUser,
+  token: storedToken,
   login: (user, token) => {
     localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
     set({ user, token, isAuthenticated: true });
   },
   logout: () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     set({ user: null, token: null, isAuthenticated: false });
   },
   updateUser: (user) => {
+    const updatedUser = {
+      ...user,
+      id: user.id || (initialUser?.id ?? ''),  // Preserve the user ID
+    };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
     set((state) => ({
       ...state,
-      user: {
-        ...state.user,
-        ...user,
-      },
+      user: updatedUser,
     }));
   },
 }));
