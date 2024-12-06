@@ -6,6 +6,15 @@ export default {
       textShadow: {
         tight: '0 2px 4px rgba(0, 0, 0, 0.9), 1px 1px 3px rgba(0, 0, 0, 0.9)',
       },
+      keyframes: {
+        scroll: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+      },
+      animation: {
+        scroll: 'scroll 30s linear infinite',
+      },
     },
   },
   plugins: [

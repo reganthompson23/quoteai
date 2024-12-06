@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Hero } from '../components/landing/Hero';
 import { Features } from '../components/landing/Features';
+import { Industries } from '../components/landing/Industries';
 import { Pricing } from '../components/landing/Pricing';
 import { Testimonials } from '../components/landing/Testimonials';
 import { useAuthStore } from '../store/auth';
@@ -19,6 +20,7 @@ export function LandingPage() {
   return (
     <div className="bg-white">
       <Hero />
+      <Industries />
       <Features />
       <Pricing />
       <Testimonials />
