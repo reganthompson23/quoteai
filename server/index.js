@@ -70,6 +70,7 @@ async function setupDatabase() {
         businessName TEXT,
         industry TEXT,
         needsPasswordChange BOOLEAN DEFAULT 0,
+        viewed BOOLEAN DEFAULT 0,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -233,9 +234,28 @@ app.post('/auth/signup', async (req, res) => {
     const userId = crypto.randomUUID();
 
     await db.run(
-      'INSERT INTO users (id, email, password, businessName, industry) VALUES (?, ?, ?, ?, ?)',
-      [userId, email, hashedPassword, businessName, industry]
+      'INSERT INTO users (id, email, password, businessName, industry, viewed) VALUES (?, ?, ?, ?, ?, ?)',
+      [userId, email, hashedPassword, businessName, industry, false]
     );
+
+    // Send email notification to admin
+    const adminEmail = 'regan@syndicatestore.com.au';
+    const subject = 'New PricePilot Signup!';
+    const message = `
+      New user signup:
+      Business: ${businessName}
+      Industry: ${industry}
+      Email: ${email}
+      Time: ${new Date().toLocaleString()}
+    `;
+
+    // You'll need to set up your email service (e.g., SendGrid, AWS SES)
+    // For now, we'll just console.log it
+    console.log('New signup notification:', {
+      to: adminEmail,
+      subject,
+      message
+    });
 
     // Generate token
     const token = jwt.sign({ id: userId, email }, process.env.JWT_SECRET);
@@ -890,5 +910,17 @@ app.post('/auth/change-password', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Password change error:', error);
     res.status(500).json({ message: 'Failed to change password' });
+  }
+});
+
+// Add to admin routes section
+app.post('/admin/users/:id/mark-viewed', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.run('UPDATE users SET viewed = 1 WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Failed to mark user as viewed:', error);
+    res.status(500).json({ message: 'Failed to mark user as viewed' });
   }
 });

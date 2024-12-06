@@ -10,6 +10,7 @@ interface User {
   industry: string;
   createdAt: string;
   needsPasswordChange: boolean;
+  viewed: boolean;
 }
 
 export function AdminDashboard() {
@@ -30,13 +31,24 @@ export function AdminDashboard() {
     async function fetchUsers() {
       try {
         const data = await api.getUsers();
-        setUsers(data);
+        // Sort users by creation date (newest first) and viewed status
+        const sortedUsers = data.sort((a: User, b: User) => {
+          // First sort by viewed status
+          if (!a.viewed && b.viewed) return -1;
+          if (a.viewed && !b.viewed) return 1;
+          // Then by date
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+        setUsers(sortedUsers);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch users');
       }
     }
 
     fetchUsers();
+    // Refresh data every minute
+    const interval = setInterval(fetchUsers, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleResetPassword = async (userId: string) => {
@@ -71,9 +83,31 @@ export function AdminDashboard() {
     }
   };
 
+  const handleMarkAsViewed = async (userId: string) => {
+    try {
+      await api.markUserAsViewed(userId);
+      setUsers(users.map(u => 
+        u.id === userId 
+          ? { ...u, viewed: true }
+          : u
+      ));
+    } catch (err: any) {
+      console.error('Failed to mark user as viewed:', err);
+    }
+  };
+
+  const newUsersCount = users.filter(u => !u.viewed).length;
+
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+        {newUsersCount > 0 && (
+          <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-medium">
+            {newUsersCount} new signup{newUsersCount !== 1 ? 's' : ''}!
+          </div>
+        )}
+      </div>
       
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -87,6 +121,7 @@ export function AdminDashboard() {
         </div>
       )}
 
+      {/* Reset password modal */}
       {isResetting && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-xl">
@@ -119,6 +154,9 @@ export function AdminDashboard() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -128,7 +166,7 @@ export function AdminDashboard() {
                 Industry
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Created At
+                Signed Up
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
@@ -137,7 +175,14 @@ export function AdminDashboard() {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user) => (
-              <tr key={user.id}>
+              <tr key={user.id} className={!user.viewed ? 'bg-blue-50' : ''}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {!user.viewed && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      New!
+                    </span>
+                  )}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {user.email}
                 </td>
@@ -148,17 +193,25 @@ export function AdminDashboard() {
                   {user.industry}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {new Date(user.createdAt).toLocaleDateString()}
+                  {new Date(user.createdAt).toLocaleString()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-sm space-x-3">
                   <button
                     onClick={() => handleResetPassword(user.id)}
                     className="text-blue-600 hover:text-blue-900"
                   >
                     Reset Password
                   </button>
+                  {!user.viewed && (
+                    <button
+                      onClick={() => handleMarkAsViewed(user.id)}
+                      className="text-green-600 hover:text-green-900"
+                    >
+                      Mark as Viewed
+                    </button>
+                  )}
                   {user.needsPasswordChange && (
-                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                       Password change required
                     </span>
                   )}

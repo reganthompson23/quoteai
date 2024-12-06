@@ -68,6 +68,11 @@ export const api = {
 
   // Admin
   getUsers: () => fetchApi('/admin/users'),
+  
+  markUserAsViewed: (userId: string) =>
+    fetchApi(`/admin/users/${userId}/mark-viewed`, {
+      method: 'POST',
+    }),
 
   // Jobs
   getJobs: () => fetchApi('/jobs'),
