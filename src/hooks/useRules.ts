@@ -20,7 +20,10 @@ export function useRules() {
   });
 
   const updateRule = useMutation({
-    mutationFn: (rule: Rule) => api.updateRule(rule.id, rule),
+    mutationFn: (rule: Rule) => {
+      const { id, ...ruleData } = rule;
+      return api.updateRule(id, ruleData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rules'] });
     },

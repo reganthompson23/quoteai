@@ -24,20 +24,22 @@ export function RuleForm({ initialData }: RuleFormProps) {
       setIsSubmitting(true);
       setError(null);
 
-      const ruleData = {
-        title,
-        description,
-        isActive,
-      };
-
       if (initialData) {
+        // Update existing rule
         await updateRule.mutateAsync({
-          ...ruleData,
           id: initialData.id,
+          title,
+          description,
+          isActive,
           businessId: initialData.businessId,
         });
       } else {
-        await createRule.mutateAsync(ruleData);
+        // Create new rule
+        await createRule.mutateAsync({
+          title,
+          description,
+          isActive,
+        });
       }
 
       navigate('/dashboard/pricing');
