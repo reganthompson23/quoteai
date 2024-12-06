@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { useJobs } from '../../hooks/useJobs';
-import { JobForm } from '../../components/jobs/JobForm';
+import { JobForm } from './JobForm';
 import { Job } from '../../types';
 
 export function EditJob() {

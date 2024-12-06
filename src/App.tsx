@@ -5,6 +5,7 @@ import { Header } from './components/layout/Header';
 import { DashboardLayout } from './components/dashboard/DashboardLayout';
 import { JobList } from './components/jobs/JobList';
 import { JobForm } from './components/jobs/JobForm';
+import { EditJob } from './components/jobs/EditJob';
 import { PricingRules } from './components/pricing/PricingRules';
 import { RuleForm } from './components/pricing/RuleForm';
 import { WidgetPreview } from './components/widget/WidgetPreview';
@@ -16,7 +17,6 @@ import { SignupPage } from './pages/auth/SignupPage';
 import { DemoPage } from './pages/DemoPage';
 import { useAuthStore } from './store/auth';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
-import { EditJob } from './components/jobs/EditJob';
 
 const queryClient = new QueryClient();
 
