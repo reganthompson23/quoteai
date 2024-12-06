@@ -14,6 +14,7 @@ export default {
       },
       animation: {
         scroll: 'scroll 30s linear infinite',
+        'scroll-fast': 'scroll 20s linear infinite',
       },
     },
   },
