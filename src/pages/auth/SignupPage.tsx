@@ -45,6 +45,9 @@ export function SignupPage() {
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           Create your account
         </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          No credit card required. Start building your AI chatbot today - we'll only ask for payment details once you're ready to go live. Need a website? We can build and maintain one for you with our $100/month plan, which includes ongoing tech support.
+        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -56,6 +59,23 @@ export function SignupPage() {
           )}
           
           <form className="space-y-6" onSubmit={handleSubmit}>
+            <div>
+              <label htmlFor="businessName" className="block text-sm font-medium text-gray-700">
+                Business Name
+              </label>
+              <div className="mt-1">
+                <input
+                  id="businessName"
+                  name="businessName"
+                  type="text"
+                  required
+                  value={formData.businessName}
+                  onChange={handleChange}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                />
+              </div>
+            </div>
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
@@ -84,23 +104,6 @@ export function SignupPage() {
                   type="password"
                   required
                   value={formData.password}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="businessName" className="block text-sm font-medium text-gray-700">
-                Business Name
-              </label>
-              <div className="mt-1">
-                <input
-                  id="businessName"
-                  name="businessName"
-                  type="text"
-                  required
-                  value={formData.businessName}
                   onChange={handleChange}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
