@@ -362,6 +362,32 @@ app.post('/rules', authenticateToken, async (req, res) => {
   }
 });
 
+app.put('/rules/:id', authenticateToken, async (req, res) => {
+  try {
+    const { title, description, isActive } = req.body;
+    const { id } = req.params;
+
+    // First check if the rule exists and belongs to the user
+    const rule = await db.get(
+      'SELECT * FROM rules WHERE id = ? AND businessId = ?',
+      [id, req.user.id]
+    );
+
+    if (!rule) {
+      return res.status(404).json({ message: 'Rule not found' });
+    }
+
+    await db.run(
+      'UPDATE rules SET title = ?, description = ?, isActive = ? WHERE id = ? AND businessId = ?',
+      [title, description, isActive, id, req.user.id]
+    );
+
+    res.json({ id, title, description, isActive });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Store conversation history in memory (in production, this should be in a database)
 const conversationHistory = new Map();
 
