@@ -1,13 +1,23 @@
 import React from 'react';
-import { Clock, TrendingUp, Zap } from 'lucide-react';
+import { TrendingUp, Clock, Zap } from 'lucide-react';
 
-export const posts = [
+export interface BlogPost {
+  id: number;
+  title: string;
+  description: string;
+  icon: React.ComponentType;
+  readTime: string;
+  date: string;
+  content: React.ReactNode;
+}
+
+export const posts: BlogPost[] = [
   {
     id: 1,
     title: 'How to Convert More Website Visitors into Booked Jobs: A Guide for Trade Businesses',
-    description: 'Learn how leading trade businesses are converting up to 3x more website visitors into actual bookings with automated instant estimates. Discover the key factors that make customers choose one service provider over another.',
+    description: 'Learn how leading trade businesses are converting up to 3x more website visitors into actual bookings with automated instant estimates.',
     icon: TrendingUp,
-    readTime: '2 min read',
+    readTime: '5 min read',
     date: 'Mar 15, 2024',
     content: (
       <>
@@ -42,87 +52,79 @@ export const posts = [
   {
     id: 2,
     title: 'The True Cost of Delayed Estimates: Why 24/7 Response Time Matters in Trade Services',
-    description: 'Research shows that 78% of customers choose the first business that provides a clear estimate. Find out how much delayed responses are really costing your business and how to fix it.',
+    description: 'Research shows that 78% of customers choose the first business that provides a clear estimate.',
     icon: Clock,
-    readTime: '2 min read',
+    readTime: '4 min read',
     date: 'Mar 12, 2024',
     content: (
       <>
         <p>
-          Every hour you delay providing an estimate costs you money. But exactly how much? Let's break down the real cost of delayed responses in the trade service industry.
+          In today's fast-paced world, customers expect instant responses. When they're looking for trade services, they're often comparing multiple providers simultaneously. The business that responds first with a clear estimate has a significant advantage.
         </p>
 
-        <h2>The Hidden Costs</h2>
+        <h2>The Hidden Costs of Delayed Responses</h2>
         <ul>
-          <li><strong>Lost Jobs:</strong> 65% of customers will move on to another provider if they don't get a response within 2 hours</li>
-          <li><strong>Wasted Admin Time:</strong> Average of 5 hours per week spent on quotes that never convert</li>
-          <li><strong>Lower Project Values:</strong> Rush quotes often undervalue jobs by 15-20%</li>
-          <li><strong>Missed After-Hours Opportunities:</strong> 40% of quote requests come outside business hours</li>
+          <li>Lost opportunities to competitors who respond faster</li>
+          <li>Wasted time on quotes for customers who've already chosen another provider</li>
+          <li>Reduced customer satisfaction due to waiting times</li>
+          <li>Lower website conversion rates</li>
         </ul>
 
-        <h2>Real Numbers from Real Businesses</h2>
+        <h2>The 24/7 Advantage</h2>
         <p>
-          A typical trade business receiving 20 quote requests per week, with a 30% conversion rate and average job value of $3,000, loses approximately $156,000 annually due to delayed responses alone.
-        </p>
-
-        <h2>The Solution</h2>
-        <p>
-          Modern trade businesses are implementing 24/7 automated estimate systems that instantly respond to customer inquiries. These systems maintain your pricing strategy while ensuring no opportunity slips through the cracks, whether it's 3 PM or 3 AM.
+          Modern estimate automation tools allow you to provide instant quotes any time of day or night. This means you never miss an opportunity, even when you're busy with existing jobs or it's outside business hours.
         </p>
 
         <p>
-          The best part? These systems can be set up in minutes, not days, and start delivering ROI from day one.
+          By implementing automated estimating, businesses typically see:
         </p>
+        <ul>
+          <li>30-40% increase in lead capture</li>
+          <li>50% reduction in quote preparation time</li>
+          <li>Higher customer satisfaction scores</li>
+          <li>More efficient use of business hours</li>
+        </ul>
       </>
     ),
   },
   {
     id: 3,
     title: 'Automating Estimates: How Trade Businesses Are Saving 10+ Hours Per Week',
-    description: 'Discover how modern trade businesses are automating their estimate process to save time, reduce errors, and grow their customer base - all while maintaining their pricing strategy.',
+    description: 'Discover how modern trade businesses are automating their estimate process to save time.',
     icon: Zap,
-    readTime: '2 min read',
+    readTime: '6 min read',
     date: 'Mar 8, 2024',
     content: (
       <>
         <p>
-          Time is money in the trades. Every minute spent writing up estimates is time you could be on the tools or growing your business. Here's how successful trade businesses are automating their estimate process without compromising on accuracy.
+          Time is money in the trades. Every hour spent preparing quotes is an hour you could be earning on the tools or growing your business. Here's how leading trade businesses are using automation to reclaim their time while growing their customer base.
         </p>
 
-        <h2>The Old Way vs. The Smart Way</h2>
-        <table className="w-full mb-6">
-          <thead>
-            <tr>
-              <th className="text-left">Manual Process</th>
-              <th className="text-left">Automated Process</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>30-60 mins per quote</td>
-              <td>Instant</td>
-            </tr>
-            <tr>
-              <td>Business hours only</td>
-              <td>24/7 availability</td>
-            </tr>
-            <tr>
-              <td>Inconsistent pricing</td>
-              <td>Standardized rules</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <h2>Real Results</h2>
+        <h2>The Traditional Quoting Process</h2>
+        <p>
+          Most trade businesses follow a time-consuming process for every quote:
+        </p>
         <ul>
-          <li>Average 10 hours saved per week on quote preparation</li>
-          <li>45% increase in quote-to-job conversion rate</li>
-          <li>100% consistency in pricing across all quotes</li>
-          <li>Zero missed after-hours opportunities</li>
+          <li>Phone calls or emails back and forth with potential customers</li>
+          <li>Site visits for jobs that may not convert</li>
+          <li>Manual calculations and quote preparation</li>
+          <li>Follow-up communications</li>
+        </ul>
+
+        <h2>The Automated Alternative</h2>
+        <p>
+          Modern estimate automation tools can:
+        </p>
+        <ul>
+          <li>Collect detailed job requirements 24/7</li>
+          <li>Apply your pricing rules automatically</li>
+          <li>Generate professional quotes instantly</li>
+          <li>Capture customer contact information</li>
+          <li>Follow up automatically</li>
         </ul>
 
         <p>
-          The key? A smart estimate system that learns your pricing rules and handles the entire process automatically. You set the rules once, and the system handles the rest - whether you're on a job, in a meeting, or enjoying your weekend.
+          The result? Businesses using automated estimating report saving an average of 10-15 hours per week while increasing their conversion rates.
         </p>
       </>
     ),
