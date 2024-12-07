@@ -14,21 +14,26 @@ export function BlogPost() {
   const Icon = post.icon;
 
   return (
-    <div className="bg-white">
+    <div className="bg-white pt-16">
       {/* Mini Hero */}
-      <div className="bg-white border-b">
-        <div className="mx-auto max-w-7xl px-6 py-6 lg:px-8">
-          <div className="flex justify-between items-center">
+      <div className="bg-white border-b shadow-sm">
+        <div className="mx-auto max-w-7xl px-6 py-8 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div className="flex items-center gap-x-3">
-              <Link to="/" className="text-xl font-semibold text-gray-900 hover:text-blue-600">
-                PricePilot - Instant Estimates For Your Customers On Autopilot
-              </Link>
+              <img 
+                src="/images/logo.png" 
+                alt="PricePilot Logo" 
+                className="h-8 w-auto"
+              />
+              <h2 className="text-xl font-semibold text-gray-900">
+                Instant Estimates For Your Customers On Autopilot
+              </h2>
             </div>
             <Link
               to="/"
-              className="text-sm font-semibold text-blue-600 hover:text-blue-500 flex items-center gap-1"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Learn More <ArrowRight className="h-4 w-4" />
+              Try It Free <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </div>
         </div>
