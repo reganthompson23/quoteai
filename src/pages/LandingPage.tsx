@@ -5,7 +5,7 @@ import { Features } from '../components/landing/Features';
 import { Industries } from '../components/landing/Industries';
 import { Blog } from '../components/landing/Blog';
 import { Pricing } from '../components/landing/Pricing';
-import { Testimonials } from '../components/landing/Testimonials';
+// import { Testimonials } from '../components/landing/Testimonials'; // Keeping import commented for future use
 import { useAuthStore } from '../store/auth';
 
 export function LandingPage() {
@@ -25,7 +25,7 @@ export function LandingPage() {
       <Features />
       <Blog />
       <Pricing />
-      <Testimonials />
+      {/* <Testimonials /> */}
     </div>
   );
 }
