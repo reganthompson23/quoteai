@@ -29,12 +29,14 @@ export function BlogPost() {
                 Instant Estimates For Your Customers On Autopilot
               </h2>
             </div>
-            <Link
-              to="/"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Try It Free <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+            <div className="flex justify-end">
+              <Link
+                to="/"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 whitespace-nowrap"
+              >
+                Try It Free <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>
