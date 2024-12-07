@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { posts, BlogPost as BlogPostType } from './posts';
+import { posts, BlogPost as BlogPostType } from './posts.tsx';
 
 export function BlogPost() {
   const { id } = useParams<{ id: string }>();
