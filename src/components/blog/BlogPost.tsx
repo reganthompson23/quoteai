@@ -1,14 +1,14 @@
 import React from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, Navigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { posts } from './posts';
+import { posts, BlogPost as BlogPostType } from './posts';
 
 export function BlogPost() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const post = posts.find(p => p.id === Number(id));
 
   if (!post) {
-    return <div>Post not found</div>;
+    return <Navigate to="/" replace />;
   }
 
   const Icon = post.icon;
@@ -20,9 +20,9 @@ export function BlogPost() {
         <div className="mx-auto max-w-7xl px-6 py-6 lg:px-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-x-3">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <Link to="/" className="text-xl font-semibold text-gray-900 hover:text-blue-600">
                 PricePilot - Instant Estimates For Your Customers On Autopilot
-              </h2>
+              </Link>
             </div>
             <Link
               to="/"
