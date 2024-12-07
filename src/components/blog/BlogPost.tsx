@@ -74,16 +74,16 @@ export function BlogPost() {
                 Turn your pricing docs into an intelligent estimate bot in minutes, ready to serve customers 24/7.
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-4 lg:w-1/3">
+            <div className="flex flex-row gap-4 w-full lg:w-1/3">
               <Link
                 to="/signup"
-                className="rounded-md bg-blue-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+                className="flex-1 rounded-md bg-blue-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
               >
                 Start Free Trial
               </Link>
               <Link
                 to="/demo/widget"
-                className="rounded-md bg-white px-6 py-3 text-center text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                className="flex-1 rounded-md bg-white px-6 py-3 text-center text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
               >
                 See it in action
               </Link>
