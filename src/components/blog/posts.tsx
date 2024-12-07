@@ -17,8 +17,8 @@ export const posts: BlogPost[] = [
     title: 'How to Convert More Website Visitors into Booked Jobs: A Guide for Trade Businesses',
     description: 'Learn how leading trade businesses are converting up to 3x more website visitors into actual bookings with automated instant estimates.',
     icon: TrendingUp,
-    readTime: '5 min read',
-    date: 'Mar 15, 2024',
+    readTime: '1 min read',
+    date: 'Dec 6, 2024',
     content: (
       <div className="space-y-6">
         <p>
@@ -54,8 +54,8 @@ export const posts: BlogPost[] = [
     title: 'The True Cost of Delayed Estimates: Why 24/7 Response Time Matters in Trade Services',
     description: 'Research shows that 78% of customers choose the first business that provides a clear estimate.',
     icon: Clock,
-    readTime: '4 min read',
-    date: 'Mar 12, 2024',
+    readTime: '1 min read',
+    date: 'Dec 4, 2024',
     content: (
       <div className="space-y-6">
         <p>
@@ -92,8 +92,8 @@ export const posts: BlogPost[] = [
     title: 'Automating Estimates: How Trade Businesses Are Saving 10+ Hours Per Week',
     description: 'Discover how modern trade businesses are automating their estimate process to save time.',
     icon: Zap,
-    readTime: '6 min read',
-    date: 'Mar 8, 2024',
+    readTime: '1 min read',
+    date: 'Dec 2, 2024',
     content: (
       <div className="space-y-6">
         <p>
