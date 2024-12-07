@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Hero } from '../components/landing/Hero';
 import { Features } from '../components/landing/Features';
 import { Industries } from '../components/landing/Industries';
+import { Blog } from '../components/landing/Blog';
 import { Pricing } from '../components/landing/Pricing';
 import { Testimonials } from '../components/landing/Testimonials';
 import { useAuthStore } from '../store/auth';
@@ -22,6 +23,7 @@ export function LandingPage() {
       <Hero />
       <Industries />
       <Features />
+      <Blog />
       <Pricing />
       <Testimonials />
     </div>
