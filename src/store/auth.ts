@@ -8,15 +8,7 @@ interface AuthState {
   login: (token: string, user: User) => void;
   setUser: (user: User | null) => void;
   logout: () => void;
-  loginAsDemo: () => void;
 }
-
-const demoUser: User = {
-  id: 'demo-user',
-  email: 'regan@syndicatestore.com.au',
-  businessName: 'Syndicate Painting',
-  industry: 'Painting',
-};
 
 // Initialize state from localStorage if available
 const storedToken = localStorage.getItem('token');
@@ -44,11 +36,5 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     set({ token: null, user: null, isAuthenticated: false });
-  },
-  loginAsDemo: () => {
-    const demoToken = 'demo-token';
-    localStorage.setItem('token', demoToken);
-    localStorage.setItem('user', JSON.stringify(demoUser));
-    set({ token: demoToken, user: demoUser, isAuthenticated: true });
-  },
+  }
 }));
