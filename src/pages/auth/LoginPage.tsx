@@ -23,11 +23,7 @@ export function LoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: 'regan@syndicatestore.com.au',
-      password: 'test123456',
-    },
+    resolver: zodResolver(loginSchema)
   });
 
   const onSubmit = async (data: LoginFormData) => {
