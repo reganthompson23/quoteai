@@ -107,6 +107,10 @@ async function setupDatabase() {
     const existingTables = await db.all("SELECT name FROM sqlite_master WHERE type='table';");
     console.log('Existing tables:', existingTables.map(t => t.name).join(', '));
 
+    // List all users in the database
+    const users = await db.all('SELECT email, businessName, industry FROM users');
+    console.log('Users in database:', users);
+
     // Create tables if they don't exist
     console.log('Creating tables...');
     
@@ -294,13 +298,27 @@ app.post('/auth/signup', async (req, res) => {
 app.post('/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+    console.log('Login attempt for email:', email);
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+    console.log('User found in database:', user ? 'Yes' : 'No');
+
+    if (!user) {
+      console.log('No user found with email:', email);
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    console.log('Password match:', passwordMatch ? 'Yes' : 'No');
+
+    if (!passwordMatch) {
+      console.log('Password does not match for user:', email);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     const token = jwt.sign({ id: user.id, email }, process.env.JWT_SECRET);
+    console.log('JWT token generated successfully');
+
     res.json({
       token,
       user: {
@@ -312,6 +330,7 @@ app.post('/auth/login', async (req, res) => {
       },
     });
   } catch (error) {
+    console.error('Login Error:', error);
     res.status(500).json({ message: error.message });
   }
 });
