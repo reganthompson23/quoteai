@@ -35,12 +35,6 @@ const dbPath = '/opt/render/project/src/data/database.sqlite';
 
 console.log('Setting up database at:', dbPath);
 
-// Ensure the database directory exists
-const dataDir = dirname(dbPath);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
 async function setupDatabase() {
   try {
     // Create data directory if it doesn't exist
@@ -52,157 +46,44 @@ async function setupDatabase() {
       fs.mkdirSync(dataDir, { recursive: true });
     }
 
-    console.log('Data directory exists:', dataDir);
-    console.log('Checking if directory is writable...');
-    
-    try {
-      await fs.promises.access(dataDir, fs.constants.W_OK);
-      console.log('Directory is writable');
-    } catch (err) {
-      console.error('Directory is not writable:', err);
-      throw err;
-    }
-
     // Open database connection
     console.log('Opening database connection...');
     db = await open({
       filename: dbPath,
       driver: sqlite3.Database,
     });
+    console.log('Database connection opened successfully');
 
-    // Create users table with needsPasswordChange column
+    // Create tables if they don't exist
     await db.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
         email TEXT UNIQUE,
         password TEXT,
-        name TEXT,
         businessName TEXT,
-        businessAddress TEXT,
-        phone TEXT,
         industry TEXT,
-        needsPasswordChange BOOLEAN DEFAULT 0,
         viewed BOOLEAN DEFAULT 0,
+        needsPasswordChange BOOLEAN DEFAULT 0,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-    // Add new columns if they don't exist
-    try {
-      await db.exec(`
-        ALTER TABLE users 
-        ADD COLUMN name TEXT;
-      `);
-      await db.exec(`
-        ALTER TABLE users 
-        ADD COLUMN businessAddress TEXT;
-      `);
-      await db.exec(`
-        ALTER TABLE users 
-        ADD COLUMN phone TEXT;
-      `);
-      console.log('Added new user columns');
-    } catch (error) {
-      // Columns might already exist, which is fine
-      console.log('Some columns might already exist:', error.message);
-    }
-
-    // Check if tables exist
-    const existingTables = await db.all("SELECT name FROM sqlite_master WHERE type='table';");
-    console.log('Existing tables:', existingTables.map(t => t.name).join(', '));
-
-    // List all users in the database
-    const users = await db.all('SELECT email, businessName, industry FROM users');
-    console.log('Users in database:', users);
-
-    // Create tables if they don't exist
-    console.log('Creating tables...');
+    // Check if admin user exists
+    const adminUser = await db.get('SELECT * FROM users WHERE email = ?', ['regan@syndicatestore.com.au']);
     
-    // Add isDeleted column to chats if it doesn't exist
-    try {
-      await db.exec(`
-        ALTER TABLE chats 
-        ADD COLUMN isDeleted BOOLEAN DEFAULT 0;
-      `);
-      console.log('Added isDeleted column to chats table');
-    } catch (error) {
-      // Column might already exist, which is fine
-      console.log('isDeleted column might already exist:', error.message);
-    }
-
-    await db.exec(`
-      CREATE TABLE IF NOT EXISTS jobs (
-        id TEXT PRIMARY KEY,
-        businessId TEXT,
-        title TEXT,
-        description TEXT,
-        price REAL,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (businessId) REFERENCES users(id)
-      );
-    `);
-    console.log('Jobs table created');
-
-    await db.exec(`
-      CREATE TABLE IF NOT EXISTS rules (
-        id TEXT PRIMARY KEY,
-        businessId TEXT,
-        title TEXT,
-        description TEXT,
-        isActive BOOLEAN,
-        FOREIGN KEY (businessId) REFERENCES users(id)
-      );
-    `);
-    console.log('Rules table created');
-
-    await db.exec(`
-      CREATE TABLE IF NOT EXISTS chats (
-        id TEXT PRIMARY KEY,
-        businessId TEXT,
-        chatNumber INTEGER,
-        summary TEXT,
-        contactName TEXT,
-        contactEmail TEXT,
-        contactPhone TEXT,
-        messages TEXT,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        isDeleted BOOLEAN DEFAULT 0,
-        FOREIGN KEY (businessId) REFERENCES users(id),
-        UNIQUE(businessId, chatNumber)
-      );
-    `);
-    console.log('Chats table created');
-
-    // Create index for chat numbers per business
-    await db.exec(`
-      CREATE INDEX IF NOT EXISTS idx_chats_business 
-      ON chats(businessId, chatNumber);
-    `);
-    console.log('Chat indices created');
-
-    // Verify tables were created
-    const finalTables = await db.all("SELECT name FROM sqlite_master WHERE type='table';");
-    console.log('Final tables:', finalTables.map(t => t.name).join(', '));
-
-    // Insert demo user if not exists
-    const demoUser = await db.get('SELECT * FROM users WHERE email = ?', ['regan@syndicatestore.com.au']);
-    if (!demoUser) {
-      console.log('Creating demo user...');
+    if (!adminUser) {
+      console.log('Creating admin user...');
       const hashedPassword = await bcrypt.hash('test123456', 10);
       await db.run(
-        'INSERT INTO users (id, email, password, businessName, industry) VALUES (?, ?, ?, ?, ?)',
-        ['demo-user', 'regan@syndicatestore.com.au', hashedPassword, 'Syndicate Painting', 'Painting']
+        'INSERT INTO users (id, email, password, businessName, industry, viewed) VALUES (?, ?, ?, ?, ?, ?)',
+        [crypto.randomUUID(), 'regan@syndicatestore.com.au', hashedPassword, 'Syndicate Painting', 'Painting', true]
       );
-      console.log('Demo user created');
+      console.log('Admin user created successfully');
     }
 
-    // Verify users exist
-    const userCount = await db.get('SELECT COUNT(*) as count FROM users');
-    console.log('Total users in database:', userCount.count);
-
-    console.log('Database setup complete!');
+    console.log('Database setup completed successfully');
   } catch (error) {
-    console.error('Database setup failed:', error);
+    console.error('Database setup error:', error);
     throw error;
   }
 }
