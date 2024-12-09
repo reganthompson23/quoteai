@@ -31,11 +31,15 @@ try {
 
 // Database setup
 let db;
-const dbPath = process.env.NODE_ENV === 'production'
-  ? '/opt/render/project/src/data/database.sqlite'
-  : process.env.DATABASE_URL || './database.sqlite';
+const dbPath = '/opt/render/project/src/data/database.sqlite';
 
 console.log('Setting up database at:', dbPath);
+
+// Ensure the database directory exists
+const dataDir = dirname(dbPath);
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
 
 async function setupDatabase() {
   try {
@@ -207,7 +211,7 @@ setupDatabase().catch(console.error);
 
 // Middleware
 const corsOptions = {
-  origin: ['https://pricepilot.chat', 'http://localhost:5173'],
+  origin: 'https://pricepilot.chat',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
