@@ -41,9 +41,11 @@ console.log('Setting up database at:', dbPath);
 
 async function setupDatabase() {
   try {
+    console.log('=== Database Setup ===');
+    
     // Create data directory if it doesn't exist
     const dataDir = dirname(dbPath);
-    console.log('Data directory path:', dataDir);
+    console.log('Setting up database directory:', dataDir);
     
     if (!fs.existsSync(dataDir)) {
       console.log('Creating data directory...');
@@ -58,7 +60,8 @@ async function setupDatabase() {
     });
     console.log('Database connection opened successfully');
 
-    // Create tables if they don't exist
+    // Create tables
+    console.log('Creating/verifying users table...');
     await db.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
@@ -72,22 +75,33 @@ async function setupDatabase() {
       );
     `);
 
-    // Check if admin user exists
+    // Check for admin user
+    console.log('Checking for admin user...');
     const adminUser = await db.get('SELECT * FROM users WHERE email = ?', ['regan@syndicatestore.com.au']);
     
     if (!adminUser) {
-      console.log('Creating admin user...');
-      const hashedPassword = await bcrypt.hash('test123456', 10);
+      console.log('Admin user not found, creating...');
+      const adminPassword = 'test123456';
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      
       await db.run(
         'INSERT INTO users (id, email, password, businessName, industry, viewed) VALUES (?, ?, ?, ?, ?, ?)',
         [crypto.randomUUID(), 'regan@syndicatestore.com.au', hashedPassword, 'Syndicate Painting', 'Painting', true]
       );
       console.log('Admin user created successfully');
+    } else {
+      console.log('Admin user already exists');
     }
+
+    // List all users
+    const users = await db.all('SELECT email, businessName, industry FROM users');
+    console.log('Current users in database:', users);
 
     console.log('Database setup completed successfully');
   } catch (error) {
-    console.error('Database setup error:', error);
+    console.error('=== Database Setup Error ===');
+    console.error('Error details:', error);
+    console.error('Stack trace:', error.stack);
     throw error;
   }
 }
@@ -186,33 +200,43 @@ app.post('/auth/signup', async (req, res) => {
   }
 });
 
+// Login route with detailed logging
 app.post('/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log('Login attempt for email:', email);
+    console.log('=== Login Attempt ===');
+    console.log('Email:', email);
+    console.log('JWT_SECRET exists:', !!JWT_SECRET);
 
+    // Get user from database
     const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
-    console.log('User found:', user ? 'Yes' : 'No');
-
+    console.log('Database query completed');
+    console.log('User found in database:', !!user);
+    
     if (!user) {
+      console.log('Login failed: User not found');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    // Check password
     const passwordMatch = await bcrypt.compare(password, user.password);
-    console.log('Password match:', passwordMatch ? 'Yes' : 'No');
+    console.log('Password check completed');
+    console.log('Password matches:', passwordMatch);
 
     if (!passwordMatch) {
+      console.log('Login failed: Password incorrect');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Generate token with explicit expiration
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: '24h' }  // Token expires in 24 hours
-    );
+    // Generate token
+    const tokenPayload = { id: user.id, email: user.email };
+    console.log('Creating token with payload:', tokenPayload);
+    
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '24h' });
+    console.log('Token generated successfully');
 
-    res.json({
+    // Send response
+    const response = {
       token,
       user: {
         id: user.id,
@@ -221,9 +245,14 @@ app.post('/auth/login', async (req, res) => {
         industry: user.industry,
         needsPasswordChange: user.needsPasswordChange
       }
-    });
+    };
+    console.log('Sending successful login response');
+    res.json(response);
+    
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('=== Login Error ===');
+    console.error('Error details:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({ message: 'Internal server error during login' });
   }
 });
