@@ -31,7 +31,9 @@ try {
 
 // Database setup
 let db;
-const dbPath = '/opt/render/project/src/data/database.sqlite';
+const dbPath = process.env.NODE_ENV === 'production'
+  ? '/opt/render/project/src/data/database.sqlite'
+  : process.env.DATABASE_URL || './database.sqlite';
 
 console.log('Setting up database at:', dbPath);
 
