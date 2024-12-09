@@ -31,9 +31,7 @@ try {
 
 // Database setup
 let db;
-const dbPath = process.env.NODE_ENV === 'production'
-  ? '/opt/render/project/src/data/database.sqlite'
-  : './database.sqlite';
+const dbPath = '/opt/render/project/src/data/database.sqlite';
 
 console.log('Setting up database at:', dbPath);
 
@@ -207,9 +205,15 @@ setupDatabase().catch(console.error);
 
 // Middleware
 const corsOptions = {
-  origin: '*',
+  origin: [
+    'https://quoteai-backend.onrender.com',
+    'https://quoteai.netlify.app',
+    'http://localhost:5173',  // for local development
+    'http://localhost:3000'   // for local development
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 };
 
 app.use(cors(corsOptions));
