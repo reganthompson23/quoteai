@@ -16,6 +16,10 @@ const app = express();
 const port = process.env.PORT || 3001;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Use a consistent JWT secret
+const JWT_SECRET = process.env.JWT_SECRET || 'your-fallback-secret-key-here';
+console.log('JWT configuration initialized');
+
 // Initialize OpenAI with error handling
 let openai;
 try {
@@ -115,13 +119,14 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ message: 'No token provided' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ message: 'Invalid token' });
-    }
+  try {
+    const user = jwt.verify(token, JWT_SECRET);
     req.user = user;
     next();
-  });
+  } catch (err) {
+    console.error('JWT verification error:', err.message);
+    return res.status(403).json({ message: 'Invalid or expired token' });
+  }
 };
 
 // Routes
@@ -187,10 +192,9 @@ app.post('/auth/login', async (req, res) => {
     console.log('Login attempt for email:', email);
 
     const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
-    console.log('User found in database:', user ? 'Yes' : 'No');
+    console.log('User found:', user ? 'Yes' : 'No');
 
     if (!user) {
-      console.log('No user found with email:', email);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
@@ -198,12 +202,15 @@ app.post('/auth/login', async (req, res) => {
     console.log('Password match:', passwordMatch ? 'Yes' : 'No');
 
     if (!passwordMatch) {
-      console.log('Password does not match for user:', email);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: user.id, email }, process.env.JWT_SECRET);
-    console.log('JWT token generated successfully');
+    // Generate token with explicit expiration
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '24h' }  // Token expires in 24 hours
+    );
 
     res.json({
       token,
@@ -213,11 +220,11 @@ app.post('/auth/login', async (req, res) => {
         businessName: user.businessName,
         industry: user.industry,
         needsPasswordChange: user.needsPasswordChange
-      },
+      }
     });
   } catch (error) {
-    console.error('Login Error:', error);
-    res.status(500).json({ message: error.message });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Internal server error during login' });
   }
 });
 
