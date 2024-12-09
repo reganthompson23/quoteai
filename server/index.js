@@ -108,14 +108,16 @@ async function setupDatabase() {
 
 setupDatabase().catch(console.error);
 
-// Middleware
+// CORS Configuration
 const corsOptions = {
-  origin: 'https://pricepilot.chat',
+  origin: ['https://pricepilot.chat', 'https://www.pricepilot.chat'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: true,
+  maxAge: 86400 // 24 hours
 };
 
+// Apply CORS before any routes
 app.use(cors(corsOptions));
 app.use(express.json());
 
@@ -200,13 +202,20 @@ app.post('/auth/signup', async (req, res) => {
   }
 });
 
-// Login route with detailed logging
-app.post('/auth/login', async (req, res) => {
+// Handle preflight requests for login
+app.options('/auth/login', cors(corsOptions));
+
+// Login route with better error handling
+app.post('/auth/login', cors(corsOptions), async (req, res) => {
   try {
     const { email, password } = req.body;
     console.log('=== Login Attempt ===');
     console.log('Email:', email);
-    console.log('JWT_SECRET exists:', !!JWT_SECRET);
+
+    if (!email || !password) {
+      console.log('Login failed: Missing email or password');
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
 
     // Get user from database
     const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
@@ -230,13 +239,17 @@ app.post('/auth/login', async (req, res) => {
 
     // Generate token
     const tokenPayload = { id: user.id, email: user.email };
-    console.log('Creating token with payload:', tokenPayload);
-    
     const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '24h' });
     console.log('Token generated successfully');
 
+    // Set response headers
+    res.set({
+      'Access-Control-Allow-Origin': 'https://pricepilot.chat',
+      'Access-Control-Allow-Credentials': 'true'
+    });
+
     // Send response
-    const response = {
+    res.json({
       token,
       user: {
         id: user.id,
@@ -245,9 +258,7 @@ app.post('/auth/login', async (req, res) => {
         industry: user.industry,
         needsPasswordChange: user.needsPasswordChange
       }
-    };
-    console.log('Sending successful login response');
-    res.json(response);
+    });
     
   } catch (error) {
     console.error('=== Login Error ===');
