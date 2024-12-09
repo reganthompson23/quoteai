@@ -205,12 +205,7 @@ setupDatabase().catch(console.error);
 
 // Middleware
 const corsOptions = {
-  origin: [
-    'https://quoteai-backend.onrender.com',
-    'https://quoteai.netlify.app',
-    'http://localhost:5173',  // for local development
-    'http://localhost:3000'   // for local development
-  ],
+  origin: ['https://pricepilot.chat', 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
