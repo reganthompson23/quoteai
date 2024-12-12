@@ -210,7 +210,11 @@ app.post('/auth/signup', async (req, res) => {
     });
 
     // Generate token
-    const token = jwt.sign({ id: userId, email }, process.env.JWT_SECRET);
+    const token = jwt.sign(
+      { id: userId, email },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
     res.status(201).json({
       token,
@@ -290,11 +294,31 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
     }
 
     // Generate token
+    console.log('Generating JWT token with:', {
+      userId: user.id,
+      email: user.email,
+      hasJwtSecret: !!JWT_SECRET,
+      jwtSecretLength: JWT_SECRET?.length
+    });
+
     const token = jwt.sign(
       { id: user.id, email: user.email },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
+
+    // Verify the token immediately to ensure it's valid
+    try {
+      const verified = jwt.verify(token, JWT_SECRET);
+      console.log('Token verification successful:', {
+        tokenGenerated: !!token,
+        tokenLength: token?.length,
+        verifiedPayload: verified
+      });
+    } catch (verifyError) {
+      console.error('Token verification failed:', verifyError);
+      throw verifyError;
+    }
 
     res.json({
       token,
@@ -307,8 +331,8 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Login Error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('JWT Error:', error);
+    res.status(500).json({ message: 'Authentication error' });
   }
 });
 
