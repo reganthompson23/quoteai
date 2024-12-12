@@ -917,3 +917,43 @@ app.put('/auth/update-details', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Failed to update user details' });
   }
 });
+
+// Temporary debug endpoint
+app.get('/debug-db', async (req, res) => {
+  try {
+    console.log('=== Debug Database State ===');
+    
+    // Check database connection
+    console.log('Database path:', dbPath);
+    console.log('Database connection:', !!db);
+    
+    // Get all users (non-sensitive data only)
+    const users = await db.all('SELECT email, businessName, industry FROM users');
+    console.log('Found users:', users);
+    
+    // Get specific user details (no password)
+    const adminUser = await db.get(
+      'SELECT email, businessName, industry FROM users WHERE email = ?',
+      ['regan@syndicatestore.com.au']
+    );
+    console.log('Admin user exists:', !!adminUser);
+
+    res.json({
+      databaseConnected: !!db,
+      userCount: users.length,
+      users: users.map(u => ({
+        email: u.email,
+        businessName: u.businessName,
+        industry: u.industry
+      })),
+      adminExists: !!adminUser
+    });
+  } catch (error) {
+    console.error('Debug endpoint error:', error);
+    res.status(500).json({ 
+      error: 'Database error',
+      details: error.message,
+      stack: error.stack
+    });
+  }
+});
