@@ -256,7 +256,7 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
       email: user?.email,
       hasPassword: !!user?.password,
       passwordLength: user?.password?.length,
-      hashedPasswordStart: user?.password?.substring(0, 10) + '...'
+      storedHash: user?.password // Log the full hash for debugging
     });
 
     if (!user) {
@@ -269,11 +269,25 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
     console.log('Password comparison details:', {
       providedPassword: cleanPassword,
       passwordLength: cleanPassword.length,
-      storedHashLength: user.password.length
+      storedHash: user.password,
+      storedHashLength: user.password.length,
+      isHashValid: user.password.startsWith('$2') // Check if it's a valid bcrypt hash
+    });
+    
+    // Try creating a new hash with the provided password
+    const testHash = await bcrypt.hash(cleanPassword, 10);
+    console.log('Test hash generation:', {
+      providedPassword: cleanPassword,
+      generatedHash: testHash,
+      hashLength: testHash.length
     });
     
     const passwordMatch = await bcrypt.compare(cleanPassword, user.password);
-    console.log('Password comparison result:', passwordMatch);
+    console.log('Password comparison result:', {
+      match: passwordMatch,
+      cleanPassword,
+      storedHash: user.password
+    });
 
     if (!passwordMatch) {
       console.log('Password does not match');
