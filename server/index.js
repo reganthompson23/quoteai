@@ -45,48 +45,38 @@ console.log('Setting up database at:', dbPath);
 async function setupDatabase() {
   try {
     console.log('=== Database Setup ===');
-    console.log('Current working directory:', process.cwd());
+    
+    // Check database file status
+    let dbFileExists = false;
+    let dbFileStats = null;
+    try {
+      dbFileStats = fs.statSync(dbPath);
+      dbFileExists = true;
+      console.log('Database file info:', {
+        exists: true,
+        created: dbFileStats.birthtime,
+        modified: dbFileStats.mtime,
+        size: dbFileStats.size
+      });
+    } catch (e) {
+      console.log('Database file does not exist yet');
+    }
     
     // Ensure data directory exists
     const dataDir = dirname(dbPath);
-    console.log('Checking data directory:', dataDir);
-    
-    try {
-      if (!fs.existsSync(dataDir)) {
-        console.log('Creating data directory...');
-        fs.mkdirSync(dataDir, { recursive: true, mode: 0o777 });
-        console.log('Data directory created successfully');
-      } else {
-        console.log('Data directory already exists');
-        // Check if directory is writable
-        try {
-          fs.accessSync(dataDir, fs.constants.W_OK);
-          console.log('Data directory is writable');
-        } catch (e) {
-          console.error('Data directory is not writable:', e);
-          // Try to make it writable
-          fs.chmodSync(dataDir, 0o777);
-          console.log('Updated directory permissions');
-        }
-      }
-    } catch (dirError) {
-      console.error('Error with data directory:', dirError);
-      // Try alternative location
-      const altPath = join(process.cwd(), 'database.sqlite');
-      console.log('Trying alternative database path:', altPath);
-      dbPath = altPath;
+    if (!fs.existsSync(dataDir)) {
+      console.log('Creating data directory...');
+      fs.mkdirSync(dataDir, { recursive: true });
     }
 
     // Open database connection
-    console.log('Attempting to open database connection...');
+    console.log('Opening database connection...');
     db = await open({
       filename: dbPath,
       driver: sqlite3.Database,
     });
-    console.log('Database connection established successfully');
 
     // Create users table
-    console.log('Creating users table if not exists...');
     await db.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
@@ -99,7 +89,6 @@ async function setupDatabase() {
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log('Users table ready');
 
     // Check for admin user
     const adminUser = await db.get('SELECT * FROM users WHERE email = ?', ['regan@syndicatestore.com.au']);
@@ -111,18 +100,25 @@ async function setupDatabase() {
         'INSERT INTO users (id, email, password, businessName, industry, viewed) VALUES (?, ?, ?, ?, ?, ?)',
         [crypto.randomUUID(), 'regan@syndicatestore.com.au', hashedPassword, 'Syndicate Painting', 'Painting', true]
       );
-      console.log('Admin user created successfully');
     } else {
-      console.log('Admin user already exists');
+      console.log('Admin user exists:', {
+        email: adminUser.email,
+        hasPassword: !!adminUser.password,
+        passwordLength: adminUser.password?.length,
+        createdAt: adminUser.createdAt
+      });
     }
 
     // List all users for verification
-    const users = await db.all('SELECT email, businessName, industry FROM users');
-    console.log('Current users:', users);
+    const users = await db.all('SELECT email, password, createdAt FROM users');
+    console.log('Current users:', users.map(u => ({
+      email: u.email,
+      passwordHash: u.password?.substring(0, 10) + '...',
+      createdAt: u.createdAt
+    })));
 
   } catch (error) {
     console.error('Database setup error:', error);
-    console.error('Error stack:', error.stack);
     throw error;
   }
 }
