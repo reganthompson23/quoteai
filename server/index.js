@@ -98,11 +98,10 @@ setupDatabase().catch(console.error);
 
 // CORS Configuration
 const corsOptions = {
-  origin: ['https://pricepilot.chat', 'https://www.pricepilot.chat'],
+  origin: '*',  // Allow all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  maxAge: 86400 // 24 hours
+  credentials: false  // Must be false when using '*'
 };
 
 // Apply CORS before any routes
