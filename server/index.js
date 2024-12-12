@@ -1022,10 +1022,10 @@ app.post('/test-auth', async (req, res) => {
     const hashedPassword = await bcrypt.hash(testPassword, 10);
     const userId = crypto.randomUUID();
     
-    // Store the user
+    // Store the user (without the viewed column)
     await db.run(
-      'INSERT INTO users (id, email, password, businessName, industry, viewed) VALUES (?, ?, ?, ?, ?, ?)',
-      [userId, 'test@example.com', hashedPassword, 'Test Business', 'Testing', true]
+      'INSERT INTO users (id, email, password, businessName, industry) VALUES (?, ?, ?, ?, ?)',
+      [userId, 'test@example.com', hashedPassword, 'Test Business', 'Testing']
     );
     
     console.log('Created test user with:', {
@@ -1035,12 +1035,17 @@ app.post('/test-auth', async (req, res) => {
     
     // Immediately try to verify
     const user = await db.get('SELECT * FROM users WHERE email = ?', ['test@example.com']);
-    const match = await bcrypt.compare(testPassword, user.password);
     
-    console.log('Immediate verification:', {
+    // Try multiple verification approaches
+    const directMatch = await bcrypt.compare(testPassword, user.password);
+    const newHash = await bcrypt.hash(testPassword, 10);
+    
+    console.log('Verification results:', {
       originalPassword: testPassword,
       storedHash: user.password,
-      passwordMatches: match
+      newHash: newHash,
+      directMatch: directMatch,
+      hashesEqual: hashedPassword === user.password
     });
     
     // Clean up - delete test user
@@ -1049,7 +1054,7 @@ app.post('/test-auth', async (req, res) => {
     res.json({ 
       success: true,
       testResults: {
-        passwordMatched: match,
+        passwordMatched: directMatch,
         originalHash: hashedPassword,
         storedHash: user.password,
         hashesEqual: hashedPassword === user.password
@@ -1057,6 +1062,7 @@ app.post('/test-auth', async (req, res) => {
     });
   } catch (error) {
     console.error('Test Auth Error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ message: 'Test failed', error: error.message });
   }
 });
