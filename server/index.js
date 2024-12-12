@@ -197,6 +197,10 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
   try {
     console.log('=== Login Request ===');
     const { email, password } = req.body;
+    
+    // Strip any quotes from the password
+    const cleanPassword = password.replace(/^["']|["']$/g, '');
+    
     console.log('Login attempt for:', email);
 
     // Get full user record including password hash
@@ -215,9 +219,9 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
     // Log password comparison details
     console.log('Attempting password comparison');
     console.log('Stored password hash:', user.password);
-    console.log('Provided password:', password);
+    console.log('Provided password (cleaned):', cleanPassword);
     
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const passwordMatch = await bcrypt.compare(cleanPassword, user.password);
     console.log('Password comparison result:', passwordMatch);
 
     if (!passwordMatch) {

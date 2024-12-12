@@ -36,7 +36,7 @@ export function Features() {
             Never Miss an Opportunity
           </p>
           <p className="mt-6 text-lg leading-8 text-gray-600">
-            Convert every inquiry into a detailed project scope and qualified lead—all while providing instant estimates that match your pricing structure.
+            Convert every website visit into a detailed project scope and qualified lead—all while providing instant estimates that match your pricing structure.
           </p>
         </div>
         <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
