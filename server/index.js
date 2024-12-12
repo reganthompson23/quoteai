@@ -1011,3 +1011,52 @@ app.get('/debug-db', async (req, res) => {
     });
   }
 });
+
+// Add this after your other routes
+app.post('/test-auth', async (req, res) => {
+  try {
+    console.log('=== Testing Authentication ===');
+    
+    // Create a test user with a known password
+    const testPassword = 'TestPassword123';
+    const hashedPassword = await bcrypt.hash(testPassword, 10);
+    const userId = crypto.randomUUID();
+    
+    // Store the user
+    await db.run(
+      'INSERT INTO users (id, email, password, businessName, industry, viewed) VALUES (?, ?, ?, ?, ?, ?)',
+      [userId, 'test@example.com', hashedPassword, 'Test Business', 'Testing', true]
+    );
+    
+    console.log('Created test user with:', {
+      password: testPassword,
+      hash: hashedPassword
+    });
+    
+    // Immediately try to verify
+    const user = await db.get('SELECT * FROM users WHERE email = ?', ['test@example.com']);
+    const match = await bcrypt.compare(testPassword, user.password);
+    
+    console.log('Immediate verification:', {
+      originalPassword: testPassword,
+      storedHash: user.password,
+      passwordMatches: match
+    });
+    
+    // Clean up - delete test user
+    await db.run('DELETE FROM users WHERE email = ?', ['test@example.com']);
+    
+    res.json({ 
+      success: true,
+      testResults: {
+        passwordMatched: match,
+        originalHash: hashedPassword,
+        storedHash: user.password,
+        hashesEqual: hashedPassword === user.password
+      }
+    });
+  } catch (error) {
+    console.error('Test Auth Error:', error);
+    res.status(500).json({ message: 'Test failed', error: error.message });
+  }
+});
