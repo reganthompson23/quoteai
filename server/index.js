@@ -233,20 +233,30 @@ app.options('/auth/login', cors(corsOptions));
 // Login route with password comparison logging
 app.post('/auth/login', cors(corsOptions), async (req, res) => {
   try {
-    console.log('=== Login Request ===');
+    console.log('\n=== Login Request ===');
     const { email, password } = req.body;
+    
+    console.log('Raw request body:', req.body);
     
     // Strip any quotes from the password
     const cleanPassword = password.replace(/^["']|["']$/g, '');
     
-    console.log('Login attempt for:', email);
+    console.log('Login attempt details:', {
+      email,
+      originalPassword: password,
+      cleanPassword,
+      hasPassword: !!password,
+      passwordLength: password?.length
+    });
 
     // Get full user record including password hash
     const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
-    console.log('Found user:', {
+    console.log('Database query result:', {
+      userFound: !!user,
       email: user?.email,
       hasPassword: !!user?.password,
-      passwordLength: user?.password?.length
+      passwordLength: user?.password?.length,
+      hashedPasswordStart: user?.password?.substring(0, 10) + '...'
     });
 
     if (!user) {
@@ -256,8 +266,11 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
 
     // Log password comparison details
     console.log('Attempting password comparison');
-    console.log('Stored password hash:', user.password);
-    console.log('Provided password (cleaned):', cleanPassword);
+    console.log('Password comparison details:', {
+      providedPassword: cleanPassword,
+      passwordLength: cleanPassword.length,
+      storedHashLength: user.password.length
+    });
     
     const passwordMatch = await bcrypt.compare(cleanPassword, user.password);
     console.log('Password comparison result:', passwordMatch);
