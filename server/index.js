@@ -234,7 +234,7 @@ app.post('/auth/signup', async (req, res) => {
 // Handle preflight requests for login
 app.options('/auth/login', cors(corsOptions));
 
-// Login route with password comparison logging
+// Login route
 app.post('/auth/login', cors(corsOptions), async (req, res) => {
   try {
     console.log('\n=== Login Request ===');
@@ -251,22 +251,38 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
     const cleanPassword = String(password).trim();
     const storedHash = String(user.password).trim();
 
-    console.log('Password verification:', {
+    // Generate a new hash with the provided password
+    const newHash = await bcrypt.hash(cleanPassword, 10);
+
+    console.log('Password details:', {
       email,
+      providedPassword: cleanPassword,
       passwordLength: cleanPassword.length,
+      storedHash,
+      newlyGeneratedHash: newHash,
+      hashesStartWith: {
+        stored: storedHash.substring(0, 29),
+        new: newHash.substring(0, 29)
+      }
+    });
+
+    // Try both the direct comparison and a new hash comparison
+    const directMatch = await bcrypt.compare(cleanPassword, storedHash);
+    console.log('Password verification results:', {
+      directMatch,
       hashLength: storedHash.length,
       hashValid: storedHash.startsWith('$2a$')
     });
 
-    // Simple bcrypt test
-    const testResult = await bcrypt.compare('test123', await bcrypt.hash('test123', 10));
-    console.log('Bcrypt self-test result:', testResult);
-
-    // Actual password comparison
-    const match = await bcrypt.compare(cleanPassword, storedHash);
-    console.log('Password match result:', match);
-
-    if (!match) {
+    if (!directMatch) {
+      // If no match, let's see what's in the database
+      const allUsers = await db.all('SELECT email, password FROM users');
+      console.log('All users in database:', allUsers.map(u => ({
+        email: u.email,
+        passwordHash: u.password,
+        hashValid: u.password.startsWith('$2a$')
+      })));
+      
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
