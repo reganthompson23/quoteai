@@ -192,32 +192,48 @@ app.post('/auth/signup', async (req, res) => {
 // Handle preflight requests for login
 app.options('/auth/login', cors(corsOptions));
 
-// Login route with better error handling
+// Login route with debug logging
 app.post('/auth/login', cors(corsOptions), async (req, res) => {
   try {
+    console.log('=== Login Request ===');
+    console.log('Raw request body:', req.body);
+    
     const { email, password } = req.body;
-    console.log('Login attempt for:', email);
+    console.log('Extracted email:', email);
+    console.log('Password provided:', !!password);
 
     if (!email || !password) {
+      console.log('Missing email or password');
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
+    console.log('Querying database for user...');
     const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+    console.log('User found in database:', !!user);
+    
     if (!user) {
+      console.log('No user found with email:', email);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    console.log('Comparing passwords...');
     const passwordMatch = await bcrypt.compare(password, user.password);
+    console.log('Password match result:', passwordMatch);
+
     if (!passwordMatch) {
+      console.log('Password does not match');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    console.log('Generating JWT token...');
     const token = jwt.sign(
       { id: user.id, email: user.email },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
+    console.log('Token generated successfully');
 
+    console.log('Sending successful response');
     res.json({
       token,
       user: {
@@ -229,7 +245,9 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('=== Login Error ===');
+    console.error('Error details:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
