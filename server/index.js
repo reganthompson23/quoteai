@@ -773,7 +773,8 @@ app.listen(port, () => {
 // Admin routes (protected by admin check)
 const isAdmin = (req, res, next) => {
   const { email } = req.user;
-  if (email === 'regan@syndicatestore.com.au') {
+  const adminEmails = ['regan@syndicatestore.com.au', 'regan@roredistribution.com'];
+  if (adminEmails.includes(email)) {
     next();
   } else {
     res.status(403).json({ message: 'Admin access required' });
@@ -1064,5 +1065,46 @@ app.post('/test-auth', async (req, res) => {
     console.error('Test Auth Error:', error);
     console.error('Error stack:', error.stack);
     res.status(500).json({ message: 'Test failed', error: error.message });
+  }
+});
+
+// Add a route to create new admin
+app.post('/create-admin', async (req, res) => {
+  try {
+    console.log('=== Creating New Admin User ===');
+    
+    const email = 'regan@roredistribution.com';
+    const password = 'AdminPass2024!';  // We'll show this only once
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const userId = crypto.randomUUID();
+    
+    // Create the new admin user
+    await db.run(
+      'INSERT INTO users (id, email, password, businessName, industry) VALUES (?, ?, ?, ?, ?)',
+      [userId, email, hashedPassword, 'Rore Distribution', 'Admin']
+    );
+    
+    // Verify the user was created
+    const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+    const match = await bcrypt.compare(password, user.password);
+    
+    console.log('New admin creation results:', {
+      email,
+      passwordWorking: match,
+      userCreated: !!user
+    });
+    
+    res.json({
+      success: true,
+      message: 'New admin user created',
+      credentials: {
+        email,
+        password,  // Only shown once for initial login
+        note: 'Please save these credentials and change the password after first login'
+      }
+    });
+  } catch (error) {
+    console.error('Admin Creation Error:', error);
+    res.status(500).json({ message: 'Failed to create admin user', error: error.message });
   }
 });
