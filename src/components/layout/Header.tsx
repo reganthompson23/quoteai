@@ -4,7 +4,8 @@ import { useAuthStore } from '../../store/auth';
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuthStore();
-  const isAdmin = user?.email === 'regan@syndicatestore.com.au';
+  const adminEmails = ['regan@syndicatestore.com.au', 'regan@roredistribution.com'];
+  const isAdmin = user?.email && adminEmails.includes(user.email);
 
   return (
     <header className="bg-white shadow fixed top-0 left-0 right-0 z-50">

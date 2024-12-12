@@ -22,8 +22,10 @@ export function AdminDashboard() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [tempPassword, setTempPassword] = useState('');
 
+  const adminEmails = ['regan@syndicatestore.com.au', 'regan@roredistribution.com'];
+  
   // Check if current user is admin
-  if (!user || user.email !== 'regan@syndicatestore.com.au') {
+  if (!user || !adminEmails.includes(user.email)) {
     return <Navigate to="/dashboard" />;
   }
 
