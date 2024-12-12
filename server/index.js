@@ -240,6 +240,17 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
     console.log('\n=== Login Request ===');
     const { email, password } = req.body;
     
+    // First, test bcrypt with a known good pair
+    const knownPassword = 'test123';
+    const knownHash = '$2a$10$abcdefghijklmnopqrstuv';  // Example hash
+    
+    console.log('Testing bcrypt configuration:', {
+      version: bcrypt.version || 'unknown',
+      saltRounds: 10,
+      hashPrefix: '$2a$',
+      implementation: bcrypt.getRounds ? 'Full' : 'Limited'
+    });
+
     // Get full user record including password hash
     const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
     
@@ -247,56 +258,46 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Ensure we're working with strings
+    // Log exact password processing
     const cleanPassword = String(password).trim();
     const storedHash = String(user.password).trim();
-
-    console.log('Raw credentials:', {
-      email,
-      password: password.split('').map(c => c.charCodeAt(0)), // Show character codes
-      cleanPassword: cleanPassword.split('').map(c => c.charCodeAt(0)),
-      storedHash: storedHash
-    });
-
-    // Test bcrypt functionality
-    console.log('Testing bcrypt...');
-    const testPassword = 'test123';
-    const testHash = await bcrypt.hash(testPassword, 10);
-    const testCompare = await bcrypt.compare(testPassword, testHash);
-    console.log('Bcrypt test results:', {
-      testPassword,
-      testHash,
-      testCompareWorked: testCompare
-    });
-
-    // Try multiple comparison approaches
-    console.log('Attempting password verification...');
     
-    // Approach 1: Direct comparison
-    const directMatch = await bcrypt.compare(cleanPassword, storedHash);
-    console.log('Direct comparison result:', directMatch);
-
-    // Approach 2: Generate new hash and compare
-    const newHash = await bcrypt.hash(cleanPassword, 10);
-    console.log('Hash comparison:', {
-      storedHash,
-      newHash,
-      hashesMatch: storedHash === newHash
+    console.log('Password processing:', {
+      original: {
+        length: password.length,
+        chars: password.split('').map(c => ({ char: c, code: c.charCodeAt(0) }))
+      },
+      cleaned: {
+        length: cleanPassword.length,
+        chars: cleanPassword.split('').map(c => ({ char: c, code: c.charCodeAt(0) }))
+      },
+      hash: {
+        length: storedHash.length,
+        prefix: storedHash.substring(0, 7),
+        isValid: storedHash.startsWith('$2')
+      }
     });
 
-    // Approach 3: Try with Buffer
-    const bufferPassword = Buffer.from(cleanPassword);
-    const bufferMatch = await bcrypt.compare(bufferPassword, storedHash);
-    console.log('Buffer comparison result:', bufferMatch);
+    // Try comparison with debug info
+    let match;
+    try {
+      match = await bcrypt.compare(cleanPassword, storedHash);
+      console.log('Bcrypt comparison completed:', {
+        result: match,
+        error: null
+      });
+    } catch (e) {
+      console.error('Bcrypt comparison failed:', {
+        error: e.message,
+        stack: e.stack
+      });
+      match = false;
+    }
 
-    if (!directMatch && !bufferMatch) {
-      console.log('All password verification attempts failed');
+    if (!match) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // If we get here, one of the comparisons worked
-    console.log('Password verification succeeded');
-    
     // Generate token
     const token = jwt.sign(
       { id: user.id, email: user.email },
