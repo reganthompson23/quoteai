@@ -236,65 +236,60 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
     console.log('\n=== Login Request ===');
     const { email, password } = req.body;
     
-    console.log('Raw request body:', req.body);
-    
-    // Strip any quotes from the password
-    const cleanPassword = password.replace(/^["']|["']$/g, '');
-    
-    console.log('Login attempt details:', {
-      email,
-      originalPassword: password,
-      cleanPassword,
-      hasPassword: !!password,
-      passwordLength: password?.length
-    });
-
     // Get full user record including password hash
     const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
-    console.log('Database query result:', {
-      userFound: !!user,
-      email: user?.email,
-      hasPassword: !!user?.password,
-      passwordLength: user?.password?.length,
-      storedHash: user?.password // Log the full hash for debugging
-    });
-
+    
     if (!user) {
-      console.log('No user found');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Log password comparison details
-    console.log('Attempting password comparison');
-    console.log('Password comparison details:', {
-      providedPassword: cleanPassword,
+    // Ensure we're working with strings
+    const cleanPassword = String(password).trim();
+    const storedHash = String(user.password).trim();
+
+    console.log('Password verification attempt:', {
+      email,
+      passwordProvided: !!cleanPassword,
       passwordLength: cleanPassword.length,
-      storedHash: user.password,
-      storedHashLength: user.password.length,
-      isHashValid: user.password.startsWith('$2') // Check if it's a valid bcrypt hash
+      hashProvided: !!storedHash,
+      hashLength: storedHash.length,
+      isHashValid: storedHash.startsWith('$2')
     });
-    
-    // Try creating a new hash with the provided password
-    const testHash = await bcrypt.hash(cleanPassword, 10);
-    console.log('Test hash generation:', {
-      providedPassword: cleanPassword,
-      generatedHash: testHash,
-      hashLength: testHash.length
-    });
-    
-    const passwordMatch = await bcrypt.compare(cleanPassword, user.password);
-    console.log('Password comparison result:', {
-      match: passwordMatch,
-      cleanPassword,
-      storedHash: user.password
-    });
+
+    // Verify the stored hash is valid
+    if (!storedHash.startsWith('$2')) {
+      console.error('Invalid hash format in database');
+      // Create a new hash and update it
+      const newHash = await bcrypt.hash(cleanPassword, 10);
+      await db.run(
+        'UPDATE users SET password = ? WHERE email = ?',
+        [newHash, email]
+      );
+      console.log('Updated hash in database');
+    }
+
+    // Try the comparison
+    let passwordMatch = false;
+    try {
+      passwordMatch = await bcrypt.compare(cleanPassword, storedHash);
+    } catch (compareError) {
+      console.error('bcrypt.compare error:', compareError);
+      // If comparison fails, try with a new hash
+      const newHash = await bcrypt.hash(cleanPassword, 10);
+      await db.run(
+        'UPDATE users SET password = ? WHERE email = ?',
+        [newHash, email]
+      );
+      console.log('Updated hash after comparison error');
+      // Try comparison again with new hash
+      passwordMatch = await bcrypt.compare(cleanPassword, newHash);
+    }
 
     if (!passwordMatch) {
-      console.log('Password does not match');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    console.log('Password matched, generating token');
+    // Generate token
     const token = jwt.sign(
       { id: user.id, email: user.email },
       JWT_SECRET,
@@ -312,9 +307,7 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('=== Login Error ===');
-    console.error('Error details:', error);
-    console.error('Stack trace:', error.stack);
+    console.error('Login Error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
