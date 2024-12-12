@@ -240,17 +240,6 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
     console.log('\n=== Login Request ===');
     const { email, password } = req.body;
     
-    // First, test bcrypt with a known good pair
-    const knownPassword = 'test123';
-    const knownHash = '$2a$10$abcdefghijklmnopqrstuv';  // Example hash
-    
-    console.log('Testing bcrypt configuration:', {
-      version: bcrypt.version || 'unknown',
-      saltRounds: 10,
-      hashPrefix: '$2a$',
-      implementation: bcrypt.getRounds ? 'Full' : 'Limited'
-    });
-
     // Get full user record including password hash
     const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
     
@@ -258,41 +247,24 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Log exact password processing
+    // Clean and prepare the password (ensure it's a string)
     const cleanPassword = String(password).trim();
     const storedHash = String(user.password).trim();
-    
-    console.log('Password processing:', {
-      original: {
-        length: password.length,
-        chars: password.split('').map(c => ({ char: c, code: c.charCodeAt(0) }))
-      },
-      cleaned: {
-        length: cleanPassword.length,
-        chars: cleanPassword.split('').map(c => ({ char: c, code: c.charCodeAt(0) }))
-      },
-      hash: {
-        length: storedHash.length,
-        prefix: storedHash.substring(0, 7),
-        isValid: storedHash.startsWith('$2')
-      }
+
+    console.log('Password verification:', {
+      email,
+      passwordLength: cleanPassword.length,
+      hashLength: storedHash.length,
+      hashValid: storedHash.startsWith('$2a$')
     });
 
-    // Try comparison with debug info
-    let match;
-    try {
-      match = await bcrypt.compare(cleanPassword, storedHash);
-      console.log('Bcrypt comparison completed:', {
-        result: match,
-        error: null
-      });
-    } catch (e) {
-      console.error('Bcrypt comparison failed:', {
-        error: e.message,
-        stack: e.stack
-      });
-      match = false;
-    }
+    // Simple bcrypt test
+    const testResult = await bcrypt.compare('test123', await bcrypt.hash('test123', 10));
+    console.log('Bcrypt self-test result:', testResult);
+
+    // Actual password comparison
+    const match = await bcrypt.compare(cleanPassword, storedHash);
+    console.log('Password match result:', match);
 
     if (!match) {
       return res.status(401).json({ message: 'Invalid credentials' });
