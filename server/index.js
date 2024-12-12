@@ -192,48 +192,51 @@ app.post('/auth/signup', async (req, res) => {
 // Handle preflight requests for login
 app.options('/auth/login', cors(corsOptions));
 
-// Login route with debug logging
+// Login route with password comparison logging
 app.post('/auth/login', cors(corsOptions), async (req, res) => {
   try {
     console.log('=== Login Request ===');
-    console.log('Raw request body:', req.body);
-    
     const { email, password } = req.body;
-    console.log('Extracted email:', email);
-    console.log('Password provided:', !!password);
-
-    if (!email || !password) {
-      console.log('Missing email or password');
-      return res.status(400).json({ message: 'Email and password are required' });
-    }
-
-    console.log('Querying database for user...');
-    const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
-    console.log('User found in database:', !!user);
+    console.log('Login attempt for:', email);
     
+    // Get full user record including password hash
+    const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+    console.log('Found user:', {
+      email: user?.email,
+      hasPassword: !!user?.password,
+      passwordLength: user?.password?.length
+    });
+
     if (!user) {
-      console.log('No user found with email:', email);
+      console.log('No user found');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    console.log('Comparing passwords...');
+    // Log password comparison details
+    console.log('Attempting password comparison with:', {
+      providedPassword: password,
+      storedHashLength: user.password?.length
+    });
+
     const passwordMatch = await bcrypt.compare(password, user.password);
-    console.log('Password match result:', passwordMatch);
+    console.log('Password comparison result:', {
+      matches: passwordMatch,
+      providedPasswordLength: password?.length,
+      hashLength: user.password?.length
+    });
 
     if (!passwordMatch) {
       console.log('Password does not match');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    console.log('Generating JWT token...');
+    console.log('Password matched, generating token');
     const token = jwt.sign(
       { id: user.id, email: user.email },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
-    console.log('Token generated successfully');
 
-    console.log('Sending successful response');
     res.json({
       token,
       user: {
