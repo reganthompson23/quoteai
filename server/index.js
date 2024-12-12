@@ -16,9 +16,12 @@ const app = express();
 const port = process.env.PORT || 3001;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Use a consistent JWT secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-fallback-secret-key-here';
-console.log('JWT configuration initialized');
+// Ensure we have required environment variables
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('JWT_SECRET environment variable is required');
+  process.exit(1);
+}
 
 // Initialize OpenAI with error handling
 let openai;
@@ -43,25 +46,19 @@ async function setupDatabase() {
   try {
     console.log('=== Database Setup ===');
     
-    // Create data directory if it doesn't exist
+    // Ensure data directory exists
     const dataDir = dirname(dbPath);
-    console.log('Setting up database directory:', dataDir);
-    
     if (!fs.existsSync(dataDir)) {
-      console.log('Creating data directory...');
       fs.mkdirSync(dataDir, { recursive: true });
     }
 
     // Open database connection
-    console.log('Opening database connection...');
     db = await open({
       filename: dbPath,
       driver: sqlite3.Database,
     });
-    console.log('Database connection opened successfully');
 
-    // Create tables
-    console.log('Creating/verifying users table...');
+    // Create users table
     await db.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
@@ -76,32 +73,23 @@ async function setupDatabase() {
     `);
 
     // Check for admin user
-    console.log('Checking for admin user...');
     const adminUser = await db.get('SELECT * FROM users WHERE email = ?', ['regan@syndicatestore.com.au']);
     
     if (!adminUser) {
-      console.log('Admin user not found, creating...');
-      const adminPassword = 'test123456';
-      const hashedPassword = await bcrypt.hash(adminPassword, 10);
-      
+      console.log('Creating admin user...');
+      const hashedPassword = await bcrypt.hash('test123456', 10);
       await db.run(
         'INSERT INTO users (id, email, password, businessName, industry, viewed) VALUES (?, ?, ?, ?, ?, ?)',
         [crypto.randomUUID(), 'regan@syndicatestore.com.au', hashedPassword, 'Syndicate Painting', 'Painting', true]
       );
-      console.log('Admin user created successfully');
-    } else {
-      console.log('Admin user already exists');
     }
 
-    // List all users
+    // List all users for verification
     const users = await db.all('SELECT email, businessName, industry FROM users');
-    console.log('Current users in database:', users);
+    console.log('Current users:', users);
 
-    console.log('Database setup completed successfully');
   } catch (error) {
-    console.error('=== Database Setup Error ===');
-    console.error('Error details:', error);
-    console.error('Stack trace:', error.stack);
+    console.error('Database setup error:', error);
     throw error;
   }
 }
@@ -209,46 +197,28 @@ app.options('/auth/login', cors(corsOptions));
 app.post('/auth/login', cors(corsOptions), async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log('=== Login Attempt ===');
-    console.log('Email:', email);
+    console.log('Login attempt for:', email);
 
     if (!email || !password) {
-      console.log('Login failed: Missing email or password');
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    // Get user from database
     const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
-    console.log('Database query completed');
-    console.log('User found in database:', !!user);
-    
     if (!user) {
-      console.log('Login failed: User not found');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Check password
     const passwordMatch = await bcrypt.compare(password, user.password);
-    console.log('Password check completed');
-    console.log('Password matches:', passwordMatch);
-
     if (!passwordMatch) {
-      console.log('Login failed: Password incorrect');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Generate token
-    const tokenPayload = { id: user.id, email: user.email };
-    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '24h' });
-    console.log('Token generated successfully');
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
-    // Set response headers
-    res.set({
-      'Access-Control-Allow-Origin': 'https://pricepilot.chat',
-      'Access-Control-Allow-Credentials': 'true'
-    });
-
-    // Send response
     res.json({
       token,
       user: {
@@ -259,12 +229,9 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
         needsPasswordChange: user.needsPasswordChange
       }
     });
-    
   } catch (error) {
-    console.error('=== Login Error ===');
-    console.error('Error details:', error);
-    console.error('Stack trace:', error.stack);
-    res.status(500).json({ message: 'Internal server error during login' });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
