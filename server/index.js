@@ -251,74 +251,58 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
     const cleanPassword = String(password).trim();
     const storedHash = String(user.password).trim();
 
-    console.log('Password verification attempt:', {
+    console.log('Raw credentials:', {
       email,
-      passwordProvided: !!cleanPassword,
-      passwordLength: cleanPassword.length,
-      hashProvided: !!storedHash,
-      hashLength: storedHash.length,
-      isHashValid: storedHash.startsWith('$2')
+      password: password.split('').map(c => c.charCodeAt(0)), // Show character codes
+      cleanPassword: cleanPassword.split('').map(c => c.charCodeAt(0)),
+      storedHash: storedHash
     });
 
-    // Verify the stored hash is valid
-    if (!storedHash.startsWith('$2')) {
-      console.error('Invalid hash format in database');
-      // Create a new hash and update it
-      const newHash = await bcrypt.hash(cleanPassword, 10);
-      await db.run(
-        'UPDATE users SET password = ? WHERE email = ?',
-        [newHash, email]
-      );
-      console.log('Updated hash in database');
-    }
+    // Test bcrypt functionality
+    console.log('Testing bcrypt...');
+    const testPassword = 'test123';
+    const testHash = await bcrypt.hash(testPassword, 10);
+    const testCompare = await bcrypt.compare(testPassword, testHash);
+    console.log('Bcrypt test results:', {
+      testPassword,
+      testHash,
+      testCompareWorked: testCompare
+    });
 
-    // Try the comparison
-    let passwordMatch = false;
-    try {
-      passwordMatch = await bcrypt.compare(cleanPassword, storedHash);
-    } catch (compareError) {
-      console.error('bcrypt.compare error:', compareError);
-      // If comparison fails, try with a new hash
-      const newHash = await bcrypt.hash(cleanPassword, 10);
-      await db.run(
-        'UPDATE users SET password = ? WHERE email = ?',
-        [newHash, email]
-      );
-      console.log('Updated hash after comparison error');
-      // Try comparison again with new hash
-      passwordMatch = await bcrypt.compare(cleanPassword, newHash);
-    }
+    // Try multiple comparison approaches
+    console.log('Attempting password verification...');
+    
+    // Approach 1: Direct comparison
+    const directMatch = await bcrypt.compare(cleanPassword, storedHash);
+    console.log('Direct comparison result:', directMatch);
 
-    if (!passwordMatch) {
+    // Approach 2: Generate new hash and compare
+    const newHash = await bcrypt.hash(cleanPassword, 10);
+    console.log('Hash comparison:', {
+      storedHash,
+      newHash,
+      hashesMatch: storedHash === newHash
+    });
+
+    // Approach 3: Try with Buffer
+    const bufferPassword = Buffer.from(cleanPassword);
+    const bufferMatch = await bcrypt.compare(bufferPassword, storedHash);
+    console.log('Buffer comparison result:', bufferMatch);
+
+    if (!directMatch && !bufferMatch) {
+      console.log('All password verification attempts failed');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    // If we get here, one of the comparisons worked
+    console.log('Password verification succeeded');
+    
     // Generate token
-    console.log('Generating JWT token with:', {
-      userId: user.id,
-      email: user.email,
-      hasJwtSecret: !!JWT_SECRET,
-      jwtSecretLength: JWT_SECRET?.length
-    });
-
     const token = jwt.sign(
       { id: user.id, email: user.email },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
-
-    // Verify the token immediately to ensure it's valid
-    try {
-      const verified = jwt.verify(token, JWT_SECRET);
-      console.log('Token verification successful:', {
-        tokenGenerated: !!token,
-        tokenLength: token?.length,
-        verifiedPayload: verified
-      });
-    } catch (verifyError) {
-      console.error('Token verification failed:', verifyError);
-      throw verifyError;
-    }
 
     res.json({
       token,
@@ -331,8 +315,9 @@ app.post('/auth/login', cors(corsOptions), async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('JWT Error:', error);
-    res.status(500).json({ message: 'Authentication error' });
+    console.error('Login Error:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
