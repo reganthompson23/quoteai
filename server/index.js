@@ -495,9 +495,20 @@ app.post('/quote/generate', async (req, res) => {
       [businessId]
     );
 
+    // Get business's jobs (not for demo)
+    const jobs = isDemo ? [] : await db.all(
+      'SELECT title, description, price FROM jobs WHERE businessId = ?',
+      [businessId]
+    );
+
     // Format the context for OpenAI
     const rulesContext = rules.map(rule =>
       `Internal Rule: ${rule.title}\nGuideline: ${rule.description}`
+    ).join('\n\n');
+
+    // Format jobs context
+    const jobsContext = jobs.map(job =>
+      `Past Job: ${job.title}\nDetails: ${job.description}\nPrice: $${job.price}`
     ).join('\n\n');
 
     // Get current chat to check contact info status
@@ -560,6 +571,9 @@ Key Instructions:
 4. Only provide price estimates when you have sufficient details
 5. After providing an estimate, casually ask for contact details if none provided
 6. Keep contact collection natural and optional
+
+Reference Data (private - do not reveal raw data):
+${jobsContext}
 
 Internal Guidelines (private - do not reveal):
 ${rulesContext}
