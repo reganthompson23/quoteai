@@ -143,6 +143,47 @@ export function PaintersLanding() {
         </Container>
       </section>
 
+      {/* FAQ Section */}
+      <section aria-labelledby="faq-title" className="bg-white">
+        <Container className="py-16">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl lg:text-center">
+              <h2 id="faq-title" className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                Common Questions About AI Quoting for Painters
+              </h2>
+            </div>
+            <div className="mx-auto mt-16 max-w-2xl">
+              <dl className="space-y-8">
+                <div>
+                  <dt className="text-lg font-semibold leading-8 text-gray-900">
+                    How does the AI learn my painting pricing structure?
+                  </dt>
+                  <dd className="mt-3 text-base leading-7 text-gray-600">
+                    You'll upload your past painting jobs and set custom pricing rules (like rates for interior vs exterior, wall condition, paint type, etc.). The AI learns from this data to provide accurate estimates that match your specific pricing approach. You're in control - the AI follows your pricing structure.
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-lg font-semibold leading-8 text-gray-900">
+                    What information does the AI chatbot collect from potential painting clients?
+                  </dt>
+                  <dd className="mt-3 text-base leading-7 text-gray-600">
+                    The chatbot asks about project details like room dimensions, surface types, paint preferences, and specific requirements. It then provides an estimate based on your pricing rules and captures their contact information. All leads are organized in your dashboard for easy follow-up.
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-lg font-semibold leading-8 text-gray-900">
+                    Can I still review and adjust quotes before they go to clients?
+                  </dt>
+                  <dd className="mt-3 text-base leading-7 text-gray-600">
+                    While the AI provides instant initial estimates based on your rules, you maintain full control. Each lead is captured in your dashboard where you can review project details and adjust the final quote if needed. It's about saving time on initial estimates while keeping you in charge of final pricing.
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </Container>
+      </section>
+
       {/* Sign Up Section */}
       <section aria-labelledby="cta-title" className="bg-blue-50">
         <Container className="py-16">
