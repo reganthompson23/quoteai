@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet';
 import { Button } from '../../components/ui/Button';
 import { Container } from '../../components/layout/Container';
 import { MessageSquare, Clock, Calculator } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const benefits = [
   {
@@ -179,6 +180,44 @@ export function PaintersLanding() {
                   </dd>
                 </div>
               </dl>
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* Use Cases */}
+      <section aria-labelledby="use-cases-title" className="bg-gray-50">
+        <Container className="py-16">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl lg:text-center">
+              <h2 id="use-cases-title" className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                How Painters Use Our AI Quote Software
+              </h2>
+              <p className="mt-4 text-lg text-gray-600">
+                See how painting businesses are automating their quoting process across different types of jobs:
+              </p>
+            </div>
+            <div className="mx-auto mt-16 max-w-2xl lg:max-w-none">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="relative block p-6 bg-white rounded-lg shadow">
+                  <h3 className="text-lg font-semibold text-gray-900">Interior Residential</h3>
+                  <p className="mt-2 text-sm text-gray-600">
+                    "The AI chatbot collects room dimensions, wall conditions, and finish preferences, then provides accurate quotes based on our interior rates."
+                  </p>
+                </div>
+                <div className="relative block p-6 bg-white rounded-lg shadow">
+                  <h3 className="text-lg font-semibold text-gray-900">Commercial Projects</h3>
+                  <p className="mt-2 text-sm text-gray-600">
+                    "We've automated quoting for office spaces and retail stores. The AI handles square footage calculations and factors in business hours constraints."
+                  </p>
+                </div>
+                <div className="relative block p-6 bg-white rounded-lg shadow">
+                  <h3 className="text-lg font-semibold text-gray-900">Exterior Painting</h3>
+                  <p className="mt-2 text-sm text-gray-600">
+                    "Our chatbot asks about house size, surface materials, and prep work needed. It applies our exterior pricing rules to generate instant estimates."
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </Container>
