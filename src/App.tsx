@@ -20,7 +20,7 @@ import { BlogPost } from './components/blog/BlogPost';
 import { useAuthStore } from './store/auth';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { Details } from './components/dashboard/Details';
-import { PaintersLanding } from './pages/industries/PaintersLanding';
+import { PaintersLanding } from './pages/seo/ai-quoting-software-for-painters';
 
 const queryClient = new QueryClient();
 
@@ -37,7 +37,7 @@ function App() {
           <Header />
           <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/industries/painters" element={<PaintersLanding />} />
+            <Route path="/ai-quoting-software-for-painters" element={<PaintersLanding />} />
             <Route path="/blog/:id" element={<BlogPost />} />
             <Route path="/demo/*" element={<DemoPage />} />
             <Route path="/login" element={<LoginPage />} />
