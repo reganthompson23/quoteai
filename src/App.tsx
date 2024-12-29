@@ -22,6 +22,7 @@ import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { Details } from './components/dashboard/Details';
 import { PaintersLanding } from './pages/seo/ai-quoting-software-for-painters';
 import { LandscapingLanding } from './pages/seo/landscaping-quoting-software';
+import { PlumbingLanding } from './pages/seo/plumbing-quote-software';
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/ai-quoting-software-for-painters" element={<PaintersLanding />} />
             <Route path="/landscaping-quoting-software" element={<LandscapingLanding />} />
+            <Route path="/plumbing-quote-software" element={<PlumbingLanding />} />
             <Route path="/blog/:id" element={<BlogPost />} />
             <Route path="/demo/*" element={<DemoPage />} />
             <Route path="/login" element={<LoginPage />} />
