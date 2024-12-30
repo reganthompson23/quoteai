@@ -21,8 +21,10 @@ import { useAuthStore } from './store/auth';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { Details } from './components/dashboard/Details';
 import { PaintersLanding } from './pages/seo/ai-quoting-software-for-painters';
-import { LandscapingLanding } from './pages/seo/landscaping-quoting-software';
+import { LandscapingLanding } from './pages/seo/landscaping-quote-software';
 import { PlumbingLanding } from './pages/seo/plumbing-quote-software';
+import { RoofingLanding } from './pages/seo/roofing-quote-software';
+import { TilingLanding } from './pages/seo/tiling-quote-software';
 import { HVACLanding } from './pages/seo/hvac-quote-software';
 import { ElectricianLanding } from './pages/seo/electrician-quote-software';
 import { FlooringLanding } from './pages/seo/flooring-quote-software';
@@ -49,6 +51,8 @@ function App() {
             <Route path="/ai-quoting-software-for-painters" element={<PaintersLanding />} />
             <Route path="/landscaping-quoting-software" element={<LandscapingLanding />} />
             <Route path="/plumbing-quote-software" element={<PlumbingLanding />} />
+            <Route path="/roofing-quote-software" element={<RoofingLanding />} />
+            <Route path="/tiling-quote-software" element={<TilingLanding />} />
             <Route path="/hvac-quote-software" element={<HVACLanding />} />
             <Route path="/electrician-quote-software" element={<ElectricianLanding />} />
             <Route path="/flooring-quote-software" element={<FlooringLanding />} />
