@@ -23,6 +23,13 @@ import { Details } from './components/dashboard/Details';
 import { PaintersLanding } from './pages/seo/ai-quoting-software-for-painters';
 import { LandscapingLanding } from './pages/seo/landscaping-quoting-software';
 import { PlumbingLanding } from './pages/seo/plumbing-quote-software';
+import { HVACLanding } from './pages/seo/hvac-quote-software';
+import { ElectricianLanding } from './pages/seo/electrician-quote-software';
+import { FlooringLanding } from './pages/seo/flooring-quote-software';
+import { ConcreteLanding } from './pages/seo/concrete-quote-software';
+import { WindowInstallationLanding } from './pages/seo/window-installation-quote-software';
+import { FencingLanding } from './pages/seo/fencing-quote-software';
+import { DrywallLanding } from './pages/seo/drywall-quote-software';
 
 const queryClient = new QueryClient();
 
@@ -42,6 +49,13 @@ function App() {
             <Route path="/ai-quoting-software-for-painters" element={<PaintersLanding />} />
             <Route path="/landscaping-quoting-software" element={<LandscapingLanding />} />
             <Route path="/plumbing-quote-software" element={<PlumbingLanding />} />
+            <Route path="/hvac-quote-software" element={<HVACLanding />} />
+            <Route path="/electrician-quote-software" element={<ElectricianLanding />} />
+            <Route path="/flooring-quote-software" element={<FlooringLanding />} />
+            <Route path="/concrete-quote-software" element={<ConcreteLanding />} />
+            <Route path="/window-installation-quote-software" element={<WindowInstallationLanding />} />
+            <Route path="/fencing-quote-software" element={<FencingLanding />} />
+            <Route path="/drywall-quote-software" element={<DrywallLanding />} />
             <Route path="/blog/:id" element={<BlogPost />} />
             <Route path="/demo/*" element={<DemoPage />} />
             <Route path="/login" element={<LoginPage />} />
