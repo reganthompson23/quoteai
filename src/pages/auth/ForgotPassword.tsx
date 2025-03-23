@@ -2,50 +2,76 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/auth';
+import { supabase } from '../../lib/supabase';
 
-const loginSchema = z.object({
+const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
-export function LoginPage() {
-  const navigate = useNavigate();
-  const { login } = useAuthStore();
+export function ForgotPassword() {
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
-  
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema)
+  } = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
   });
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
       setError('');
-      await login(data.email, data.password);
-      navigate('/dashboard');
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        data.email,
+        {
+          redirectTo: `${window.location.origin}/reset-password`,
+        }
+      );
+
+      if (resetError) throw resetError;
+      
+      setIsSubmitted(true);
     } catch (err: any) {
-      setError(err.message || 'Failed to login');
+      setError(err.message || 'Failed to send reset instructions');
     }
   };
+
+  if (isSubmitted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+            Check your email
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            We've sent you instructions on how to reset your password.
+          </p>
+          <div className="mt-4 text-center">
+            <a
+              href="/login"
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
+              Back to login
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-          Sign in to your account
+          Reset your password
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <a href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
-            create a new account
-          </a>
+          Enter your email address and we'll send you instructions to reset your
+          password.
         </p>
       </div>
 
@@ -56,7 +82,7 @@ export function LoginPage() {
               {error}
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label
@@ -80,57 +106,26 @@ export function LoginPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <div className="mt-1">
-                <input
-                  {...register('password')}
-                  type="password"
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div>
               <button
                 type="submit"
                 disabled={isSubmitting}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
-                {isSubmitting ? 'Signing in...' : 'Sign in'}
+                {isSubmitting ? 'Sending...' : 'Send reset instructions'}
               </button>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="text-sm">
-                <a
-                  href="/forgot-password"
-                  className="font-medium text-blue-600 hover:text-blue-500"
-                >
-                  Forgot your password?
-                </a>
-              </div>
-              <div className="text-sm">
-                <a
-                  href="/signup"
-                  className="font-medium text-blue-600 hover:text-blue-500"
-                >
-                  Create an account
-                </a>
-              </div>
+            <div className="text-center">
+              <a
+                href="/login"
+                className="font-medium text-blue-600 hover:text-blue-500"
+              >
+                Back to login
+              </a>
             </div>
           </form>
         </div>
       </div>
     </div>
   );
-}
+} 

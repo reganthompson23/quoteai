@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../lib/api';
+import { supabase } from '../lib/supabase';
 import { Job } from '../types';
 import { useAuthStore } from '../store/auth';
 
@@ -28,16 +28,29 @@ export function useJobs() {
 
   const jobs = useQuery({
     queryKey: ['jobs'],
-    queryFn: () => {
+    queryFn: async () => {
       if (user?.id === 'demo-user') {
-        return Promise.resolve(DEMO_JOBS);
+        return DEMO_JOBS;
       }
-      return api.getJobs();
+      
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return data.map(job => ({
+        ...job,
+        id: job.id,
+        businessId: job.business_id,
+        createdAt: job.created_at,
+      }));
     },
   });
 
   const createJob = useMutation({
-    mutationFn: (job: Partial<Job>) => {
+    mutationFn: async (job: Partial<Job>) => {
       if (user?.id === 'demo-user') {
         const newJob: Job = {
           id: crypto.randomUUID(),
@@ -48,9 +61,28 @@ export function useJobs() {
           price: job.price || 0,
         };
         DEMO_JOBS.unshift(newJob);
-        return Promise.resolve(newJob);
+        return newJob;
       }
-      return api.createJob(job);
+
+      const { data, error } = await supabase
+        .from('jobs')
+        .insert([{
+          business_id: user?.id,
+          title: job.title,
+          description: job.description,
+          price: job.price,
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        ...data,
+        id: data.id,
+        businessId: data.business_id,
+        createdAt: data.created_at,
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
@@ -58,23 +90,42 @@ export function useJobs() {
   });
 
   const updateJob = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Job> }) => {
+    mutationFn: async ({ id, data: job }: { id: string; data: Partial<Job> }) => {
       if (user?.id === 'demo-user') {
-        const jobIndex = DEMO_JOBS.findIndex(job => job.id === id);
+        const jobIndex = DEMO_JOBS.findIndex(j => j.id === id);
         if (jobIndex !== -1) {
           const updatedJob: Job = {
             ...DEMO_JOBS[jobIndex],
-            ...data,
+            ...job,
             id: DEMO_JOBS[jobIndex].id,
             businessId: DEMO_JOBS[jobIndex].businessId,
             createdAt: DEMO_JOBS[jobIndex].createdAt,
           };
           DEMO_JOBS[jobIndex] = updatedJob;
-          return Promise.resolve(updatedJob);
+          return updatedJob;
         }
-        return Promise.reject(new Error('Job not found'));
+        throw new Error('Job not found');
       }
-      return api.updateJob(id, data);
+
+      const { data: updatedJob, error } = await supabase
+        .from('jobs')
+        .update({
+          title: job.title,
+          description: job.description,
+          price: job.price,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        ...updatedJob,
+        id: updatedJob.id,
+        businessId: updatedJob.business_id,
+        createdAt: updatedJob.created_at,
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });

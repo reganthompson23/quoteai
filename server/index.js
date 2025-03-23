@@ -1,14 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { OpenAI } from 'openai';
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import { fileURLToPath } from 'url';
+import OpenAI from 'openai';
+import { createClient } from '@supabase/supabase-js';
 import { dirname, join } from 'path';
-import fs from 'fs';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
@@ -16,119 +12,21 @@ const app = express();
 const port = process.env.PORT || 3001;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Ensure we have required environment variables
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  console.error('JWT_SECRET environment variable is required');
-  process.exit(1);
-}
-
-// Initialize OpenAI with error handling
+// Initialize OpenAI client
 let openai;
 try {
-  if (!process.env.OPENAI_API_KEY) {
-    console.warn('Warning: OpenAI API key is not configured');
-  }
   openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
 } catch (error) {
-  console.error('Failed to initialize OpenAI:', error);
+  console.error('Failed to initialize OpenAI client:', error);
 }
 
-// Database setup
-let db;
-const dbPath = '/opt/render/project/src/data/database.sqlite';
-
-console.log('Setting up database at:', dbPath);
-
-async function setupDatabase() {
-  try {
-    console.log('=== Database Setup ===');
-    
-    // Check database file status
-    let dbFileExists = false;
-    let dbFileStats = null;
-    try {
-      dbFileStats = fs.statSync(dbPath);
-      dbFileExists = true;
-      console.log('Database file info:', {
-        exists: true,
-        created: dbFileStats.birthtime,
-        modified: dbFileStats.mtime,
-        size: dbFileStats.size
-      });
-    } catch (e) {
-      console.log('Database file does not exist yet');
-    }
-    
-    // Ensure data directory exists
-    const dataDir = dirname(dbPath);
-    if (!fs.existsSync(dataDir)) {
-      console.log('Creating data directory...');
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-
-    // Open database connection
-    console.log('Opening database connection...');
-    db = await open({
-      filename: dbPath,
-      driver: sqlite3.Database,
-    });
-
-    // Create users table
-    await db.exec(`
-      CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        email TEXT UNIQUE,
-        password TEXT,
-        businessName TEXT,
-        industry TEXT,
-        viewed BOOLEAN DEFAULT 0,
-        needsPasswordChange BOOLEAN DEFAULT 0,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // Check for admin user
-    const adminUser = await db.get('SELECT * FROM users WHERE email = ?', ['regan@syndicatestore.com.au']);
-    
-    if (!adminUser) {
-      console.log('Creating admin user...');
-      const hashedPassword = await bcrypt.hash('test123456', 10);
-      await db.run(
-        'INSERT INTO users (id, email, password, businessName, industry, viewed) VALUES (?, ?, ?, ?, ?, ?)',
-        [crypto.randomUUID(), 'regan@syndicatestore.com.au', hashedPassword, 'Syndicate Painting', 'Painting', true]
-      );
-    } else {
-      console.log('Admin user exists:', {
-        email: adminUser.email,
-        hasPassword: !!adminUser.password,
-        passwordLength: adminUser.password?.length,
-        createdAt: adminUser.createdAt
-      });
-    }
-
-    // List all users for verification
-    const users = await db.all('SELECT email, password, createdAt FROM users');
-    console.log('Current users:', users.map(u => ({
-      email: u.email,
-      passwordHash: u.password?.substring(0, 10) + '...',
-      createdAt: u.createdAt
-    })));
-
-  } catch (error) {
-    console.error('Database setup error:', error);
-    throw error;
-  }
-}
-
-// Add error handler for database setup
-setupDatabase().catch(error => {
-  console.error('Fatal database setup error:', error);
-  console.error('Error stack:', error.stack);
-  process.exit(1);
-});
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
 // CORS Configuration
 const corsOptions = {
@@ -148,7 +46,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Auth middleware
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -157,451 +55,168 @@ const authenticateToken = (req, res, next) => {
   }
 
   try {
-    const user = jwt.verify(token, JWT_SECRET);
-    req.user = user;
+    // Verify the JWT with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error) {
+      console.error('Auth error:', error.message);
+      return res.status(403).json({ message: 'Invalid or expired token' });
+    }
+    
+    if (!user) {
+      return res.status(403).json({ message: 'User not found' });
+    }
+
+    // Get user's profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    // Add profile data to the user object
+    req.user = {
+      ...user,
+      profile
+    };
+    
     next();
   } catch (err) {
-    console.error('JWT verification error:', err.message);
+    console.error('Auth error:', err.message);
     return res.status(403).json({ message: 'Invalid or expired token' });
   }
 };
 
-// Routes
-app.post('/auth/signup', async (req, res) => {
+// Quote generation endpoint
+app.post('/quote/generate', authenticateToken, async (req, res) => {
   try {
-    const { email, password, businessName, industry } = req.body;
+    const { description, isPreview } = req.body;
+    const businessId = req.user.id;
 
-    // Check if user already exists
-    const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [email]);
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email already registered' });
+    if (!description) {
+      console.error('No description provided in request body:', req.body);
+      return res.status(400).json({ message: 'No description provided' });
     }
 
-    // Hash password and create user
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const userId = crypto.randomUUID();
+    // Get active pricing rules
+    const { data: rules, error: rulesError } = await supabase
+      .from('pricing_rules')
+      .select('*')
+      .eq('business_id', businessId)
+      .eq('is_active', true);
 
-    await db.run(
-      'INSERT INTO users (id, email, password, businessName, industry, viewed) VALUES (?, ?, ?, ?, ?, ?)',
-      [userId, email, hashedPassword, businessName, industry, false]
-    );
+    if (rulesError) {
+      console.error('Error fetching rules:', rulesError);
+      throw rulesError;
+    }
 
-    // Send email notification to admin
-    const adminEmail = 'regan@syndicatestore.com.au';
-    const subject = 'New PricePilot Signup!';
-    const message = `
-      New user signup:
-      Business: ${businessName}
-      Industry: ${industry}
-      Email: ${email}
-      Time: ${new Date().toLocaleString()}
-    `;
+    // Get past jobs
+    const { data: jobs, error: jobsError } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('business_id', businessId)
+      .order('created_at', { ascending: false })
+      .limit(5);
 
-    // You'll need to set up your email service (e.g., SendGrid, AWS SES)
-    // For now, we'll just console.log it
-    console.log('New signup notification:', {
-      to: adminEmail,
-      subject,
-      message
-    });
+    if (jobsError) {
+      console.error('Error fetching jobs:', jobsError);
+      throw jobsError;
+    }
 
-    // Generate token
-    const token = jwt.sign(
-      { id: userId, email },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    res.status(201).json({
-      token,
-      user: {
-        id: userId,
-        email,
-        businessName,
-        industry,
+    // Format context for AI
+    const context = {
+      business: {
+        name: req.user.profile.businessName,
+        industry: req.user.profile.industry,
       },
-    });
-  } catch (error) {
-    console.error('Signup Error:', error);
-    res.status(500).json({ message: 'Failed to create account' });
-  }
-});
+      rules: rules.map(rule => ({
+        title: rule.title,
+        description: rule.description,
+      })),
+      recentJobs: jobs.map(job => ({
+        title: job.title,
+        description: job.description,
+        price: job.price,
+      })),
+    };
 
-// Handle preflight requests for login
-app.options('/auth/login', cors(corsOptions));
-
-// Login route
-app.post('/auth/login', cors(corsOptions), async (req, res) => {
-  try {
-    console.log('\n=== Login Request ===');
-    const { email, password } = req.body;
-    
-    // Get full user record including password hash
-    const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
-    
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // Clean and prepare the password (ensure it's a string)
-    const cleanPassword = String(password).trim();
-    const storedHash = String(user.password).trim();
-
-    // Generate a new hash with the provided password
-    const newHash = await bcrypt.hash(cleanPassword, 10);
-
-    console.log('Password details:', {
-      email,
-      providedPassword: cleanPassword,
-      passwordLength: cleanPassword.length,
-      storedHash,
-      newlyGeneratedHash: newHash,
-      hashesStartWith: {
-        stored: storedHash.substring(0, 29),
-        new: newHash.substring(0, 29)
-      }
+    console.log('Generating quote with context:', {
+      businessName: context.business.name,
+      industry: context.business.industry,
+      rulesCount: context.rules.length,
+      jobsCount: context.recentJobs.length,
+      description,
+      isPreview
     });
 
-    // Try both the direct comparison and a new hash comparison
-    const directMatch = await bcrypt.compare(cleanPassword, storedHash);
-    console.log('Password verification results:', {
-      directMatch,
-      hashLength: storedHash.length,
-      hashValid: storedHash.startsWith('$2a$')
-    });
-
-    if (!directMatch) {
-      // If no match, let's see what's in the database
-      const allUsers = await db.all('SELECT email, password FROM users');
-      console.log('All users in database:', allUsers.map(u => ({
-        email: u.email,
-        passwordHash: u.password,
-        hashValid: u.password.startsWith('$2a$')
-      })));
-      
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // Generate token
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        businessName: user.businessName,
-        industry: user.industry,
-        needsPasswordChange: user.needsPasswordChange
-      }
-    });
-  } catch (error) {
-    console.error('Login Error:', error);
-    console.error('Error stack:', error.stack);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-// Jobs
-app.get('/jobs', authenticateToken, async (req, res) => {
-  try {
-    const jobs = await db.all('SELECT * FROM jobs WHERE businessId = ?', [
-      req.user.id,
-    ]);
-    res.json(jobs);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-app.post('/jobs', authenticateToken, async (req, res) => {
-  try {
-    const { title, description, price } = req.body;
-    const id = crypto.randomUUID();
-
-    await db.run(
-      'INSERT INTO jobs (id, businessId, title, description, price) VALUES (?, ?, ?, ?, ?)',
-      [id, req.user.id, title, description, price]
-    );
-
-    res.json({ id, title, description, price });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-app.put('/jobs/:id', authenticateToken, async (req, res) => {
-  try {
-    const { title, description, price } = req.body;
-    const { id } = req.params;
-
-    // First check if the job exists and belongs to the user
-    const job = await db.get(
-      'SELECT * FROM jobs WHERE id = ? AND businessId = ?',
-      [id, req.user.id]
-    );
-
-    if (!job) {
-      return res.status(404).json({ message: 'Job not found' });
-    }
-
-    await db.run(
-      'UPDATE jobs SET title = ?, description = ?, price = ? WHERE id = ? AND businessId = ?',
-      [title, description, price, id, req.user.id]
-    );
-
-    res.json({ id, title, description, price });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Rules
-app.get('/rules', authenticateToken, async (req, res) => {
-  try {
-    const rules = await db.all('SELECT * FROM rules WHERE businessId = ?', [
-      req.user.id,
-    ]);
-    res.json(rules);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-app.post('/rules', authenticateToken, async (req, res) => {
-  try {
-    const { title, description } = req.body;
-    const id = crypto.randomUUID();
-
-    await db.run(
-      'INSERT INTO rules (id, businessId, title, description, isActive) VALUES (?, ?, ?, ?, ?)',
-      [id, req.user.id, title, description, true]
-    );
-
-    res.json({ id, title, description, isActive: true });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-app.put('/rules/:id', authenticateToken, async (req, res) => {
-  try {
-    const { title, description, isActive } = req.body;
-    const { id } = req.params;
-
-    // First check if the rule exists and belongs to the user
-    const rule = await db.get(
-      'SELECT * FROM rules WHERE id = ? AND businessId = ?',
-      [id, req.user.id]
-    );
-
-    if (!rule) {
-      return res.status(404).json({ message: 'Rule not found' });
-    }
-
-    await db.run(
-      'UPDATE rules SET title = ?, description = ?, isActive = ? WHERE id = ? AND businessId = ?',
-      [title, description, isActive, id, req.user.id]
-    );
-
-    res.json({ id, title, description, isActive });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Store conversation history in memory (in production, this should be in a database)
-const conversationHistory = new Map();
-
-// Add contact info extraction helper
-function extractContactInfo(message) {
-  const emailRegex = /[\w.-]+@[\w.-]+\.\w+/;
-  const phoneRegex = /(?:\+?61|0)[2-478](?:[ -]?[0-9]){8}/; // Australian format
-  
-  const email = message.match(emailRegex)?.[0];
-  const phone = message.match(phoneRegex)?.[0];
-
-  return {
-    email,
-    phone,
-    name: null // Name will be extracted by AI
-  };
-}
-
-// Update demo business constants with accurate Australian pricing
-const DEMO_BUSINESS = {
-  id: 'petes-demo',
-  name: "Pete's Painting",
-  industry: 'Painting',
-  rules: [
-    {
-      title: 'Heritage Listed Building',
-      description: 'Additional care, permits, and specialized materials required for heritage properties',
-      adjustment: '25% increase'
-    },
-    {
-      title: 'Multi-Story External',
-      description: 'Per story surcharge for external painting due to scaffolding and safety requirements',
-      adjustment: '15% per story'
-    },
-    {
-      title: 'High-Prep Areas',
-      description: 'Areas with peeling paint, plaster repair, or heavy sanding',
-      adjustment: '$15-$25 per square metre extra'
-    }
-  ],
-  baseRates: {
-    // Interior painting (based on standard 3x3.6m rooms)
-    'interior-small': 3000,    // 1-2 rooms + bathroom/laundry
-    'interior-medium': 6000,   // 3-bed house with 2 bath, kitchen, laundry
-    'interior-large': 9000,    // 4+ bedrooms, multiple living areas
-    // Exterior painting (based on square meterage)
-    'exterior-small': 6000,    // Single story (up to 150sqm)
-    'exterior-medium': 12000,  // Two story (up to 250sqm)
-    'exterior-large': 20000    // Three story or large (300sqm+)
-  }
-};
-
-// AI Quote Generation
-app.post('/quote/generate', async (req, res) => {
-  try {
-    if (!openai) {
-      throw new Error('OpenAI client not initialized');
-    }
-
-    const { businessId, description } = req.body;
-    const isDemo = businessId === 'petes-demo';
-
-    // Get business info
-    const business = isDemo ? DEMO_BUSINESS : await db.get(
-      'SELECT businessName, industry FROM users WHERE id = ?',
-      [businessId]
-    );
-
-    // Get or initialize conversation history
-    if (!conversationHistory.has(businessId)) {
-      conversationHistory.set(businessId, []);
-    }
-    const history = conversationHistory.get(businessId);
-    history.push({ role: "user", content: description });
-
-    // Get business's rules - use demo rules for Pete's demo
-    const rules = isDemo ? DEMO_BUSINESS.rules : await db.all(
-      'SELECT title, description FROM rules WHERE businessId = ? AND isActive = 1',
-      [businessId]
-    );
-
-    // Get business's jobs (not for demo)
-    const jobs = isDemo ? [] : await db.all(
-      'SELECT title, description, price FROM jobs WHERE businessId = ?',
-      [businessId]
-    );
-
-    // Format the context for OpenAI
-    const rulesContext = rules.map(rule =>
-      `Internal Rule: ${rule.title}\nGuideline: ${rule.description}`
-    ).join('\n\n');
-
-    // Format jobs context
-    const jobsContext = jobs.map(job =>
-      `Past Job: ${job.title}\nDetails: ${job.description}\nPrice: $${job.price}`
-    ).join('\n\n');
-
-    // Get current chat to check contact info status
-    let contactStatus = 'No contact information provided yet';
-    if (history.length > 0) {
-      const chatInfo = await db.get(
-        'SELECT contactName, contactEmail, contactPhone FROM chats WHERE businessId = ? ORDER BY createdAt DESC LIMIT 1',
-        [businessId]
-      );
-      if (chatInfo) {
-        contactStatus = `Contact Status:
-- Name: ${chatInfo.contactName ? 'Provided' : 'Not provided'}
-- Email: ${chatInfo.contactEmail ? 'Provided' : 'Not provided'}
-- Phone: ${chatInfo.contactPhone ? 'Provided' : 'Not provided'}`;
-      }
-    }
-
-    // Special system prompt for Pete's demo
-    const demoSystemPrompt = isDemo ? `
-You are Pete's Painting's instant quote assistant. Your goal is to demonstrate value QUICKLY.
-
-Key Behaviors:
-1. Give a rough estimate in your FIRST response whenever possible
-2. Only ask 1 key question at a time if needed
-3. Keep all responses under 3 sentences
-4. Be enthusiastic but professional
-
-Pricing Guidelines (INTERNAL):
-- Interior rooms: $600-$750 per standard room
-- Full house interior: $6,000-$9,000 (depending on size)
-- Exterior: $40-$50 per square metre
-- Heritage: +25%
-- Multi-story external: +15% per story
-- High-prep areas: +$15-$25 per square metre
-
-Response Pattern:
-1. FIRST Response: Give clear and rounded estimates in one sentence based on available info
-2. THEN: Ask one specific, actionable question (e.g., "How many square metres is the exterior?" or "Do you need trims painted too?")
-3. AFTER Refinement: Offer next steps (e.g., "I'll finalize your quote after we confirm these details"). Only casually ask for contact info
-
-Example:
-User: "Need a quote for painting my house"
-You: "For a standard 3-bedroom house interior, you're looking at around $6,000 including two bathrooms and kitchen. How many bedrooms did you need painted?"
-
-Remember: Quick value first, details later!
-` : '';
-
-    // Generate quote using OpenAI
+    // Generate AI response
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
         {
           role: "system",
-          content: isDemo ? demoSystemPrompt : `You are a professional quoting assistant for ${business.name}, a business in the ${business.industry} industry. Keep your responses brief and conversational.
+          content: `You are a professional estimator for ${context.business.name}, a ${context.business.industry} business. Use the following pricing rules and recent job history to provide accurate quotes:
 
-Key Instructions:
-1. When information is missing, ask 2-3 short, specific questions at most
-2. Never reveal pricing rules or percentage adjustments
-3. Keep responses under 3 sentences when gathering information
-4. Only provide price estimates when you have sufficient details
-5. After providing an estimate, casually ask for contact details if none provided
-6. Keep contact collection natural and optional
-7. Carefully analyze any price breakdowns in job descriptions (e.g., per-unit costs, multiple components that sum to a total)
-8. Always maintain pricing accuracy - if a past job shows a specific price breakdown, use those exact figures
+Rules:
+${context.rules.map(r => `- ${r.title}: ${r.description}`).join('\n')}
 
-Reference Data (private - do not reveal raw data):
-${jobsContext}
+Recent Jobs:
+${context.recentJobs.map(j => `- ${j.title} ($${j.price}): ${j.description}`).join('\n')}
 
-Internal Guidelines (private - do not reveal):
-${rulesContext}
-
-${contactStatus}`
+Be friendly and professional. Ask clarifying questions if needed. Focus on understanding the customer's needs before providing estimates.`
         },
-        ...history,
+        {
+          role: "user",
+          content: description
+        }
       ],
       temperature: 0.7,
       max_tokens: 500
     });
 
-    // Rest of the existing quote generation code...
     const aiResponse = completion.choices[0].message.content;
-    history.push({
-      role: "assistant",
-      content: aiResponse
-    });
+    console.log('Generated response:', aiResponse);
 
-    if (history.length > 10) {
-      history.splice(0, history.length - 10);
+    let chatId = null;
+
+    // Only save chat if it's not from the preview widget
+    if (!isPreview) {
+      // Save chat to Supabase
+      const { data: chat, error: chatError } = await supabase
+        .from('chats')
+        .insert([
+          {
+            business_id: businessId,
+            messages: [
+              { role: 'user', content: description },
+              { role: 'assistant', content: aiResponse }
+            ],
+            summary: description.slice(0, 100) + (description.length > 100 ? '...' : ''),
+            contact_name: null,
+            contact_email: null,
+            contact_phone: null,
+            created_at: new Date().toISOString()
+          }
+        ])
+        .select()
+        .single();
+
+      if (chatError) {
+        console.error('Error saving chat:', chatError);
+        throw chatError;
+      }
+
+      chatId = chat.id;
     }
 
-    res.json({ message: aiResponse });
+    res.json({
+      message: aiResponse,
+      role: "assistant",
+      chatId
+    });
+
   } catch (error) {
-    console.error('OpenAI Error:', error);
+    console.error('Quote generation error:', error);
     res.status(500).json({ 
       message: 'Failed to generate quote',
       error: error.message 
@@ -609,518 +224,115 @@ ${contactStatus}`
   }
 });
 
-// Chat completion endpoint
-app.post('/chats/complete', async (req, res) => {
-  try {
-    const { businessId, messages, chatId } = req.body;
-    
-    console.log('Received chat completion request:', {
-      businessId,
-      messageCount: messages?.length,
-      chatId
-    });
-    
-    if (!messages || messages.length === 0) {
-      console.log('No messages provided');
-      return res.status(400).json({ message: 'No messages provided' });
-    }
-
-    if (!businessId) {
-      console.log('No businessId provided');
-      return res.status(400).json({ message: 'No businessId provided' });
-    }
-
-    // Extract basic contact info from messages
-    const contactInfo = messages.reduce((info, msg) => {
-      if (msg.role === 'user') {
-        const extracted = extractContactInfo(msg.content);
-        return {
-          email: info.email || extracted.email,
-          phone: info.phone || extracted.phone
-        };
-      }
-      return info;
-    }, { email: null, phone: null });
-
-    // Get the last few messages to check for name-related content
-    const recentMessages = messages.slice(-3);
-    const lastUserMessage = recentMessages.find(m => m.role === 'user')?.content?.toLowerCase() || '';
-    
-    // Only run name extraction if:
-    // 1. It's a new chat (no chatId)
-    // 2. The recent messages contain name-related keywords
-    const shouldExtractName = !chatId || 
-      lastUserMessage.includes('name') ||
-      lastUserMessage.includes('actually') ||
-      lastUserMessage.includes('i am') ||
-      lastUserMessage.includes("i'm") ||
-      lastUserMessage.includes('call me');
-
-    if (shouldExtractName) {
-      // Use AI to determine the customer's name from the conversation
-      const nameCompletion = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: `You are a name extraction specialist. Analyze the conversation and determine the customer's most current name.
-            
-Rules:
-1. If someone corrects their name, use the correction
-2. If multiple names are given, use the most recent one
-3. Return null if no name is provided
-4. Ignore the AI assistant's name suggestions
-5. Only extract the customer's actual name, not titles or honorifics
-6. Format names with proper capitalization
-
-Return ONLY the name as a string, or null if no name found. No other text or explanation.`
-          },
-          ...messages
-        ],
-        temperature: 0,
-        max_tokens: 50
-      });
-
-      // Extract name from AI response
-      const aiSuggestedName = nameCompletion.choices[0].message.content.trim();
-      contactInfo.name = aiSuggestedName === 'null' ? null : aiSuggestedName;
-    }
-
-    // Generate a summary using OpenAI
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "Create a brief summary (max 200 characters) of this conversation about a service quote. Focus on the key details discussed and any price estimates given."
-        },
-        ...messages
-      ],
-      temperature: 0.7,
-      max_tokens: 100
-    });
-
-    const summary = completion.choices[0].message.content;
-    console.log('Generated summary:', summary);
-    
-    if (chatId) {
-      // Update existing chat
-      const updateQuery = shouldExtractName
-        ? `UPDATE chats 
-           SET summary = ?, 
-               messages = ?,
-               contactName = CASE WHEN ? IS NOT NULL THEN ? ELSE contactName END,
-               contactEmail = CASE WHEN ? IS NOT NULL THEN ? ELSE contactEmail END,
-               contactPhone = CASE WHEN ? IS NOT NULL THEN ? ELSE contactPhone END
-           WHERE id = ? AND businessId = ?`
-        : `UPDATE chats 
-           SET summary = ?, 
-               messages = ?,
-               contactEmail = CASE WHEN ? IS NOT NULL THEN ? ELSE contactEmail END,
-               contactPhone = CASE WHEN ? IS NOT NULL THEN ? ELSE contactPhone END
-           WHERE id = ? AND businessId = ?`;
-
-      const updateParams = shouldExtractName
-        ? [
-            summary,
-            JSON.stringify(messages),
-            contactInfo.name, contactInfo.name,
-            contactInfo.email, contactInfo.email,
-            contactInfo.phone, contactInfo.phone,
-            chatId,
-            businessId
-          ]
-        : [
-            summary,
-            JSON.stringify(messages),
-            contactInfo.email, contactInfo.email,
-            contactInfo.phone, contactInfo.phone,
-            chatId,
-            businessId
-          ];
-
-      await db.run(updateQuery, updateParams);
-      console.log('Chat updated successfully:', chatId);
-      res.json({ success: true, chatId });
-    } else {
-      // Create new chat
-      const newChatId = crypto.randomUUID();
-      const chatNumber = await getNextChatNumber(businessId);
-      await db.run(
-        `INSERT INTO chats (
-          id, businessId, chatNumber, summary, messages,
-          contactName, contactEmail, contactPhone
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          newChatId,
-          businessId,
-          chatNumber,
-          summary,
-          JSON.stringify(messages),
-          contactInfo.name,
-          contactInfo.email,
-          contactInfo.phone
-        ]
-      );
-      console.log('New chat created:', newChatId);
-      res.json({ success: true, chatId: newChatId });
-    }
-  } catch (error) {
-    console.error('Chat completion error:', error);
-    res.status(500).json({ 
-      message: 'Failed to save chat',
-      error: error.message 
-    });
-  }
-});
-
-// Handle SPA routing in production
-if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
-    res.sendFile(join(__dirname, '../dist/index.html'));
-  });
-}
-
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-  console.log(`OpenAI API Key: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Missing'}`);
-});
-
-// Admin routes (protected by admin check)
-const isAdmin = (req, res, next) => {
-  const { email } = req.user;
-  const adminEmails = ['regan@syndicatestore.com.au', 'regan@roredistribution.com'];
-  if (adminEmails.includes(email)) {
-    next();
-  } else {
-    res.status(403).json({ message: 'Admin access required' });
-  }
-};
-
-app.get('/admin/users', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const users = await db.all('SELECT id, email, businessName, industry, createdAt FROM users');
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Chat management endpoints
+// Get all chats for a business
 app.get('/chats', authenticateToken, async (req, res) => {
   try {
-    const chats = await db.all(
-      'SELECT id, chatNumber, summary, contactName, contactEmail, contactPhone, createdAt FROM chats WHERE businessId = ? AND isDeleted = 0 ORDER BY createdAt DESC',
-      [req.user.id]
-    );
+    const businessId = req.user.id;
+
+    const { data: chats, error } = await supabase
+      .from('chats')
+      .select('*')
+      .eq('business_id', businessId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching chats:', error);
+      throw error;
+    }
+
     res.json(chats);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Failed to fetch chats:', error);
+    res.status(500).json({ message: 'Failed to fetch chats' });
   }
 });
 
+// Get a single chat
 app.get('/chats/:id', authenticateToken, async (req, res) => {
   try {
-    const chat = await db.get(
-      'SELECT * FROM chats WHERE id = ? AND businessId = ?',
-      [req.params.id, req.user.id]
-    );
-    
+    const { id } = req.params;
+    const businessId = req.user.id;
+
+    const { data: chat, error } = await supabase
+      .from('chats')
+      .select('*')
+      .eq('id', id)
+      .eq('business_id', businessId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching chat:', error);
+      throw error;
+    }
+
     if (!chat) {
       return res.status(404).json({ message: 'Chat not found' });
     }
 
-    // Parse the messages JSON string back to an array
-    chat.messages = JSON.parse(chat.messages);
-    
     res.json(chat);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Failed to fetch chat:', error);
+    res.status(500).json({ message: 'Failed to fetch chat' });
   }
 });
 
-// Add delete chat endpoint
-app.post('/chats/:id/delete', authenticateToken, async (req, res) => {
-  try {
-    // Soft delete the chat
-    await db.run(
-      'UPDATE chats SET isDeleted = 1 WHERE id = ? AND businessId = ?',
-      [req.params.id, req.user.id]
-    );
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Admin endpoint to view all chats (including deleted ones)
-app.get('/admin/chats', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const chats = await db.all(`
-      SELECT c.*, u.businessName, u.email as businessEmail 
-      FROM chats c
-      JOIN users u ON c.businessId = u.id
-      ORDER BY c.createdAt DESC
-    `);
-    res.json(chats);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Helper function to get next chat number for a business
-async function getNextChatNumber(businessId) {
-  const result = await db.get(
-    'SELECT MAX(chatNumber) as maxNumber FROM chats WHERE businessId = ?',
-    [businessId]
-  );
-  return (result.maxNumber || 0) + 1;
-}
-
-// Admin reset password endpoint
-app.post('/admin/users/:id/reset-password', authenticateToken, isAdmin, async (req, res) => {
+// Update chat contact info
+app.put('/chats/:id/contact', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { temporaryPassword } = req.body;
+    const businessId = req.user.id;
+    const { contactName, contactEmail, contactPhone } = req.body;
 
-    if (!temporaryPassword || temporaryPassword.length < 8) {
-      return res.status(400).json({ message: 'Temporary password must be at least 8 characters' });
+    const { data: chat, error } = await supabase
+      .from('chats')
+      .update({
+        contact_name: contactName,
+        contact_email: contactEmail,
+        contact_phone: contactPhone,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .eq('business_id', businessId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating chat:', error);
+      throw error;
     }
 
-    // Hash the temporary password
-    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
-
-    // Update user's password and set needsPasswordChange flag
-    await db.run(
-      'UPDATE users SET password = ?, needsPasswordChange = 1 WHERE id = ?',
-      [hashedPassword, id]
-    );
-
-    res.json({ message: 'Password reset successful' });
+    res.json(chat);
   } catch (error) {
-    console.error('Password reset error:', error);
-    res.status(500).json({ message: 'Failed to reset password' });
+    console.error('Failed to update chat:', error);
+    res.status(500).json({ message: 'Failed to update chat' });
   }
 });
 
-// User change password endpoint
-app.post('/auth/change-password', authenticateToken, async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-    const userId = req.user.id;
-
-    // Get user's current password
-    const user = await db.get('SELECT * FROM users WHERE id = ?', [userId]);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Verify current password unless it's a forced change
-    if (!user.needsPasswordChange) {
-      const validPassword = await bcrypt.compare(currentPassword, user.password);
-      if (!validPassword) {
-        return res.status(401).json({ message: 'Current password is incorrect' });
-      }
-    }
-
-    // Validate new password
-    if (!newPassword || newPassword.length < 8) {
-      return res.status(400).json({ message: 'New password must be at least 8 characters' });
-    }
-
-    // Hash and update the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await db.run(
-      'UPDATE users SET password = ?, needsPasswordChange = 0 WHERE id = ?',
-      [hashedPassword, userId]
-    );
-
-    res.json({ message: 'Password changed successfully' });
-  } catch (error) {
-    console.error('Password change error:', error);
-    res.status(500).json({ message: 'Failed to change password' });
-  }
-});
-
-// Add to admin routes section
-app.post('/admin/users/:id/mark-viewed', authenticateToken, isAdmin, async (req, res) => {
+// Delete a chat
+app.delete('/chats/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    await db.run('UPDATE users SET viewed = 1 WHERE id = ?', [id]);
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Failed to mark user as viewed:', error);
-    res.status(500).json({ message: 'Failed to mark user as viewed' });
-  }
-});
+    const businessId = req.user.id;
 
-// Add to routes section
-app.put('/auth/update-details', authenticateToken, async (req, res) => {
-  try {
-    const { name, businessName, businessAddress, phone, email, industry } = req.body;
-    const userId = req.user.id;
+    const { error } = await supabase
+      .from('chats')
+      .delete()
+      .eq('id', id)
+      .eq('business_id', businessId);
 
-    // If email is being changed, check if it's already taken
-    if (email !== req.user.email) {
-      const existingUser = await db.get('SELECT * FROM users WHERE email = ? AND id != ?', [email, userId]);
-      if (existingUser) {
-        return res.status(400).json({ message: 'Email already in use' });
-      }
+    if (error) {
+      console.error('Error deleting chat:', error);
+      throw error;
     }
 
-    // Update user details
-    await db.run(
-      `UPDATE users 
-       SET name = ?, businessName = ?, businessAddress = ?, phone = ?, email = ?, industry = ?
-       WHERE id = ?`,
-      [name, businessName, businessAddress, phone, email, industry, userId]
-    );
-
-    // Get updated user data
-    const updatedUser = await db.get(
-      'SELECT id, email, name, businessName, businessAddress, phone, industry, needsPasswordChange FROM users WHERE id = ?',
-      [userId]
-    );
-
-    res.json(updatedUser);
+    res.json({ message: 'Chat deleted successfully' });
   } catch (error) {
-    console.error('Failed to update user details:', error);
-    res.status(500).json({ message: 'Failed to update user details' });
+    console.error('Failed to delete chat:', error);
+    res.status(500).json({ message: 'Failed to delete chat' });
   }
 });
 
-// Temporary debug endpoint
-app.get('/debug-db', async (req, res) => {
-  try {
-    console.log('=== Debug Database State ===');
-    
-    // Check database connection
-    console.log('Database path:', dbPath);
-    console.log('Database connection:', !!db);
-    
-    // Get all users (non-sensitive data only)
-    const users = await db.all('SELECT email, businessName, industry FROM users');
-    console.log('Found users:', users);
-    
-    // Get specific user details (no password)
-    const adminUser = await db.get(
-      'SELECT email, businessName, industry FROM users WHERE email = ?',
-      ['regan@syndicatestore.com.au']
-    );
-    console.log('Admin user exists:', !!adminUser);
-
-    res.json({
-      databaseConnected: !!db,
-      userCount: users.length,
-      users: users.map(u => ({
-        email: u.email,
-        businessName: u.businessName,
-        industry: u.industry
-      })),
-      adminExists: !!adminUser
-    });
-  } catch (error) {
-    console.error('Debug endpoint error:', error);
-    res.status(500).json({ 
-      error: 'Database error',
-      details: error.message,
-      stack: error.stack
-    });
-  }
-});
-
-// Add this after your other routes
-app.post('/test-auth', async (req, res) => {
-  try {
-    console.log('=== Testing Authentication ===');
-    
-    // Create a test user with a known password
-    const testPassword = 'TestPassword123';
-    const hashedPassword = await bcrypt.hash(testPassword, 10);
-    const userId = crypto.randomUUID();
-    
-    // Store the user (without the viewed column)
-    await db.run(
-      'INSERT INTO users (id, email, password, businessName, industry) VALUES (?, ?, ?, ?, ?)',
-      [userId, 'test@example.com', hashedPassword, 'Test Business', 'Testing']
-    );
-    
-    console.log('Created test user with:', {
-      password: testPassword,
-      hash: hashedPassword
-    });
-    
-    // Immediately try to verify
-    const user = await db.get('SELECT * FROM users WHERE email = ?', ['test@example.com']);
-    
-    // Try multiple verification approaches
-    const directMatch = await bcrypt.compare(testPassword, user.password);
-    const newHash = await bcrypt.hash(testPassword, 10);
-    
-    console.log('Verification results:', {
-      originalPassword: testPassword,
-      storedHash: user.password,
-      newHash: newHash,
-      directMatch: directMatch,
-      hashesEqual: hashedPassword === user.password
-    });
-    
-    // Clean up - delete test user
-    await db.run('DELETE FROM users WHERE email = ?', ['test@example.com']);
-    
-    res.json({ 
-      success: true,
-      testResults: {
-        passwordMatched: directMatch,
-        originalHash: hashedPassword,
-        storedHash: user.password,
-        hashesEqual: hashedPassword === user.password
-      }
-    });
-  } catch (error) {
-    console.error('Test Auth Error:', error);
-    console.error('Error stack:', error.stack);
-    res.status(500).json({ message: 'Test failed', error: error.message });
-  }
-});
-
-// Add a route to create new admin
-app.post('/create-admin', async (req, res) => {
-  try {
-    console.log('=== Creating New Admin User ===');
-    
-    const email = 'regan@roredistribution.com';
-    const password = 'AdminPass2024!';  // We'll show this only once
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const userId = crypto.randomUUID();
-    
-    // Create the new admin user
-    await db.run(
-      'INSERT INTO users (id, email, password, businessName, industry) VALUES (?, ?, ?, ?, ?)',
-      [userId, email, hashedPassword, 'Rore Distribution', 'Admin']
-    );
-    
-    // Verify the user was created
-    const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
-    const match = await bcrypt.compare(password, user.password);
-    
-    console.log('New admin creation results:', {
-      email,
-      passwordWorking: match,
-      userCreated: !!user
-    });
-    
-    res.json({
-      success: true,
-      message: 'New admin user created',
-      credentials: {
-        email,
-        password,  // Only shown once for initial login
-        note: 'Please save these credentials and change the password after first login'
-      }
-    });
-  } catch (error) {
-    console.error('Admin Creation Error:', error);
-    res.status(500).json({ message: 'Failed to create admin user', error: error.message });
-  }
+// Start server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });

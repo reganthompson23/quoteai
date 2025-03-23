@@ -27,7 +27,7 @@ export function ChatDetail() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['chats']);
+      queryClient.invalidateQueries({ queryKey: ['chats'] });
       navigate('/dashboard/chats');
     },
   });
@@ -80,45 +80,45 @@ export function ChatDetail() {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              {chat.contactName ? (
+              {chat.contact_name ? (
                 <div className="flex items-center gap-2">
                   <User className="h-6 w-6 text-blue-600" />
-                  <span>{chat.contactName}</span>
+                  <span>{chat.contact_name}</span>
                   <span className="text-gray-400 text-lg">
-                    (Chat #{chat.chatNumber.toString().padStart(5, '0')})
+                    (Chat #{chat.id.slice(0, 8)})
                   </span>
                 </div>
               ) : (
-                <>Chat #{chat.chatNumber.toString().padStart(5, '0')}</>
+                <>Chat #{chat.id.slice(0, 8)}</>
               )}
             </h1>
             <p className="text-sm text-gray-600 mt-1">
-              {new Date(chat.createdAt).toLocaleString()}
+              {new Date(chat.created_at).toLocaleString()}
             </p>
           </div>
 
           <div className="bg-white shadow-sm rounded-lg p-4 min-w-[250px]">
             <h3 className="font-semibold text-gray-900 mb-3">Contact Details</h3>
             <div className="space-y-2">
-              {chat.contactName ? (
+              {chat.contact_name ? (
                 <div className="flex items-center gap-2 text-sm">
                   <User className="h-4 w-4 text-blue-600" />
-                  <span className="font-medium text-gray-900">{chat.contactName}</span>
+                  <span className="font-medium text-gray-900">{chat.contact_name}</span>
                 </div>
               ) : null}
-              {chat.contactEmail && (
+              {chat.contact_email && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Mail className="h-4 w-4" />
-                  {chat.contactEmail}
+                  {chat.contact_email}
                 </div>
               )}
-              {chat.contactPhone && (
+              {chat.contact_phone && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Phone className="h-4 w-4" />
-                  {chat.contactPhone}
+                  {chat.contact_phone}
                 </div>
               )}
-              {!chat.contactName && !chat.contactEmail && !chat.contactPhone && (
+              {!chat.contact_name && !chat.contact_email && !chat.contact_phone && (
                 <p className="text-sm text-gray-400">No contact info provided</p>
               )}
             </div>

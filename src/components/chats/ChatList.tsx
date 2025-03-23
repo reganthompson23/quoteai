@@ -65,17 +65,17 @@ export function ChatList() {
                     to={`/dashboard/chats/${chat.id}`}
                     className="text-gray-900 hover:text-blue-600"
                   >
-                    Chat #{chat.chatNumber.toString().padStart(5, '0')}
+                    Chat #{chat.id.slice(0, 8)}
                   </Link>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <User className={`h-8 w-8 rounded-full p-1 ${chat.contactName ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`} />
+                      <User className={`h-8 w-8 rounded-full p-1 ${chat.contact_name ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`} />
                     </div>
                     <div className="ml-3">
                       <div className="text-sm font-medium text-gray-900">
-                        {chat.contactName || 'Anonymous Customer'}
+                        {chat.contact_name || 'Anonymous Customer'}
                       </div>
                     </div>
                   </div>
@@ -85,25 +85,25 @@ export function ChatList() {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-col gap-1">
-                    {chat.contactEmail && (
+                    {chat.contact_email && (
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Mail className="h-4 w-4" />
-                        {chat.contactEmail}
+                        {chat.contact_email}
                       </div>
                     )}
-                    {chat.contactPhone && (
+                    {chat.contact_phone && (
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Phone className="h-4 w-4" />
-                        {chat.contactPhone}
+                        {chat.contact_phone}
                       </div>
                     )}
-                    {!chat.contactEmail && !chat.contactPhone && (
+                    {!chat.contact_email && !chat.contact_phone && (
                       <span className="text-sm text-gray-400">No contact info provided</span>
                     )}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(chat.createdAt).toLocaleDateString()}
+                  {new Date(chat.created_at).toLocaleDateString()}
                 </td>
               </tr>
             ))}

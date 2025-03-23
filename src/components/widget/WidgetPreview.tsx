@@ -19,7 +19,7 @@ export function WidgetPreview() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuthStore();
+  const { user, profile } = useAuthStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -45,10 +45,14 @@ export function WidgetPreview() {
     setIsLoading(true);
 
     try {
+      console.log('Sending quote request with description:', input);
+      
       const response = await api.generateQuote({
-        businessId: user.id,
         description: input,
+        isPreview: true
       });
+
+      console.log('Received response:', response);
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -61,7 +65,7 @@ export function WidgetPreview() {
       console.error('Failed to generate quote:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: error instanceof Error ? error.message : 'Sorry, I encountered an error. Please try again.',
         isUser: false,
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -70,7 +74,7 @@ export function WidgetPreview() {
     }
   };
 
-  if (!user?.id) {
+  if (!user?.id || !profile) {
     return (
       <div className="p-8 text-center">
         <p className="text-red-600">Please log in to access the widget preview.</p>
@@ -93,7 +97,7 @@ export function WidgetPreview() {
           <div className="px-4 py-3 border-b bg-blue-600 rounded-t-lg">
             <h2 className="text-lg font-semibold text-white">Get an Instant Quote</h2>
             <p className="text-sm text-blue-100">
-              Powered by {user.businessName}
+              Powered by {profile.businessName}
             </p>
           </div>
 

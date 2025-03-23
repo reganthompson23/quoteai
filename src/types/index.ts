@@ -33,14 +33,14 @@ export interface ChatMessage {
 
 export interface Chat {
   id: string;
-  businessId: string;
-  chatNumber: number;
+  business_id: string;
   summary: string;
-  contactName: string | null;
-  contactEmail: string | null;
-  contactPhone: string | null;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
   messages: ChatMessage[];
-  createdAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // Alias for PricingRule to maintain compatibility

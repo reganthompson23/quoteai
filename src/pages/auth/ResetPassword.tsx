@@ -3,49 +3,74 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/auth';
+import { supabase } from '../../lib/supabase';
 
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+const resetPasswordSchema = z.object({
+  password: z.string()
+    .min(6, 'Password must be at least 6 characters')
+    .max(72, 'Password must be less than 72 characters'),
+  confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
-export function LoginPage() {
+export function ResetPassword() {
   const navigate = useNavigate();
-  const { login } = useAuthStore();
   const [error, setError] = useState('');
-  
+  const [isSuccess, setIsSuccess] = useState(false);
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema)
+  } = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
   });
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: ResetPasswordFormData) => {
     try {
       setError('');
-      await login(data.email, data.password);
-      navigate('/dashboard');
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: data.password
+      });
+
+      if (updateError) throw updateError;
+
+      setIsSuccess(true);
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
     } catch (err: any) {
-      setError(err.message || 'Failed to login');
+      setError(err.message || 'Failed to reset password');
     }
   };
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+            Password reset successful!
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Your password has been reset. Redirecting you to login...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-          Sign in to your account
+          Reset your password
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <a href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
-            create a new account
-          </a>
+          Enter your new password below
         </p>
       </div>
 
@@ -56,35 +81,14 @@ export function LoginPage() {
               {error}
             </div>
           )}
-          
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email address
-              </label>
-              <div className="mt-1">
-                <input
-                  {...register('email')}
-                  type="email"
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
-            </div>
 
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700"
               >
-                Password
+                New password
               </label>
               <div className="mt-1">
                 <input
@@ -101,36 +105,38 @@ export function LoginPage() {
             </div>
 
             <div>
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Confirm new password
+              </label>
+              <div className="mt-1">
+                <input
+                  {...register('confirmPassword')}
+                  type="password"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
               <button
                 type="submit"
                 disabled={isSubmitting}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
-                {isSubmitting ? 'Signing in...' : 'Sign in'}
+                {isSubmitting ? 'Resetting...' : 'Reset password'}
               </button>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="text-sm">
-                <a
-                  href="/forgot-password"
-                  className="font-medium text-blue-600 hover:text-blue-500"
-                >
-                  Forgot your password?
-                </a>
-              </div>
-              <div className="text-sm">
-                <a
-                  href="/signup"
-                  className="font-medium text-blue-600 hover:text-blue-500"
-                >
-                  Create an account
-                </a>
-              </div>
             </div>
           </form>
         </div>
       </div>
     </div>
   );
-}
+} 

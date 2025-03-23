@@ -15,6 +15,8 @@ import { ChatDetail } from './components/chats/ChatDetail';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { SignupPage } from './pages/auth/SignupPage';
+import { ForgotPassword } from './pages/auth/ForgotPassword';
+import { ResetPassword } from './pages/auth/ResetPassword';
 import { DemoPage } from './pages/DemoPage';
 import { BlogPost } from './components/blog/BlogPost';
 import { useAuthStore } from './store/auth';
@@ -64,6 +66,8 @@ function App() {
             <Route path="/demo/*" element={<DemoPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route 
               path="/admin" 
               element={

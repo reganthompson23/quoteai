@@ -1,9 +1,11 @@
 import { Job, PricingRule, User } from '../types';
+import { supabase } from './supabase';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('token');
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
   const url = `${API_URL}${endpoint}`;
   
   try {
@@ -117,7 +119,7 @@ export const api = {
   getChat: (chatId: string) => fetchApi(`/chats/${chatId}`),
 
   // AI Quote Generation
-  generateQuote: (data: { businessId: string; description: string }) =>
+  generateQuote: (data: { description: string, isPreview?: boolean }) =>
     fetchApi('/quote/generate', {
       method: 'POST',
       body: JSON.stringify(data),

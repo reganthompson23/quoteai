@@ -1,52 +1,69 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../lib/api';
 import { useAuthStore } from '../../store/auth';
+
+const signupSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  businessName: z.string().min(1, 'Business name is required'),
+  industry: z.string().min(1, 'Industry is required'),
+});
+
+type SignupFormData = z.infer<typeof signupSchema>;
+
+const INDUSTRIES = [
+  'Painting',
+  'Landscaping',
+  'Plumbing',
+  'Roofing',
+  'Tiling',
+  'HVAC',
+  'Electrical',
+  'Flooring',
+  'Concrete',
+  'Window Installation',
+  'Fencing',
+  'Drywall',
+  'Other'
+];
 
 export function SignupPage() {
   const navigate = useNavigate();
-  const { login } = useAuthStore();
+  const { signup } = useAuthStore();
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    businessName: '',
-    industry: ''
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: SignupFormData) => {
     try {
       setError('');
-      const response = await api.signup(formData);
-      if (response.token && response.user) {
-        login(response.token, response.user);
-        navigate('/dashboard');
-      } else {
-        setError('Signup failed. Please try again.');
-      }
-    } catch (error: any) {
-      console.error('Signup failed:', error);
-      setError(error.message || 'Failed to create account. Please try again.');
+      await signup(data.email, data.password, data.businessName, data.industry);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create account');
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
           Create your account
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          No credit card required. Start building your AI chatbot today - we'll only ask for payment details once you're ready to go live. Need a website? We can build and maintain one for you with our $100/month plan, which includes ongoing tech support.
+          Already have an account?{' '}
+          <a href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+            Sign in
+          </a>
         </p>
       </div>
 
@@ -57,39 +74,21 @@ export function SignupPage() {
               {error}
             </div>
           )}
-          
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="businessName" className="block text-sm font-medium text-gray-700">
-                Business Name
-              </label>
-              <div className="mt-1">
-                <input
-                  id="businessName"
-                  name="businessName"
-                  type="text"
-                  required
-                  value={formData.businessName}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-            </div>
 
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
               </label>
               <div className="mt-1">
                 <input
-                  id="email"
-                  name="email"
+                  {...register('email')}
                   type="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                )}
               </div>
             </div>
 
@@ -99,14 +98,29 @@ export function SignupPage() {
               </label>
               <div className="mt-1">
                 <input
-                  id="password"
-                  name="password"
+                  {...register('password')}
                   type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="businessName" className="block text-sm font-medium text-gray-700">
+                Business name
+              </label>
+              <div className="mt-1">
+                <input
+                  {...register('businessName')}
+                  type="text"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                {errors.businessName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.businessName.message}</p>
+                )}
               </div>
             </div>
 
@@ -115,24 +129,30 @@ export function SignupPage() {
                 Industry
               </label>
               <div className="mt-1">
-                <input
-                  id="industry"
-                  name="industry"
-                  type="text"
-                  required
-                  value={formData.industry}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
+                <select
+                  {...register('industry')}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">Select an industry</option>
+                  {INDUSTRIES.map((industry) => (
+                    <option key={industry} value={industry}>
+                      {industry}
+                    </option>
+                  ))}
+                </select>
+                {errors.industry && (
+                  <p className="mt-1 text-sm text-red-600">{errors.industry.message}</p>
+                )}
               </div>
             </div>
 
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                disabled={isSubmitting}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
-                Sign up
+                {isSubmitting ? 'Creating account...' : 'Create account'}
               </button>
             </div>
           </form>
