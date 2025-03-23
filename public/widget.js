@@ -4,7 +4,6 @@
   const scriptTag = document.currentScript;
   const apiUrl = scriptTag.getAttribute('data-api-url') || 'http://localhost:3001';
   const businessId = scriptTag.getAttribute('data-business-id');
-  const token = scriptTag.getAttribute('data-token');
 
   if (!businessId) {
     console.error('QuoteAI Widget: Missing business ID');
@@ -390,19 +389,18 @@
     adjustTextareaHeight();
     
     addMessageToUI(message, true);
-    showTypingIndicator();
+    const typingIndicator = showTypingIndicator();
     
     try {
       const response = await fetch(`${apiUrl}/quote/generate`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           message,
           businessId: businessId,
-          isPreview: true
+          isPreview: false
         })
       });
 

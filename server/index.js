@@ -88,14 +88,24 @@ const authenticateToken = async (req, res, next) => {
 };
 
 // Quote generation endpoint
-app.post('/quote/generate', authenticateToken, async (req, res) => {
+app.post('/quote/generate', async (req, res) => {
   try {
-    const { description, isPreview } = req.body;
-    const businessId = req.user.id;
+    const { message, businessId, isPreview } = req.body;
 
-    if (!description) {
-      console.error('No description provided in request body:', req.body);
-      return res.status(400).json({ message: 'No description provided' });
+    if (!message || !businessId) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Get business profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', businessId)
+      .single();
+
+    if (profileError || !profile) {
+      console.error('Error fetching business profile:', profileError);
+      return res.status(404).json({ message: 'Business not found' });
     }
 
     // Get active pricing rules
@@ -126,8 +136,8 @@ app.post('/quote/generate', authenticateToken, async (req, res) => {
     // Format context for AI
     const context = {
       business: {
-        name: req.user.profile.businessName,
-        industry: req.user.profile.industry,
+        name: profile.businessName,
+        industry: profile.industry,
       },
       rules: rules.map(rule => ({
         title: rule.title,
@@ -145,7 +155,7 @@ app.post('/quote/generate', authenticateToken, async (req, res) => {
       industry: context.business.industry,
       rulesCount: context.rules.length,
       jobsCount: context.recentJobs.length,
-      description,
+      description: message,
       isPreview
     });
 
@@ -167,7 +177,7 @@ Be friendly and professional. Ask clarifying questions if needed. Focus on under
         },
         {
           role: "user",
-          content: description
+          content: message
         }
       ],
       temperature: 0.7,
@@ -188,10 +198,10 @@ Be friendly and professional. Ask clarifying questions if needed. Focus on under
           {
             business_id: businessId,
             messages: [
-              { role: 'user', content: description },
+              { role: 'user', content: message },
               { role: 'assistant', content: aiResponse }
             ],
-            summary: description.slice(0, 100) + (description.length > 100 ? '...' : ''),
+            summary: message.slice(0, 100) + (message.length > 100 ? '...' : ''),
             contact_name: null,
             contact_email: null,
             contact_phone: null,
