@@ -9,7 +9,7 @@ import { EditJob } from './components/jobs/EditJob';
 import { PricingRules } from './components/pricing/PricingRules';
 import { RuleForm } from './components/pricing/RuleForm';
 import { EditRule } from './components/pricing/EditRule';
-import { WidgetPreview } from './components/widget/WidgetPreview';
+import WidgetPreview from './components/widget/WidgetPreview';
 import { ChatList } from './components/chats/ChatList';
 import { ChatDetail } from './components/chats/ChatDetail';
 import { LandingPage } from './pages/LandingPage';
