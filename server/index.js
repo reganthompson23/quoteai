@@ -30,7 +30,7 @@ const supabase = createClient(
 
 // CORS Configuration
 const corsOptions = {
-  origin: ['https://pricepilot.chat', 'http://localhost:5173'],  // Allow your domain and localhost
+  origin: true,  // Allow any origin
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: false
