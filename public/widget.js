@@ -1,8 +1,15 @@
 // QuoteAI Widget
 (function() {
-  // Get the API URL from the script tag
+  // Get the API URL and business ID from the script tag
   const scriptTag = document.currentScript;
   const apiUrl = scriptTag.getAttribute('data-api-url') || 'http://localhost:3001';
+  const businessId = scriptTag.getAttribute('data-business-id');
+  const token = scriptTag.getAttribute('data-token');
+
+  if (!businessId) {
+    console.error('QuoteAI Widget: Missing business ID');
+    return;
+  }
 
   // Create widget styles
   const styles = `
@@ -268,15 +275,6 @@
     document.head.appendChild(viewport);
   }
 
-  // Get business ID from script tag
-  const script = document.currentScript;
-  const businessId = script.getAttribute('data-business-id');
-
-  if (!businessId) {
-    console.error('QuoteAI Widget Error: Missing data-business-id attribute');
-    return;
-  }
-
   // Create widget HTML
   const widgetHTML = `
     <div class="quoteai-widget">
@@ -399,6 +397,7 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           message,

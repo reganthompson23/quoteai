@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { useAuthStore } from '../../store/auth';
 import { api } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 
 interface Message {
   id: string;
@@ -9,7 +10,7 @@ interface Message {
   isUser: boolean;
 }
 
-export function WidgetPreview() {
+export default function WidgetPreview() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -21,6 +22,7 @@ export function WidgetPreview() {
   const [isLoading, setIsLoading] = useState(false);
   const { user, profile } = useAuthStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -29,6 +31,13 @@ export function WidgetPreview() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    // Get the session token
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setToken(session?.access_token || null);
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,7 +94,8 @@ export function WidgetPreview() {
   const embedCode = `<script
     src="https://pricepilot.chat/widget.js"
     data-business-id="${user.id}"
-    data-api-url="${import.meta.env.VITE_API_URL}">
+    data-api-url="${import.meta.env.VITE_API_URL}"
+    data-token="${token || ''}">
   </script>`;
 
   return (
