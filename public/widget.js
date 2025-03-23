@@ -400,7 +400,9 @@
         body: JSON.stringify({
           message,
           businessId: businessId,
-          isPreview: false
+          isPreview: false,
+          chatId: localStorage.getItem(`chatId_${businessId}`) || null,
+          messages: messageHistory
         })
       });
 
@@ -410,21 +412,30 @@
 
       const data = await response.json();
 
+      // Store chat ID if this is a new chat
+      if (data.chatId && !localStorage.getItem(`chatId_${businessId}`)) {
+        localStorage.setItem(`chatId_${businessId}`, data.chatId);
+      }
+
       // Remove typing indicator
       typingIndicator.remove();
 
       // Add bot message to UI and history
       addMessageToUI(data.message, false);
+      messageHistory.push({ role: 'user', content: message });
       messageHistory.push({ role: 'assistant', content: data.message });
-      await saveChat();
+
+      // Save chat history to localStorage
+      localStorage.setItem(`chat_${businessId}`, JSON.stringify(messageHistory));
     } catch (error) {
       console.error('Failed to get response:', error);
       // Remove typing indicator
       typingIndicator.remove();
       
-      addMessageToUI('Sorry, I encountered an error. Please try again.', false);
-      messageHistory.push({ role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' });
-      await saveChat();
+      const errorMessage = 'Sorry, I encountered an error. Please try again.';
+      addMessageToUI(errorMessage, false);
+      messageHistory.push({ role: 'assistant', content: errorMessage });
+      localStorage.setItem(`chat_${businessId}`, JSON.stringify(messageHistory));
     }
   }
 

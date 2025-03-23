@@ -90,7 +90,7 @@ const authenticateToken = async (req, res, next) => {
 // Quote generation endpoint
 app.post('/quote/generate', async (req, res) => {
   try {
-    const { message, businessId, isPreview } = req.body;
+    const { message, businessId, isPreview, chatId, messages } = req.body;
 
     if (!message || !businessId) {
       return res.status(400).json({ message: 'Missing required fields' });
@@ -175,6 +175,7 @@ ${context.recentJobs.map(j => `- ${j.title} ($${j.price}): ${j.description}`).jo
 
 Be friendly and professional. Ask clarifying questions if needed. Focus on understanding the customer's needs before providing estimates.`
         },
+        ...(messages || []),
         {
           role: "user",
           content: message
@@ -187,43 +188,78 @@ Be friendly and professional. Ask clarifying questions if needed. Focus on under
     const aiResponse = completion.choices[0].message.content;
     console.log('Generated response:', aiResponse);
 
-    let chatId = null;
+    let responseData = {
+      message: aiResponse,
+      role: "assistant"
+    };
 
     // Only save chat if it's not from the preview widget
     if (!isPreview) {
-      // Save chat to Supabase
-      const { data: chat, error: chatError } = await supabase
-        .from('chats')
-        .insert([
-          {
-            business_id: businessId,
-            messages: [
-              { role: 'user', content: message },
-              { role: 'assistant', content: aiResponse }
-            ],
-            summary: message.slice(0, 100) + (message.length > 100 ? '...' : ''),
-            contact_name: null,
-            contact_email: null,
-            contact_phone: null,
-            created_at: new Date().toISOString()
-          }
-        ])
-        .select()
-        .single();
+      if (chatId) {
+        // Update existing chat
+        const { data: existingChat, error: getChatError } = await supabase
+          .from('chats')
+          .select('messages')
+          .eq('id', chatId)
+          .single();
 
-      if (chatError) {
-        console.error('Error saving chat:', chatError);
-        throw chatError;
+        if (getChatError) {
+          console.error('Error fetching existing chat:', getChatError);
+          throw getChatError;
+        }
+
+        const updatedMessages = [
+          ...(existingChat.messages || []),
+          { role: 'user', content: message },
+          { role: 'assistant', content: aiResponse }
+        ];
+
+        const { error: updateError } = await supabase
+          .from('chats')
+          .update({
+            messages: updatedMessages,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', chatId);
+
+        if (updateError) {
+          console.error('Error updating chat:', updateError);
+          throw updateError;
+        }
+
+        responseData.chatId = chatId;
+      } else {
+        // Create new chat
+        const { data: chat, error: chatError } = await supabase
+          .from('chats')
+          .insert([
+            {
+              business_id: businessId,
+              messages: [
+                { role: 'user', content: message },
+                { role: 'assistant', content: aiResponse }
+              ],
+              summary: message.slice(0, 100) + (message.length > 100 ? '...' : ''),
+              contact_name: null,
+              contact_email: null,
+              contact_phone: null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }
+          ])
+          .select()
+          .single();
+
+        if (chatError) {
+          console.error('Error saving chat:', chatError);
+          throw chatError;
+        }
+
+        responseData.chatId = chat.id;
       }
-
-      chatId = chat.id;
     }
 
-    res.json({
-      message: aiResponse,
-      role: "assistant",
-      chatId
-    });
+    res.json(responseData);
 
   } catch (error) {
     console.error('Quote generation error:', error);
