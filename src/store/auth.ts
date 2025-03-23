@@ -13,12 +13,20 @@ interface AuthState {
   signup: (email: string, password: string, businessName: string, industry: string) => Promise<void>;
   logout: () => Promise<void>;
   setProfile: (profile: AuthState['profile']) => void;
+  setSession: (session: { user: User } | null) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   profile: null,
+
+  setSession: (session) => {
+    set({
+      user: session?.user || null,
+      isAuthenticated: !!session?.user,
+    });
+  },
 
   login: async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Header } from './components/layout/Header';
@@ -34,6 +34,7 @@ import { ConcreteLanding } from './pages/seo/concrete-quote-software';
 import { WindowInstallationLanding } from './pages/seo/window-installation-quote-software';
 import { FencingLanding } from './pages/seo/fencing-quote-software';
 import { DrywallLanding } from './pages/seo/drywall-quote-software';
+import { supabase } from './lib/supabase';
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,50 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  const { setProfile, setSession } = useAuthStore();
+
+  useEffect(() => {
+    // Check active sessions and sets the user
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSession(session);
+        // Fetch profile data
+        supabase
+          .from('profiles')
+          .select('businessName, industry')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profile }) => {
+            if (profile) {
+              setProfile(profile);
+            }
+          });
+      }
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session?.user) {
+        // Fetch profile data
+        supabase
+          .from('profiles')
+          .select('businessName, industry')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profile }) => {
+            if (profile) {
+              setProfile(profile);
+            }
+          });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [setProfile, setSession]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
