@@ -1,5 +1,9 @@
 // QuoteAI Widget
 (function() {
+  // Get the API URL from the script tag
+  const scriptTag = document.currentScript;
+  const apiUrl = scriptTag.getAttribute('data-api-url') || 'http://localhost:3001';
+
   // Create widget styles
   const styles = `
     .quoteai-widget {
@@ -344,33 +348,27 @@
 
   // Save chat to localStorage and server
   async function saveChat() {
-    if (messageHistory.length > 0) {
-      // Save to localStorage
-      localStorage.setItem(`chat_${businessId}`, JSON.stringify(messageHistory));
+    try {
+      const response = await fetch(`${apiUrl}/chats/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: messageHistory,
+          contact: contactInfo
+        })
+      });
       
-      // Save to server
-      try {
-        const response = await fetch('https://quoteai-backend.onrender.com/chats/complete', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            businessId,
-            messages: messageHistory,
-            chatId: chatId
-          })
-        });
-
-        // If this is a new chat, store the chat ID
-        if (!chatId) {
-          const data = await response.json();
-          chatId = data.chatId;
-          localStorage.setItem(`chatId_${businessId}`, chatId);
-        }
-      } catch (error) {
-        console.error('Failed to save chat to server:', error);
+      if (!response.ok) {
+        throw new Error('Failed to save chat');
       }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error saving chat:', error);
+      return null;
     }
   }
 
@@ -386,31 +384,26 @@
 
   // Send message
   async function sendMessage() {
-    const text = textarea.value.trim();
-    if (!text) return;
-
-    // Clear input and reset height immediately
+    const message = textarea.value.trim();
+    
+    if (!message) return;
+    
     textarea.value = '';
-    textarea.style.height = '48px';
-
-    // Add user message to UI and history
-    addMessageToUI(text, true);
-    messageHistory.push({ role: 'user', content: text });
-    await saveChat();
-
-    // Show typing indicator
-    const typingIndicator = showTypingIndicator();
-
+    adjustTextareaHeight();
+    
+    addMessageToUI(message, true);
+    showTypingIndicator();
+    
     try {
-      // Send to API
-      const response = await fetch('https://quoteai-backend.onrender.com/quote/generate', {
+      const response = await fetch(`${apiUrl}/quote/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          businessId,
-          description: text,
+          message,
+          businessId: businessId,
+          isPreview: true
         })
       });
 

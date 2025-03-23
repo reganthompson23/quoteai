@@ -82,6 +82,12 @@ export function WidgetPreview() {
     );
   }
 
+  const embedCode = `<script 
+    src="https://pricepilot.chat/widget.js" 
+    data-business-id="${user.id}"
+    data-api-url="${import.meta.env.VITE_API_URL}">
+  </script>`;
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto">
@@ -170,6 +176,23 @@ export function WidgetPreview() {
             >
               Copy
             </button>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-semibold mb-2">Embed Code</h3>
+            <div className="relative">
+              <pre className="bg-gray-50 p-4 rounded-lg overflow-x-auto">
+                <code className="text-sm">{embedCode}</code>
+              </pre>
+              <button
+                className="absolute top-2 right-2 bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700"
+                onClick={() => navigator.clipboard.writeText(embedCode)}
+              >
+                Copy
+              </button>
+            </div>
           </div>
         </div>
       </div>
