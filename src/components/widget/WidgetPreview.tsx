@@ -82,8 +82,8 @@ export function WidgetPreview() {
     );
   }
 
-  const embedCode = `<script 
-    src="https://pricepilot.chat/widget.js" 
+  const embedCode = `<script
+    src="https://pricepilot.chat/widget.js"
     data-business-id="${user.id}"
     data-api-url="${import.meta.env.VITE_API_URL}">
   </script>`;
@@ -159,24 +159,6 @@ export function WidgetPreview() {
               </button>
             </div>
           </form>
-        </div>
-
-        <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Add to Your Website</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Copy and paste this code snippet just before the closing &lt;/body&gt; tag on your website:
-          </p>
-          <div className="bg-gray-50 rounded-md p-4 relative group">
-            <code className="text-sm text-gray-800 block">
-              &lt;script src="https://pricepilot.chat/widget.js" data-business-id="{user.id}"&gt;&lt;/script&gt;
-            </code>
-            <button 
-              onClick={() => navigator.clipboard.writeText(`<script src="https://pricepilot.chat/widget.js" data-business-id="${user.id}"></script>`)}
-              className="absolute right-2 top-2 px-2 py-1 text-xs bg-blue-600 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              Copy
-            </button>
-          </div>
         </div>
 
         <div className="space-y-4">
