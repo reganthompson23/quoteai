@@ -5,6 +5,14 @@ import { Mail, Phone, User } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Chat } from '../../types';
 
+interface ChatResponse {
+  chats: Chat[];
+  page: number;
+  pageSize: number;
+  total: number;
+  hasMore: boolean;
+}
+
 const PAGE_SIZE = 20;
 
 export function ChatList() {
@@ -18,14 +26,16 @@ export function ChatList() {
   } = useInfiniteQuery({
     queryKey: ['chats'],
     queryFn: ({ pageParam = 0 }) => api.getChats(pageParam, PAGE_SIZE),
-    getNextPageParam: (lastPage, allPages) => {
-      return lastPage.length === PAGE_SIZE ? allPages.length : undefined;
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: ChatResponse | undefined) => {
+      if (!lastPage) return undefined;
+      return lastPage.hasMore ? lastPage.page + 1 : undefined;
     },
-    staleTime: 30000, // Cache for 30 seconds
-    cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    staleTime: 30_000, // Cache for 30 seconds
+    gcTime: 5 * 60 * 1000 // Keep in cache for 5 minutes
   });
 
-  const chats = data?.pages.flat() || [];
+  const allChats = data?.pages.flatMap(page => page?.chats || []) || [];
 
   if (isLoading) {
     return (
@@ -39,6 +49,17 @@ export function ChatList() {
     return (
       <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
         Failed to load chats. Please try again.
+      </div>
+    );
+  }
+
+  if (!allChats.length) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-lg font-medium text-gray-900">No chats yet</h3>
+        <p className="mt-2 text-sm text-gray-500">
+          When customers start chatting, their conversations will appear here.
+        </p>
       </div>
     );
   }
@@ -74,14 +95,14 @@ export function ChatList() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {chats.map((chat) => (
+            {allChats.map((chat: Chat) => (
               <tr key={chat.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   <Link
                     to={`/dashboard/chats/${chat.id}`}
                     className="text-gray-900 hover:text-blue-600"
                   >
-                    Chat #{chat.id.slice(0, 8)}
+                    Chat #{typeof chat.id === 'string' ? chat.id.slice(0, 8) : chat.id}
                   </Link>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">

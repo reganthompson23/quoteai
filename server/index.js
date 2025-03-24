@@ -270,47 +270,45 @@ Be friendly and professional. Ask clarifying questions if needed. Focus on under
   }
 });
 
-// Get all chats for a business
+// Get chats endpoint
 app.get('/chats', authenticateToken, async (req, res) => {
   try {
-    const businessId = req.user.id;
     const page = parseInt(req.query.page) || 0;
     const pageSize = parseInt(req.query.pageSize) || 20;
     const start = page * pageSize;
+    const end = start + pageSize - 1;
 
     // Get total count
-    const { count, error: countError } = await supabase
+    const { count } = await supabase
       .from('chats')
       .select('*', { count: 'exact', head: true })
-      .eq('business_id', businessId);
-
-    if (countError) {
-      console.error('Error getting chat count:', countError);
-      throw countError;
-    }
+      .eq('business_id', req.user.id);
 
     // Get paginated chats
     const { data: chats, error } = await supabase
       .from('chats')
       .select('*')
-      .eq('business_id', businessId)
+      .eq('business_id', req.user.id)
       .order('created_at', { ascending: false })
-      .range(start, start + pageSize - 1);
+      .range(start, end);
 
     if (error) {
       console.error('Error fetching chats:', error);
       throw error;
     }
 
+    // Calculate if there are more pages
+    const hasMore = start + chats.length < count;
+
     res.json({
       chats,
-      total: count,
       page,
       pageSize,
-      hasMore: start + pageSize < count
+      total: count,
+      hasMore
     });
   } catch (error) {
-    console.error('Failed to fetch chats:', error);
+    console.error('Error in /chats endpoint:', error);
     res.status(500).json({ message: 'Failed to fetch chats' });
   }
 });
