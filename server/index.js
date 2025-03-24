@@ -160,7 +160,34 @@ app.post('/quote/generate', async (req, res) => {
     });
 
     // Generate AI response
-    const aiResponse = "Sample response"; // Replace with actual AI call
+    const systemPrompt = `You are an AI assistant for ${context.business.name}, a ${context.business.industry} business. 
+Your goal is to help potential customers by providing accurate quotes and information.
+
+Business Context:
+- Business Name: ${context.business.name}
+- Industry: ${context.business.industry}
+
+Pricing Rules:
+${context.rules.map(rule => `- ${rule.title}: ${rule.description}`).join('\n')}
+
+Recent Job Examples:
+${context.recentJobs.map(job => `- ${job.title} (${job.price}): ${job.description}`).join('\n')}
+
+Respond professionally and accurately based on the business context, pricing rules, and recent jobs.
+If you cannot provide an accurate quote, explain why and ask for more information.`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4-turbo-preview",
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...(messages || []).map(msg => ({ role: msg.role, content: msg.content })),
+        { role: "user", content: message }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
+    });
+
+    const aiResponse = completion.choices[0].message.content;
 
     const responseData = {
       message: aiResponse
