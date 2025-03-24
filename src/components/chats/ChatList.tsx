@@ -1,15 +1,31 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { Mail, Phone, User } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Chat } from '../../types';
 
+const PAGE_SIZE = 20;
+
 export function ChatList() {
-  const { data: chats, isLoading, error } = useQuery<Chat[]>({
+  const {
+    data,
+    isLoading,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage
+  } = useInfiniteQuery({
     queryKey: ['chats'],
-    queryFn: api.getChats,
+    queryFn: ({ pageParam = 0 }) => api.getChats(pageParam, PAGE_SIZE),
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.length === PAGE_SIZE ? allPages.length : undefined;
+    },
+    staleTime: 30000, // Cache for 30 seconds
+    cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
+
+  const chats = data?.pages.flat() || [];
 
   if (isLoading) {
     return (
@@ -58,7 +74,7 @@ export function ChatList() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {chats?.map((chat) => (
+            {chats.map((chat) => (
               <tr key={chat.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   <Link
@@ -110,6 +126,18 @@ export function ChatList() {
           </tbody>
         </table>
       </div>
+
+      {hasNextPage && (
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            {isFetchingNextPage ? 'Loading more...' : 'Load more'}
+          </button>
+        </div>
+      )}
     </div>
   );
 } 

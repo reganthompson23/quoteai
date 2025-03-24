@@ -324,8 +324,23 @@
 
   // Chat session management
   let messageHistory = [];
-  let chatId = localStorage.getItem(`chatId_${businessId}`);
-  
+  let chatId = null;
+
+  // Load existing chat if it exists
+  const savedChatId = localStorage.getItem(`chatId_${businessId}`);
+  const savedMessages = localStorage.getItem(`chat_${businessId}`);
+
+  if (savedChatId && savedMessages) {
+    try {
+      chatId = savedChatId;
+      messageHistory = JSON.parse(savedMessages);
+    } catch (e) {
+      console.error('Failed to load saved chat:', e);
+      localStorage.removeItem(`chat_${businessId}`);
+      localStorage.removeItem(`chatId_${businessId}`);
+    }
+  }
+
   // Helper function to add message and scroll in one paint
   function addMessageToUI(content, isUser) {
     // Create message element but don't append yet
@@ -401,7 +416,7 @@
           message,
           businessId: businessId,
           isPreview: false,
-          chatId: localStorage.getItem(`chatId_${businessId}`) || null,
+          chatId: chatId,
           messages: messageHistory
         })
       });
@@ -413,8 +428,9 @@
       const data = await response.json();
 
       // Store chat ID if this is a new chat
-      if (data.chatId && !localStorage.getItem(`chatId_${businessId}`)) {
-        localStorage.setItem(`chatId_${businessId}`, data.chatId);
+      if (data.chatId) {
+        chatId = data.chatId;
+        localStorage.setItem(`chatId_${businessId}`, chatId);
       }
 
       // Remove typing indicator
@@ -462,14 +478,13 @@
 
   // Toggle chat
   toggleButton.addEventListener('click', () => {
-    // Check if there's a saved chat
-    const savedMessages = localStorage.getItem(`chat_${businessId}`);
+    chat.classList.add('open');
+    if (window.innerWidth <= 768) {
+      document.body.style.overflow = 'hidden';
+    }
     
-    if (!savedMessages) {
-      // Start fresh chat
-      messageHistory = [];
-      chatId = null;
-      localStorage.removeItem(`chatId_${businessId}`);
+    // If no saved chat, show welcome message
+    if (messageHistory.length === 0) {
       const messagesContainer = widget.querySelector('.quoteai-messages');
       messagesContainer.innerHTML = `
         <div class="quoteai-message bot">
@@ -477,11 +492,7 @@
         </div>
       `;
     }
-
-    chat.classList.add('open');
-    if (window.innerWidth <= 768) {
-      document.body.style.overflow = 'hidden';
-    }
+    
     messages.scrollTop = messages.scrollHeight;
   });
 
@@ -503,27 +514,4 @@
       sendMessage();
     }
   });
-
-  // Load existing chat if it exists
-  const savedMessages = localStorage.getItem(`chat_${businessId}`);
-  if (savedMessages) {
-    try {
-      messageHistory = JSON.parse(savedMessages);
-      
-      // Display saved messages in UI
-      requestAnimationFrame(() => {
-        messageHistory.forEach(msg => {
-          const messageDiv = document.createElement('div');
-          messageDiv.className = `quoteai-message ${msg.role === 'user' ? 'user' : 'bot'}`;
-          messageDiv.textContent = msg.content;
-          messages.appendChild(messageDiv);
-        });
-        messages.scrollTop = messages.scrollHeight;
-      });
-    } catch (e) {
-      console.error('Failed to load saved chat:', e);
-      localStorage.removeItem(`chat_${businessId}`);
-      localStorage.removeItem(`chatId_${businessId}`);
-    }
-  }
 })();

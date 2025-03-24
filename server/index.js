@@ -274,19 +274,41 @@ Be friendly and professional. Ask clarifying questions if needed. Focus on under
 app.get('/chats', authenticateToken, async (req, res) => {
   try {
     const businessId = req.user.id;
+    const page = parseInt(req.query.page) || 0;
+    const pageSize = parseInt(req.query.pageSize) || 20;
+    const start = page * pageSize;
 
+    // Get total count
+    const { count, error: countError } = await supabase
+      .from('chats')
+      .select('*', { count: 'exact', head: true })
+      .eq('business_id', businessId);
+
+    if (countError) {
+      console.error('Error getting chat count:', countError);
+      throw countError;
+    }
+
+    // Get paginated chats
     const { data: chats, error } = await supabase
       .from('chats')
       .select('*')
       .eq('business_id', businessId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(start, start + pageSize - 1);
 
     if (error) {
       console.error('Error fetching chats:', error);
       throw error;
     }
 
-    res.json(chats);
+    res.json({
+      chats,
+      total: count,
+      page,
+      pageSize,
+      hasMore: start + pageSize < count
+    });
   } catch (error) {
     console.error('Failed to fetch chats:', error);
     res.status(500).json({ message: 'Failed to fetch chats' });
@@ -310,11 +332,11 @@ app.get('/chats/:id', authenticateToken, async (req, res) => {
       console.error('Error fetching chat:', error);
       throw error;
     }
-
+    
     if (!chat) {
       return res.status(404).json({ message: 'Chat not found' });
     }
-
+    
     res.json(chat);
   } catch (error) {
     console.error('Failed to fetch chat:', error);

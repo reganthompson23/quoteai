@@ -114,9 +114,11 @@ export const api = {
     }),
 
   // Chats
-  getChats: () => fetchApi('/chats'),
+  getChats: (page = 0, pageSize = 20) => 
+    fetchApi(`/chats?page=${page}&pageSize=${pageSize}`),
   
-  getChat: (chatId: string) => fetchApi(`/chats/${chatId}`),
+  getChat: (chatId: string) => 
+    fetchApi(`/chats/${chatId}`),
 
   // AI Quote Generation
   generateQuote: (data: { description: string, isPreview?: boolean }) =>
