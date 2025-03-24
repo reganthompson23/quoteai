@@ -65,7 +65,7 @@ export function ChatList() {
   }
 
   return (
-    <div>
+    <div className="pr-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Customer Chats</h1>
         <p className="text-sm text-gray-600 mt-1">
