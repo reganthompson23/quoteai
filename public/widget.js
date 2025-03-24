@@ -403,7 +403,10 @@
     textarea.value = '';
     adjustTextareaHeight();
     
+    // Add user message to UI and history
     addMessageToUI(message, true);
+    messageHistory.push({ role: 'user', content: message });
+    
     const typingIndicator = showTypingIndicator();
     
     try {
@@ -438,7 +441,6 @@
 
       // Add bot message to UI and history
       addMessageToUI(data.message, false);
-      messageHistory.push({ role: 'user', content: message });
       messageHistory.push({ role: 'assistant', content: data.message });
 
       // Save chat history to localStorage

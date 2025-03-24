@@ -160,37 +160,10 @@ app.post('/quote/generate', async (req, res) => {
     });
 
     // Generate AI response
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: `You are a professional estimator for ${context.business.name}, a ${context.business.industry} business. Use the following pricing rules and recent job history to provide accurate quotes:
+    const aiResponse = "Sample response"; // Replace with actual AI call
 
-Rules:
-${context.rules.map(r => `- ${r.title}: ${r.description}`).join('\n')}
-
-Recent Jobs:
-${context.recentJobs.map(j => `- ${j.title} ($${j.price}): ${j.description}`).join('\n')}
-
-Be friendly and professional. Ask clarifying questions if needed. Focus on understanding the customer's needs before providing estimates.`
-        },
-        ...(messages || []),
-        {
-          role: "user",
-          content: message
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 500
-    });
-
-    const aiResponse = completion.choices[0].message.content;
-    console.log('Generated response:', aiResponse);
-
-    let responseData = {
-      message: aiResponse,
-      role: "assistant"
+    const responseData = {
+      message: aiResponse
     };
 
     // Only save chat if it's not from the preview widget
@@ -239,7 +212,7 @@ Be friendly and professional. Ask clarifying questions if needed. Focus on under
                 { role: 'user', content: message },
                 { role: 'assistant', content: aiResponse }
               ],
-              summary: message.slice(0, 20) + '...',
+              summary: message.slice(0, 100) + '...',
               contact_name: null,
               contact_email: null,
               contact_phone: null,
@@ -260,13 +233,9 @@ Be friendly and professional. Ask clarifying questions if needed. Focus on under
     }
 
     res.json(responseData);
-
   } catch (error) {
-    console.error('Quote generation error:', error);
-    res.status(500).json({ 
-      message: 'Failed to generate quote',
-      error: error.message 
-    });
+    console.error('Failed to generate quote:', error);
+    res.status(500).json({ message: 'Failed to generate quote' });
   }
 });
 
