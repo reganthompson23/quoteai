@@ -239,7 +239,7 @@ Be friendly and professional. Ask clarifying questions if needed. Focus on under
                 { role: 'user', content: message },
                 { role: 'assistant', content: aiResponse }
               ],
-              summary: message.slice(0, 100) + (message.length > 100 ? '...' : ''),
+              summary: message.slice(0, 20) + '...',
               contact_name: null,
               contact_email: null,
               contact_phone: null,
