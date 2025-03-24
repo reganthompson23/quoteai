@@ -189,6 +189,41 @@ If you cannot provide an accurate quote, explain why and ask for more informatio
 
     const aiResponse = completion.choices[0].message.content;
 
+    // Extract contact information from conversation
+    const contactExtractionPrompt = `
+You are an AI assistant tasked with extracting contact information from a conversation.
+Please analyze the following message and extract any contact information in a JSON format.
+If a piece of information is not found, return null for that field.
+
+Message to analyze: "${message}"
+
+Previous messages for context:
+${messages ? messages.map(msg => `${msg.role}: ${msg.content}`).join('\n') : 'No previous messages'}
+
+Return ONLY a JSON object in this exact format:
+{
+  "name": "extracted name or null",
+  "email": "extracted email or null",
+  "phone": "extracted phone or null"
+}`;
+
+    const contactExtraction = await openai.chat.completions.create({
+      model: "gpt-4-turbo-preview",
+      messages: [
+        { role: "system", content: contactExtractionPrompt }
+      ],
+      temperature: 0,
+      response_format: { type: "json_object" }
+    });
+
+    let extractedContact;
+    try {
+      extractedContact = JSON.parse(contactExtraction.choices[0].message.content);
+    } catch (error) {
+      console.error('Failed to parse contact extraction response:', error);
+      extractedContact = { name: null, email: null, phone: null };
+    }
+
     const responseData = {
       message: aiResponse
     };
@@ -199,7 +234,7 @@ If you cannot provide an accurate quote, explain why and ask for more informatio
         // Update existing chat
         const { data: existingChat, error: getChatError } = await supabase
           .from('chats')
-          .select('messages')
+          .select('messages, contact_name, contact_email, contact_phone')
           .eq('id', chatId)
           .single();
 
@@ -214,12 +249,25 @@ If you cannot provide an accurate quote, explain why and ask for more informatio
           { role: 'assistant', content: aiResponse }
         ];
 
+        const updateData = {
+          messages: updatedMessages,
+          updated_at: new Date().toISOString(),
+        };
+
+        // Only update contact fields if they're currently null and we found new information
+        if (!existingChat.contact_name && extractedContact.name) {
+          updateData.contact_name = extractedContact.name;
+        }
+        if (!existingChat.contact_email && extractedContact.email) {
+          updateData.contact_email = extractedContact.email;
+        }
+        if (!existingChat.contact_phone && extractedContact.phone) {
+          updateData.contact_phone = extractedContact.phone;
+        }
+
         const { error: updateError } = await supabase
           .from('chats')
-          .update({
-            messages: updatedMessages,
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('id', chatId);
 
         if (updateError) {
@@ -240,9 +288,9 @@ If you cannot provide an accurate quote, explain why and ask for more informatio
                 { role: 'assistant', content: aiResponse }
               ],
               summary: message.slice(0, 100) + '...',
-              contact_name: null,
-              contact_email: null,
-              contact_phone: null,
+              contact_name: extractedContact.name,
+              contact_email: extractedContact.email,
+              contact_phone: extractedContact.phone,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             }
