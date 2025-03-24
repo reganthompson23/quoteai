@@ -19,7 +19,7 @@ export function PricingRules() {
   };
 
   return (
-    <div>
+    <div className="px-6 pr-8">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">Business Rules</h1>

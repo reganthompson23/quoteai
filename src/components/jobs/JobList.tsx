@@ -13,7 +13,7 @@ export function JobList() {
   };
 
   return (
-    <div>
+    <div className="px-6 pr-8">
       <div className="flex justify-between items-start mb-6">
         <div className="max-w-2xl">
           <h1 className="text-2xl font-bold">Past Jobs</h1>

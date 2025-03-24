@@ -58,7 +58,7 @@ export function Details() {
   }
 
   return (
-    <div>
+    <div className="px-6 pr-8">
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-2xl font-bold">Business Details</h1>
