@@ -150,16 +150,43 @@ app.post('/quote/generate', async (req, res) => {
       })),
     };
 
-    console.log('Generating quote with context:', {
-      businessName: context.business.name,
-      industry: context.business.industry,
-      rulesCount: context.rules.length,
-      jobsCount: context.recentJobs.length,
-      description: message,
-      isPreview
+    // First, analyze the entire conversation for contact information
+    const contactAnalysisPrompt = `
+You are an AI assistant tasked with extracting contact information from a conversation.
+Please analyze the following conversation and extract any contact information in a JSON format.
+If a piece of information is not found, return null for that field.
+
+Current message: "${message}"
+
+Previous conversation:
+${messages ? messages.map(msg => `${msg.role}: ${msg.content}`).join('\n') : 'No previous messages'}
+
+Return ONLY a JSON object in this exact format:
+{
+  "name": "extracted name or null",
+  "email": "extracted email or null",
+  "phone": "extracted phone or null"
+}`;
+
+    const contactAnalysis = await openai.chat.completions.create({
+      model: "gpt-4-turbo-preview",
+      messages: [
+        { role: "system", content: contactAnalysisPrompt }
+      ],
+      temperature: 0,
+      response_format: { type: "json_object" }
     });
 
-    // Generate AI response
+    let extractedContact;
+    try {
+      extractedContact = JSON.parse(contactAnalysis.choices[0].message.content);
+      console.log('Extracted contact info:', extractedContact);
+    } catch (error) {
+      console.error('Failed to parse contact analysis response:', error);
+      extractedContact = { name: null, email: null, phone: null };
+    }
+
+    // Now generate the AI response with the full context
     const systemPrompt = `You are an AI assistant for ${context.business.name}, a ${context.business.industry} business. 
 Your goal is to help potential customers by providing accurate quotes and information.
 
@@ -188,41 +215,6 @@ If you cannot provide an accurate quote, explain why and ask for more informatio
     });
 
     const aiResponse = completion.choices[0].message.content;
-
-    // Extract contact information from conversation
-    const contactExtractionPrompt = `
-You are an AI assistant tasked with extracting contact information from a conversation.
-Please analyze the following message and extract any contact information in a JSON format.
-If a piece of information is not found, return null for that field.
-
-Message to analyze: "${message}"
-
-Previous messages for context:
-${messages ? messages.map(msg => `${msg.role}: ${msg.content}`).join('\n') : 'No previous messages'}
-
-Return ONLY a JSON object in this exact format:
-{
-  "name": "extracted name or null",
-  "email": "extracted email or null",
-  "phone": "extracted phone or null"
-}`;
-
-    const contactExtraction = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview",
-      messages: [
-        { role: "system", content: contactExtractionPrompt }
-      ],
-      temperature: 0,
-      response_format: { type: "json_object" }
-    });
-
-    let extractedContact;
-    try {
-      extractedContact = JSON.parse(contactExtraction.choices[0].message.content);
-    } catch (error) {
-      console.error('Failed to parse contact extraction response:', error);
-      extractedContact = { name: null, email: null, phone: null };
-    }
 
     const responseData = {
       message: aiResponse
@@ -254,14 +246,14 @@ Return ONLY a JSON object in this exact format:
           updated_at: new Date().toISOString(),
         };
 
-        // Only update contact fields if they're currently null and we found new information
-        if (!existingChat.contact_name && extractedContact.name) {
+        // Update contact fields if we found new information
+        if (extractedContact.name) {
           updateData.contact_name = extractedContact.name;
         }
-        if (!existingChat.contact_email && extractedContact.email) {
+        if (extractedContact.email) {
           updateData.contact_email = extractedContact.email;
         }
-        if (!existingChat.contact_phone && extractedContact.phone) {
+        if (extractedContact.phone) {
           updateData.contact_phone = extractedContact.phone;
         }
 
