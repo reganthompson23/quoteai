@@ -54,7 +54,7 @@ function App() {
         // Fetch profile data
         supabase
           .from('profiles')
-          .select('businessName, industry')
+          .select('*')  // Get all profile fields
           .eq('id', session.user.id)
           .single()
           .then(({ data: profile }) => {
@@ -68,20 +68,19 @@ function App() {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       if (session?.user) {
         // Fetch profile data
-        supabase
+        const { data: profile } = await supabase
           .from('profiles')
-          .select('businessName, industry')
+          .select('*')  // Get all profile fields
           .eq('id', session.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            if (profile) {
-              setProfile(profile);
-            }
-          });
+          .single();
+
+        if (profile) {
+          setProfile(profile);
+        }
       }
     });
 
