@@ -14,7 +14,7 @@ export function Details() {
     businessName: user?.businessName || '',
     business_address: user?.business_address || '',
     phone: user?.phone || '',
-    email: user?.email || '',
+    contact_email: user?.contact_email || '',
     industry: user?.industry || '',
     about: user?.about || '',
     services: (user?.services || []).join('\n'),
@@ -28,7 +28,7 @@ export function Details() {
         businessName: user.businessName || '',
         business_address: user.business_address || '',
         phone: user.phone || '',
-        email: user.email || '',
+        contact_email: user.contact_email || '',
         industry: user.industry || '',
         about: user.about || '',
         services: (user.services || []).join('\n'),
@@ -116,14 +116,33 @@ export function Details() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Address
+              <label htmlFor="account-email" className="block text-sm font-medium text-gray-700">
+                Account Email
               </label>
+              <p className="text-xs text-gray-500 mt-1">
+                Used for account login and system notifications. Contact support to change this.
+              </p>
               <input
                 type="email"
-                id="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                id="account-email"
+                value={user.email}
+                disabled={true}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="contact_email" className="block text-sm font-medium text-gray-700">
+                Business Contact Email (Optional)
+              </label>
+              <p className="text-xs text-gray-500 mt-1">
+                This email will be shown to customers who request contact information.
+              </p>
+              <input
+                type="email"
+                id="contact_email"
+                value={formData.contact_email}
+                onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
                 disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
               />
@@ -232,7 +251,7 @@ export function Details() {
                     businessName: user.businessName || '',
                     business_address: user.business_address || '',
                     phone: user.phone || '',
-                    email: user.email || '',
+                    contact_email: user.contact_email || '',
                     industry: user.industry || '',
                     about: user.about || '',
                     services: (user.services || []).join('\n'),

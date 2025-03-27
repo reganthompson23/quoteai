@@ -9,6 +9,7 @@ export interface User {
   phone: string;
   about?: string;
   services?: string[];
+  contact_email?: string;
 }
 
 export interface Job {
