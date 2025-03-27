@@ -78,19 +78,19 @@ export function ChatList() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-44">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                   Chat ID
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-56">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                   Customer
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Summary
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-64">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
                   Contact Details
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                   Date
                 </th>
               </tr>
@@ -103,7 +103,7 @@ export function ChatList() {
                       to={`/dashboard/chats/${chat.id}`}
                       className="text-gray-900 hover:text-blue-600"
                     >
-                      Chat #{typeof chat.id === 'string' ? chat.id.slice(0, 8) : chat.id}
+                      #{typeof chat.id === 'string' ? chat.id.slice(0, 8) : chat.id}
                     </Link>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -118,25 +118,27 @@ export function ChatList() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" title={chat.summary}>
-                    {chat.summary?.slice(0, 15)}...
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    <div className="line-clamp-2" title={chat.summary}>
+                      {chat.summary}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-col gap-1">
                       {chat.contact_email && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Mail className="h-4 w-4" />
-                          {chat.contact_email}
+                        <div className="flex items-center gap-1 text-sm text-gray-600">
+                          <Mail className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate max-w-[180px]">{chat.contact_email}</span>
                         </div>
                       )}
                       {chat.contact_phone && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Phone className="h-4 w-4" />
-                          {chat.contact_phone}
+                        <div className="flex items-center gap-1 text-sm text-gray-600">
+                          <Phone className="h-3 w-3 flex-shrink-0" />
+                          <span>{chat.contact_phone}</span>
                         </div>
                       )}
                       {!chat.contact_email && !chat.contact_phone && (
-                        <span className="text-sm text-gray-400">No contact info provided</span>
+                        <span className="text-sm text-gray-400">No contact info</span>
                       )}
                     </div>
                   </td>

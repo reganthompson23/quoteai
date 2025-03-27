@@ -216,6 +216,36 @@ If you cannot provide an accurate quote, explain why and ask for more informatio
 
     const aiResponse = completion.choices[0].message.content;
 
+    // Generate a meaningful summary of the conversation
+    const summaryPrompt = `
+You are an AI assistant tasked with creating a brief, meaningful summary of a customer conversation.
+Analyze the conversation and create a ONE-SENTENCE summary that captures:
+1. The type of service or quote requested
+2. Key details or requirements mentioned
+3. Current stage of the conversation (e.g., initial inquiry, quote provided, scheduling)
+
+Previous conversation:
+${messages ? messages.map(msg => `${msg.role}: ${msg.content}`).join('\n') : ''}
+Current message: "${message}"
+AI response: "${aiResponse}"
+
+Return ONLY the summary sentence, nothing else. Example formats:
+- "Customer inquires about exterior house painting for a two-story weatherboard home"
+- "Discussion about kitchen renovation quote with specific requirements for marble countertops"
+- "Finalizing quote details for bathroom tiling project with customer contact information provided"`;
+
+    const summaryCompletion = await openai.chat.completions.create({
+      model: "gpt-4-turbo-preview",
+      messages: [
+        { role: "system", content: summaryPrompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 100
+    });
+
+    const conversationSummary = summaryCompletion.choices[0].message.content;
+    console.log('Generated summary:', conversationSummary);
+
     const responseData = {
       message: aiResponse
     };
@@ -243,6 +273,7 @@ If you cannot provide an accurate quote, explain why and ask for more informatio
 
         const updateData = {
           messages: updatedMessages,
+          summary: conversationSummary,
           updated_at: new Date().toISOString(),
         };
 
@@ -279,7 +310,7 @@ If you cannot provide an accurate quote, explain why and ask for more informatio
                 { role: 'user', content: message },
                 { role: 'assistant', content: aiResponse }
               ],
-              summary: message.slice(0, 100) + '...',
+              summary: conversationSummary,
               contact_name: extractedContact.name,
               contact_email: extractedContact.email,
               contact_phone: extractedContact.phone,
