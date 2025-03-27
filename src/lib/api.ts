@@ -121,7 +121,7 @@ export const api = {
     fetchApi(`/chats/${chatId}`),
 
   // AI Quote Generation
-  generateQuote: (data: { description: string, isPreview?: boolean }) =>
+  generateQuote: (data: { message: string, businessId: string, isPreview?: boolean, chatId?: string | null, messages?: Array<{ role: string, content: string }> }) =>
     fetchApi('/quote/generate', {
       method: 'POST',
       body: JSON.stringify(data),

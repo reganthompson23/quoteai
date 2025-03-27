@@ -1,26 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { useAuthStore } from '../../store/auth';
-import { api } from '../../lib/api';
+import { fetchApi } from '../../lib/api';
 
 interface Message {
-  id: string;
+  role: 'user' | 'assistant';
   content: string;
-  isUser: boolean;
 }
 
 export default function WidgetPreview() {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
+      role: 'assistant',
       content: 'Hi! I can help you get an instant quote. Just describe what you need.',
-      isUser: false,
     },
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { user, profile } = useAuthStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [chatId, setChatId] = useState<string | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -35,40 +34,43 @@ export default function WidgetPreview() {
     if (!input.trim() || isLoading || !user?.id) return;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      role: 'user',
       content: input,
-      isUser: true,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
     try {
-      console.log('Sending quote request with description:', input);
-      
-      const response = await api.generateQuote({
-        description: input,
-        isPreview: true
+      const response = await fetchApi('/quote/generate', {
+        method: 'POST',
+        body: JSON.stringify({
+          message: input,
+          businessId: user.id,
+          isPreview: true,
+          chatId,
+          messages: messages
+        })
       });
 
-      console.log('Received response:', response);
+      if (response.chatId) {
+        setChatId(response.chatId);
+      }
 
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        role: 'assistant',
         content: response.message,
-        isUser: false,
       };
 
-      setMessages((prev) => [...prev, aiMessage]);
+      setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Failed to generate quote:', error);
       const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        role: 'assistant',
         content: error instanceof Error ? error.message : 'Sorry, I encountered an error. Please try again.',
-        isUser: false,
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -109,14 +111,14 @@ export default function WidgetPreview() {
 
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((message) => (
+            {messages.map((message, index) => (
               <div
-                key={message.id}
-                className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                key={index}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
                   className={`max-w-[80%] rounded-lg p-3 ${
-                    message.isUser
+                    message.role === 'user'
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-900'
                   }`}
