@@ -1,32 +1,41 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useJobs } from '../../hooks/useJobs';
 import { Job } from '../../types';
 
 export function JobList() {
-  const { jobs } = useJobs();
+  const { jobs, deleteJob } = useJobs();
+  const [deleteConfirmId, setDeleteConfirmId] = React.useState<string | null>(null);
 
-  const truncateDescription = (text: string, maxLength: number = 40) => {
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength) + '...';
+  const truncateDescription = (description: string) => {
+    return description.length > 100 ? `${description.slice(0, 100)}...` : description;
+  };
+
+  const handleDelete = async (jobId: string) => {
+    try {
+      await deleteJob.mutateAsync(jobId);
+      setDeleteConfirmId(null);
+    } catch (error) {
+      console.error('Failed to delete job:', error);
+    }
   };
 
   return (
     <div className="px-6 pr-8">
-      <div className="flex justify-between items-start mb-6">
-        <div className="max-w-2xl">
-          <h1 className="text-2xl font-bold">Past Jobs</h1>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">Jobs</h1>
           <p className="text-sm text-gray-600 mt-1">
-            This is what your chatbot is trained on. Add detailed job descriptions to help your chatbot provide more accurate quotes.
+            Track and manage your completed jobs
           </p>
         </div>
         <Link
           to="/dashboard/jobs/new"
-          className="shrink-0 inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
         >
           <Plus className="h-5 w-5" />
-          Add Job
+          <span>Add Job</span>
         </Link>
       </div>
 
@@ -68,10 +77,38 @@ export function JobList() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   ${job.price.toLocaleString()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 hover:text-blue-900">
-                  <Link to={`/dashboard/jobs/${job.id}/edit`} className="hover:underline">
-                    Edit
-                  </Link>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <div className="flex items-center space-x-4">
+                    <Link 
+                      to={`/dashboard/jobs/${job.id}/edit`} 
+                      className="text-blue-600 hover:text-blue-900 hover:underline"
+                    >
+                      Edit
+                    </Link>
+                    {deleteConfirmId === job.id ? (
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleDelete(job.id)}
+                          className="text-red-600 hover:text-red-900 font-medium"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirmId(null)}
+                          className="text-gray-600 hover:text-gray-900"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setDeleteConfirmId(job.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

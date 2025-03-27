@@ -132,9 +132,34 @@ export function useJobs() {
     },
   });
 
+  const deleteJob = useMutation({
+    mutationFn: async (jobId: string) => {
+      if (user?.id === 'demo-user') {
+        const jobIndex = DEMO_JOBS.findIndex(j => j.id === jobId);
+        if (jobIndex !== -1) {
+          DEMO_JOBS.splice(jobIndex, 1);
+          return true;
+        }
+        throw new Error('Job not found');
+      }
+
+      const { error } = await supabase
+        .from('jobs')
+        .delete()
+        .eq('id', jobId);
+
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+    },
+  });
+
   return {
     jobs,
     createJob,
     updateJob,
+    deleteJob,
   };
 }

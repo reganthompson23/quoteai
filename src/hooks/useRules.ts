@@ -128,9 +128,34 @@ export function useRules() {
     },
   });
 
+  const deleteRule = useMutation({
+    mutationFn: async (ruleId: string) => {
+      if (user?.id === 'demo-user') {
+        const ruleIndex = DEMO_RULES.findIndex(r => r.id === ruleId);
+        if (ruleIndex !== -1) {
+          DEMO_RULES.splice(ruleIndex, 1);
+          return true;
+        }
+        throw new Error('Rule not found');
+      }
+
+      const { error } = await supabase
+        .from('pricing_rules')
+        .delete()
+        .eq('id', ruleId);
+
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rules'] });
+    },
+  });
+
   return {
     rules,
     createRule,
     updateRule,
+    deleteRule,
   };
 }

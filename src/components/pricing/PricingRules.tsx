@@ -1,11 +1,12 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useRules } from '../../hooks/useRules';
 import { Rule } from '../../types';
 
 export function PricingRules() {
-  const { rules, updateRule } = useRules();
+  const { rules, updateRule, deleteRule } = useRules();
+  const [deleteConfirmId, setDeleteConfirmId] = React.useState<string | null>(null);
 
   const handleToggleActive = async (rule: Rule) => {
     try {
@@ -15,6 +16,15 @@ export function PricingRules() {
       });
     } catch (error) {
       console.error('Failed to toggle rule:', error);
+    }
+  };
+
+  const handleDelete = async (ruleId: string) => {
+    try {
+      await deleteRule.mutateAsync(ruleId);
+      setDeleteConfirmId(null);
+    } catch (error) {
+      console.error('Failed to delete rule:', error);
     }
   };
 
@@ -76,12 +86,37 @@ export function PricingRules() {
                   </button>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <Link 
-                    to={`/dashboard/pricing/${rule.id}/edit`}
-                    className="text-blue-600 hover:text-blue-900"
-                  >
-                    Edit
-                  </Link>
+                  <div className="flex items-center space-x-4">
+                    <Link 
+                      to={`/dashboard/pricing/${rule.id}/edit`}
+                      className="text-blue-600 hover:text-blue-900"
+                    >
+                      Edit
+                    </Link>
+                    {deleteConfirmId === rule.id ? (
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleDelete(rule.id)}
+                          className="text-red-600 hover:text-red-900 font-medium"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirmId(null)}
+                          className="text-gray-600 hover:text-gray-900"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setDeleteConfirmId(rule.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
