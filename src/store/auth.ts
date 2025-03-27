@@ -132,19 +132,28 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
-        // Sign out from Supabase
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        
-        // Clear the persisted state from localStorage
-        localStorage.removeItem('auth-storage');
-        
-        // Reset the store state
-        set({ 
-          user: null, 
-          isAuthenticated: false, 
-          profile: null 
-        }, true); // true here means we replace the state entirely
+        try {
+          // Sign out from Supabase
+          const { error } = await supabase.auth.signOut();
+          if (error) throw error;
+          
+          // Clear all auth-related storage
+          localStorage.removeItem('auth-storage');
+          localStorage.removeItem('supabase-auth');
+          
+          // Reset the store state
+          set({ 
+            user: null, 
+            isAuthenticated: false, 
+            profile: null 
+          }, true); // true here means we replace the state entirely
+
+          // Force a page reload to clear any remaining state
+          window.location.href = '/login';
+        } catch (error) {
+          console.error('Logout error:', error);
+          throw error;
+        }
       },
     }),
     {
