@@ -87,6 +87,47 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
+// Update user details endpoint
+app.put('/auth/update-details', authenticateToken, async (req, res) => {
+  try {
+    const { name, businessName, businessAddress, phone, email, industry, about, services } = req.body;
+    const userId = req.user.id;
+
+    // Update auth user if email is changed
+    if (email && email !== req.user.email) {
+      const { error: authError } = await supabase.auth.admin.updateUserById(
+        userId,
+        { email }
+      );
+      if (authError) throw authError;
+    }
+
+    // Update profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        name,
+        businessName,
+        businessAddress,
+        phone,
+        industry,
+        about,
+        services,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (profileError) throw profileError;
+
+    res.json(profile);
+  } catch (error) {
+    console.error('Failed to update user details:', error);
+    res.status(500).json({ message: error.message || 'Failed to update user details' });
+  }
+});
+
 // Quote generation endpoint
 app.post('/quote/generate', async (req, res) => {
   try {

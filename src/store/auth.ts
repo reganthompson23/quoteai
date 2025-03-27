@@ -14,6 +14,7 @@ interface AuthState {
   logout: () => Promise<void>;
   setProfile: (profile: AuthState['profile']) => void;
   setSession: (session: { user: User } | null) => void;
+  setUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -140,4 +141,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   setProfile: (profile) => set({ profile }),
+
+  setUser: (user) => set({ user }),
 }));

@@ -7,6 +7,8 @@ export interface User {
   name: string;
   businessAddress?: string;
   phone: string;
+  about?: string;
+  services?: string[];
 }
 
 export interface Job {

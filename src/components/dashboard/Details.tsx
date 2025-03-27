@@ -16,6 +16,8 @@ export function Details() {
     phone: user?.phone || '',
     email: user?.email || '',
     industry: user?.industry || '',
+    about: user?.about || '',
+    services: (user?.services || []).join('\n'),
   });
 
   // Update form data when user data changes
@@ -28,6 +30,8 @@ export function Details() {
         phone: user.phone || '',
         email: user.email || '',
         industry: user.industry || '',
+        about: user.about || '',
+        services: (user.services || []).join('\n'),
       });
     }
   }, [user]);
@@ -41,7 +45,10 @@ export function Details() {
       setError(null);
       setSuccess(null);
 
-      const updatedUser = await api.updateUserDetails(formData);
+      const updatedUser = await api.updateUserDetails({
+        ...formData,
+        services: formData.services.split('\n').filter(service => service.trim()),
+      });
       setUser(updatedUser);
       setSuccess('Details updated successfully');
       setIsEditing(false);
@@ -64,6 +71,9 @@ export function Details() {
           <h1 className="text-2xl font-bold">Business Details</h1>
           <p className="text-sm text-gray-600 mt-1">
             Manage your business information and contact details
+          </p>
+          <p className="text-sm text-blue-600 mt-2">
+            Note: This information will be used to train your chatbot to provide accurate quotes and information to your customers.
           </p>
         </div>
         {!isEditing && (
@@ -181,6 +191,41 @@ export function Details() {
             </div>
           </div>
 
+          <div>
+            <label htmlFor="about" className="block text-sm font-medium text-gray-700">
+              About Your Business
+            </label>
+            <p className="text-sm text-gray-500 mt-1">
+              Write a brief description of your business, experience, and what makes you unique.
+            </p>
+            <textarea
+              id="about"
+              rows={4}
+              value={formData.about}
+              onChange={(e) => setFormData({ ...formData, about: e.target.value })}
+              disabled={!isEditing || isSubmitting}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="services" className="block text-sm font-medium text-gray-700">
+              Services Offered
+            </label>
+            <p className="text-sm text-gray-500 mt-1">
+              List your services, one per line. These will help the chatbot understand what services you offer.
+            </p>
+            <textarea
+              id="services"
+              rows={4}
+              value={formData.services}
+              onChange={(e) => setFormData({ ...formData, services: e.target.value })}
+              disabled={!isEditing || isSubmitting}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+              placeholder="Interior Painting&#10;Exterior Painting&#10;Commercial Painting&#10;etc..."
+            />
+          </div>
+
           {isEditing && (
             <div className="flex justify-end space-x-3">
               <button
@@ -194,6 +239,8 @@ export function Details() {
                     phone: user.phone || '',
                     email: user.email || '',
                     industry: user.industry || '',
+                    about: user.about || '',
+                    services: (user.services || []).join('\n'),
                   });
                 }}
                 disabled={isSubmitting}
