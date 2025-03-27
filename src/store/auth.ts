@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { User as AppUser } from '../types';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface AuthState {
   user: User | null;
@@ -85,8 +85,6 @@ export const useAuthStore = create<AuthState>()(
 
       signup: async (email, password, businessName, industry) => {
         try {
-          console.log('Starting signup process...');
-          
           const { data: authData, error: authError } = await supabase.auth.signUp({
             email,
             password,
@@ -134,13 +132,24 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
+        // Sign out from Supabase
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
-        set({ user: null, isAuthenticated: false, profile: null });
+        
+        // Clear the persisted state from localStorage
+        localStorage.removeItem('auth-storage');
+        
+        // Reset the store state
+        set({ 
+          user: null, 
+          isAuthenticated: false, 
+          profile: null 
+        }, true); // true here means we replace the state entirely
       },
     }),
     {
       name: 'auth-storage',
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ 
         user: state.user,
         isAuthenticated: state.isAuthenticated,
