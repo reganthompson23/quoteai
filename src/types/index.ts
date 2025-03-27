@@ -5,7 +5,7 @@ export interface User {
   industry: string;
   needsPasswordChange?: boolean;
   name: string;
-  businessAddress?: string;
+  business_address?: string;
   phone: string;
   about?: string;
   services?: string[];

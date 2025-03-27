@@ -12,7 +12,7 @@ export function Details() {
   const [formData, setFormData] = React.useState({
     name: user?.name || '',
     businessName: user?.businessName || '',
-    businessAddress: user?.businessAddress || '',
+    business_address: user?.business_address || '',
     phone: user?.phone || '',
     email: user?.email || '',
     industry: user?.industry || '',
@@ -26,7 +26,7 @@ export function Details() {
       setFormData({
         name: user.name || '',
         businessName: user.businessName || '',
-        businessAddress: user.businessAddress || '',
+        business_address: user.business_address || '',
         phone: user.phone || '',
         email: user.email || '',
         industry: user.industry || '',
@@ -112,7 +112,6 @@ export function Details() {
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-                required
               />
             </div>
 
@@ -127,7 +126,6 @@ export function Details() {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-                required
               />
             </div>
 
@@ -142,7 +140,6 @@ export function Details() {
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-                required
               />
             </div>
 
@@ -157,7 +154,6 @@ export function Details() {
                 onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
                 disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-                required
               />
             </div>
 
@@ -172,19 +168,18 @@ export function Details() {
                 onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
                 disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-                required
               />
             </div>
 
             <div>
-              <label htmlFor="businessAddress" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="business_address" className="block text-sm font-medium text-gray-700">
                 Business Address (Optional)
               </label>
               <input
                 type="text"
-                id="businessAddress"
-                value={formData.businessAddress}
-                onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })}
+                id="business_address"
+                value={formData.business_address}
+                onChange={(e) => setFormData({ ...formData, business_address: e.target.value })}
                 disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
               />
@@ -193,7 +188,7 @@ export function Details() {
 
           <div>
             <label htmlFor="about" className="block text-sm font-medium text-gray-700">
-              About Your Business
+              About Your Business (Optional)
             </label>
             <p className="text-sm text-gray-500 mt-1">
               Write a brief description of your business, experience, and what makes you unique.
@@ -210,7 +205,7 @@ export function Details() {
 
           <div>
             <label htmlFor="services" className="block text-sm font-medium text-gray-700">
-              Services Offered
+              Services Offered (Optional)
             </label>
             <p className="text-sm text-gray-500 mt-1">
               List your services, one per line. These will help the chatbot understand what services you offer.
@@ -235,7 +230,7 @@ export function Details() {
                   setFormData({
                     name: user.name || '',
                     businessName: user.businessName || '',
-                    businessAddress: user.businessAddress || '',
+                    business_address: user.business_address || '',
                     phone: user.phone || '',
                     email: user.email || '',
                     industry: user.industry || '',
