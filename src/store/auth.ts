@@ -1,55 +1,82 @@
 import { create } from 'zustand';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { User as AppUser } from '../types';
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  profile: {
-    businessName: string;
-    industry: string;
-  } | null;
+  profile: AppUser | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, businessName: string, industry: string) => Promise<void>;
   logout: () => Promise<void>;
   setProfile: (profile: AuthState['profile']) => void;
   setSession: (session: { user: User } | null) => void;
-  setUser: (user: User) => void;
+  refreshProfile: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
   profile: null,
 
-  setSession: (session) => {
-    set({
-      user: session?.user || null,
-      isAuthenticated: !!session?.user,
-    });
+  refreshProfile: async () => {
+    const { user } = get();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (profile) {
+      set({ profile });
+    }
   },
 
-  login: async (email: string, password: string) => {
+  setSession: async (session) => {
+    set({ user: session?.user || null, isAuthenticated: !!session?.user });
+    
+    if (session?.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile) {
+        set({ profile });
+      }
+    } else {
+      set({ profile: null });
+    }
+  },
+
+  setProfile: (profile) => set({ profile }),
+
+  login: async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password,
+      password
     });
 
     if (error) throw error;
 
-    if (data.user) {
-      // Fetch profile data from profiles table
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('businessName, industry')
-        .eq('id', data.user.id)
-        .single();
+    set({ 
+      user: data.user,
+      isAuthenticated: true
+    });
 
-      set({ 
-        user: data.user, 
-        isAuthenticated: true,
-        profile: profile || null
-      });
+    // Fetch profile data after login
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profile) {
+      set({ profile });
     }
   },
 
@@ -139,8 +166,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (error) throw error;
     set({ user: null, isAuthenticated: false, profile: null });
   },
-
-  setProfile: (profile) => set({ profile }),
 
   setUser: (user) => set({ user }),
 }));

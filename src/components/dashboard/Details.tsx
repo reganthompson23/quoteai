@@ -3,38 +3,38 @@ import { useAuthStore } from '../../store/auth';
 import { api } from '../../lib/api';
 
 export function Details() {
-  const { user, setUser } = useAuthStore();
+  const { user, profile, refreshProfile } = useAuthStore();
   const [isEditing, setIsEditing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const [formData, setFormData] = React.useState({
-    name: user?.name || '',
-    businessName: user?.businessName || '',
-    business_address: user?.business_address || '',
-    phone: user?.phone || '',
-    contact_email: user?.contact_email || '',
-    industry: user?.industry || '',
-    about: user?.about || '',
-    services: (user?.services || []).join('\n'),
+    name: profile?.name || '',
+    businessName: profile?.businessName || '',
+    business_address: profile?.business_address || '',
+    phone: profile?.phone || '',
+    contact_email: profile?.contact_email || '',
+    industry: profile?.industry || '',
+    about: profile?.about || '',
+    services: (profile?.services || []).join('\n'),
   });
 
-  // Update form data when user data changes
+  // Update form data when profile data changes
   React.useEffect(() => {
-    if (user) {
+    if (profile) {
       setFormData({
-        name: user.name || '',
-        businessName: user.businessName || '',
-        business_address: user.business_address || '',
-        phone: user.phone || '',
-        contact_email: user.contact_email || '',
-        industry: user.industry || '',
-        about: user.about || '',
-        services: (user.services || []).join('\n'),
+        name: profile.name || '',
+        businessName: profile.businessName || '',
+        business_address: profile.business_address || '',
+        phone: profile.phone || '',
+        contact_email: profile.contact_email || '',
+        industry: profile.industry || '',
+        about: profile.about || '',
+        services: (profile.services || []).join('\n'),
       });
     }
-  }, [user]);
+  }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,11 +45,14 @@ export function Details() {
       setError(null);
       setSuccess(null);
 
-      const updatedUser = await api.updateUserDetails({
+      await api.updateUserDetails({
         ...formData,
         services: formData.services.split('\n').filter(service => service.trim()),
       });
-      setUser(updatedUser);
+      
+      // Refresh the profile data after update
+      await refreshProfile();
+      
       setSuccess('Details updated successfully');
       setIsEditing(false);
     } catch (err) {
@@ -60,7 +63,7 @@ export function Details() {
     }
   };
 
-  if (!user) {
+  if (!user || !profile) {
     return null;
   }
 
@@ -247,14 +250,14 @@ export function Details() {
                 onClick={() => {
                   setIsEditing(false);
                   setFormData({
-                    name: user.name || '',
-                    businessName: user.businessName || '',
-                    business_address: user.business_address || '',
-                    phone: user.phone || '',
-                    contact_email: user.contact_email || '',
-                    industry: user.industry || '',
-                    about: user.about || '',
-                    services: (user.services || []).join('\n'),
+                    name: profile.name || '',
+                    businessName: profile.businessName || '',
+                    business_address: profile.business_address || '',
+                    phone: profile.phone || '',
+                    contact_email: profile.contact_email || '',
+                    industry: profile.industry || '',
+                    about: profile.about || '',
+                    services: (profile.services || []).join('\n'),
                   });
                 }}
                 disabled={isSubmitting}
