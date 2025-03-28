@@ -13,19 +13,32 @@ export const supabase = createClient<Database>(
   supabaseAnonKey,
   {
     auth: {
-      autoRefreshToken: false,
+      autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: false,
+      detectSessionInUrl: true,
       storage: {
         getItem: (key) => {
-          const value = localStorage.getItem(key);
-          return value ? JSON.parse(value) : null;
+          try {
+            const value = localStorage.getItem(key);
+            return value ? JSON.parse(value) : null;
+          } catch (error) {
+            console.error('Error reading from localStorage:', error);
+            return null;
+          }
         },
         setItem: (key, value) => {
-          localStorage.setItem(key, JSON.stringify(value));
+          try {
+            localStorage.setItem(key, JSON.stringify(value));
+          } catch (error) {
+            console.error('Error writing to localStorage:', error);
+          }
         },
         removeItem: (key) => {
-          localStorage.removeItem(key);
+          try {
+            localStorage.removeItem(key);
+          } catch (error) {
+            console.error('Error removing from localStorage:', error);
+          }
         }
       }
     }

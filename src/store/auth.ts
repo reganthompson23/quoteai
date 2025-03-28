@@ -133,15 +133,11 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          // Sign out from Supabase
-          await supabase.auth.signOut();
+          // Sign out from Supabase with scope: 'global' to kill all sessions
+          await supabase.auth.signOut({ scope: 'global' });
           
-          // Clear ALL localStorage
-          for (const key of Object.keys(localStorage)) {
-            if (key.includes('supabase') || key.includes('auth')) {
-              localStorage.removeItem(key);
-            }
-          }
+          // Clear ALL localStorage (not just auth-related)
+          localStorage.clear();
           
           // Reset the store state
           set({ 
@@ -150,17 +146,27 @@ export const useAuthStore = create<AuthState>()(
             profile: null 
           }, true);
 
-          // Clear any session cookies
-          document.cookie.split(";").forEach(function(c) { 
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-          });
+          // Clear all cookies
+          const cookies = document.cookie.split(";");
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i];
+            const eqPos = cookie.indexOf("=");
+            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
+          }
+
+          // Clear session storage
+          sessionStorage.clear();
 
           // Force a complete reload of the application
-          window.location.href = '/login';
+          window.location.replace('/login');
         } catch (error) {
           console.error('Logout error:', error);
           // Even if there's an error, try to force clear everything
-          window.location.href = '/login';
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.replace('/login');
         }
       },
     }),
