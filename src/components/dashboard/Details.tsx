@@ -12,9 +12,9 @@ export function Details() {
   const [formData, setFormData] = React.useState({
     name: profile?.name || '',
     businessName: profile?.businessName || '',
-    business_address: profile?.business_address || '',
+    businessAddress: profile?.businessAddress || '',
     phone: profile?.phone || '',
-    contact_email: profile?.contact_email || '',
+    contactEmail: profile?.contact_email || '',
     industry: profile?.industry || '',
     about: profile?.about || '',
     services: (profile?.services || []).join('\n'),
@@ -26,9 +26,9 @@ export function Details() {
       setFormData({
         name: profile.name || '',
         businessName: profile.businessName || '',
-        business_address: profile.business_address || '',
+        businessAddress: profile.businessAddress || '',
         phone: profile.phone || '',
-        contact_email: profile.contact_email || '',
+        contactEmail: profile.contact_email || '',
         industry: profile.industry || '',
         about: profile.about || '',
         services: (profile.services || []).join('\n'),
@@ -135,7 +135,7 @@ export function Details() {
             </div>
 
             <div>
-              <label htmlFor="contact_email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700">
                 Business Contact Email (Optional)
               </label>
               <p className="text-xs text-gray-500 mt-1">
@@ -143,9 +143,9 @@ export function Details() {
               </p>
               <input
                 type="email"
-                id="contact_email"
-                value={formData.contact_email}
-                onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+                id="contactEmail"
+                value={formData.contactEmail}
+                onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
                 disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
               />
@@ -194,14 +194,14 @@ export function Details() {
             </div>
 
             <div>
-              <label htmlFor="business_address" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="businessAddress" className="block text-sm font-medium text-gray-700">
                 Business Address (Optional)
               </label>
               <input
                 type="text"
-                id="business_address"
-                value={formData.business_address}
-                onChange={(e) => setFormData({ ...formData, business_address: e.target.value })}
+                id="businessAddress"
+                value={formData.businessAddress}
+                onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })}
                 disabled={!isEditing || isSubmitting}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
               />
@@ -252,9 +252,9 @@ export function Details() {
                   setFormData({
                     name: profile.name || '',
                     businessName: profile.businessName || '',
-                    business_address: profile.business_address || '',
+                    businessAddress: profile.businessAddress || '',
                     phone: profile.phone || '',
-                    contact_email: profile.contact_email || '',
+                    contactEmail: profile.contact_email || '',
                     industry: profile.industry || '',
                     about: profile.about || '',
                     services: (profile.services || []).join('\n'),

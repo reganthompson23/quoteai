@@ -90,26 +90,18 @@ const authenticateToken = async (req, res, next) => {
 // Update user details endpoint
 app.put('/auth/update-details', authenticateToken, async (req, res) => {
   try {
-    const { name, businessName, businessAddress, phone, email, industry, about, services } = req.body;
+    const { name, businessName, businessAddress, phone, contactEmail, industry, about, services } = req.body;
     const userId = req.user.id;
-
-    // Update auth user if email is changed
-    if (email && email !== req.user.email) {
-      const { error: authError } = await supabase.auth.admin.updateUserById(
-        userId,
-        { email }
-      );
-      if (authError) throw authError;
-    }
 
     // Update profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .update({
         name,
-        businessName,
-        businessAddress,
+        business_name: businessName,
+        business_address: businessAddress,
         phone,
+        contact_email: contactEmail,
         industry,
         about,
         services,
@@ -121,7 +113,15 @@ app.put('/auth/update-details', authenticateToken, async (req, res) => {
 
     if (profileError) throw profileError;
 
-    res.json(profile);
+    // Transform the response to match the frontend's camelCase format
+    const transformedProfile = {
+      ...profile,
+      businessName: profile.business_name,
+      businessAddress: profile.business_address,
+      contactEmail: profile.contact_email
+    };
+
+    res.json(transformedProfile);
   } catch (error) {
     console.error('Failed to update user details:', error);
     res.status(500).json({ message: error.message || 'Failed to update user details' });

@@ -5,11 +5,11 @@ export interface User {
   industry: string;
   needsPasswordChange?: boolean;
   name: string;
-  business_address?: string;
+  businessAddress?: string;
   phone: string;
   about?: string;
   services?: string[];
-  contact_email?: string;
+  contactEmail?: string;
 }
 
 export interface Job {
