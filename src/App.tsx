@@ -19,7 +19,6 @@ import { ForgotPassword } from './pages/auth/ForgotPassword';
 import { ResetPassword } from './pages/auth/ResetPassword';
 import { DemoPage } from './pages/DemoPage';
 import { BlogPost } from './components/blog/BlogPost';
-import { useAuthStore } from './store/auth';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { Details } from './components/dashboard/Details';
 import { PaintersLanding } from './pages/seo/ai-quoting-software-for-painters';
@@ -35,114 +34,79 @@ import { WindowInstallationLanding } from './pages/seo/window-installation-quote
 import { FencingLanding } from './pages/seo/fencing-quote-software';
 import { DrywallLanding } from './pages/seo/drywall-quote-software';
 import { supabase } from './lib/supabase';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const queryClient = new QueryClient();
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  
+  return user ? <>{children}</> : <Navigate to="/login" />;
 }
 
 function App() {
-  const { setProfile, setSession } = useAuthStore();
-
-  useEffect(() => {
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSession(session);
-        // Fetch profile data
-        supabase
-          .from('profiles')
-          .select('*')  // Get all profile fields
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            if (profile) {
-              setProfile(profile);
-            }
-          });
-      }
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      if (session?.user) {
-        // Fetch profile data
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')  // Get all profile fields
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile) {
-          setProfile(profile);
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [setProfile, setSession]);
-
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Header />
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/ai-quoting-software-for-painters" element={<PaintersLanding />} />
-            <Route path="/landscaping-quoting-software" element={<LandscapingLanding />} />
-            <Route path="/plumbing-quote-software" element={<PlumbingLanding />} />
-            <Route path="/roofing-quote-software" element={<RoofingLanding />} />
-            <Route path="/tiling-quote-software" element={<TilingLanding />} />
-            <Route path="/hvac-quote-software" element={<HVACLanding />} />
-            <Route path="/electrician-quote-software" element={<ElectricianLanding />} />
-            <Route path="/flooring-quote-software" element={<FlooringLanding />} />
-            <Route path="/concrete-quote-software" element={<ConcreteLanding />} />
-            <Route path="/window-installation-quote-software" element={<WindowInstallationLanding />} />
-            <Route path="/fencing-quote-software" element={<FencingLanding />} />
-            <Route path="/drywall-quote-software" element={<DrywallLanding />} />
-            <Route path="/blog/:id" element={<BlogPost />} />
-            <Route path="/demo/*" element={<DemoPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route 
-              path="/admin" 
-              element={
-                <PrivateRoute>
-                  <AdminDashboard />
-                </PrivateRoute>
-              } 
-            />
-            <Route
-              path="/dashboard"
-              element={
-                <PrivateRoute>
-                  <DashboardLayout />
-                </PrivateRoute>
-              }
-            >
-              <Route index element={<Navigate to="/dashboard/jobs" replace />} />
-              <Route path="jobs" element={<JobList />} />
-              <Route path="jobs/new" element={<JobForm />} />
-              <Route path="jobs/:id/edit" element={<EditJob />} />
-              <Route path="pricing" element={<PricingRules />} />
-              <Route path="pricing/new" element={<RuleForm />} />
-              <Route path="pricing/:id/edit" element={<EditRule />} />
-              <Route path="widget" element={<WidgetPreview />} />
-              <Route path="chats" element={<ChatList />} />
-              <Route path="chats/:id" element={<ChatDetail />} />
-              <Route path="details" element={<Details />} />
-            </Route>
-          </Routes>
-        </div>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50">
+            <Header />
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/ai-quoting-software-for-painters" element={<PaintersLanding />} />
+              <Route path="/landscaping-quoting-software" element={<LandscapingLanding />} />
+              <Route path="/plumbing-quote-software" element={<PlumbingLanding />} />
+              <Route path="/roofing-quote-software" element={<RoofingLanding />} />
+              <Route path="/tiling-quote-software" element={<TilingLanding />} />
+              <Route path="/hvac-quote-software" element={<HVACLanding />} />
+              <Route path="/electrician-quote-software" element={<ElectricianLanding />} />
+              <Route path="/flooring-quote-software" element={<FlooringLanding />} />
+              <Route path="/concrete-quote-software" element={<ConcreteLanding />} />
+              <Route path="/window-installation-quote-software" element={<WindowInstallationLanding />} />
+              <Route path="/fencing-quote-software" element={<FencingLanding />} />
+              <Route path="/drywall-quote-software" element={<DrywallLanding />} />
+              <Route path="/blog/:id" element={<BlogPost />} />
+              <Route path="/demo/*" element={<DemoPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route
+                path="/admin"
+                element={
+                  <PrivateRoute>
+                    <AdminDashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/dashboard/*"
+                element={
+                  <PrivateRoute>
+                    <DashboardLayout />
+                  </PrivateRoute>
+                }
+              >
+                <Route index element={<Navigate to="/dashboard/jobs" replace />} />
+                <Route path="jobs" element={<JobList />} />
+                <Route path="jobs/new" element={<JobForm />} />
+                <Route path="jobs/:id/edit" element={<EditJob />} />
+                <Route path="pricing" element={<PricingRules />} />
+                <Route path="pricing/new" element={<RuleForm />} />
+                <Route path="pricing/:id/edit" element={<EditRule />} />
+                <Route path="widget" element={<WidgetPreview />} />
+                <Route path="chats" element={<ChatList />} />
+                <Route path="chats/:id" element={<ChatDetail />} />
+                <Route path="details" element={<Details />} />
+              </Route>
+            </Routes>
+          </div>
+        </Router>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
