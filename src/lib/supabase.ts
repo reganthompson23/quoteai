@@ -13,11 +13,21 @@ export const supabase = createClient<Database>(
   supabaseAnonKey,
   {
     auth: {
-      storage: window.localStorage,
-      storageKey: 'supabase-auth',
-      autoRefreshToken: true,
+      autoRefreshToken: false,
       persistSession: true,
-      detectSessionInUrl: true
+      detectSessionInUrl: false,
+      storage: {
+        getItem: (key) => {
+          const value = localStorage.getItem(key);
+          return value ? JSON.parse(value) : null;
+        },
+        setItem: (key, value) => {
+          localStorage.setItem(key, JSON.stringify(value));
+        },
+        removeItem: (key) => {
+          localStorage.removeItem(key);
+        }
+      }
     }
   }
 ); 
