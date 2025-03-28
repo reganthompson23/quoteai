@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Rule } from '../types';
-import { useAuthStore } from '../store/auth';
+import { useAuth } from '../contexts/AuthContext';
 
 const DEMO_RULES: Rule[] = [
   {
@@ -22,7 +22,7 @@ const DEMO_RULES: Rule[] = [
 
 export function useRules() {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
 
   const rules = useQuery({
     queryKey: ['rules'],

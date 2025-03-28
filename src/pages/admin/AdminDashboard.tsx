@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/auth';
+import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../lib/api';
 
 interface User {
@@ -14,7 +14,7 @@ interface User {
 }
 
 export function AdminDashboard() {
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState('');
   const [resetSuccess, setResetSuccess] = useState<string | null>(null);

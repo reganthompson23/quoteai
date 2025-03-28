@@ -1,23 +1,23 @@
-import React from 'react';
-import { useAuthStore } from '../../store/auth';
+import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../lib/api';
 
 export function Details() {
-  const { user, profile, refreshProfile } = useAuthStore();
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [success, setSuccess] = React.useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { user, profile } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = useState({
     name: profile?.name || '',
+    phone: profile?.phone || '',
     businessName: profile?.businessName || '',
     businessAddress: profile?.businessAddress || '',
-    phone: profile?.phone || '',
     contactEmail: profile?.contactEmail || '',
     industry: profile?.industry || '',
     about: profile?.about || '',
-    services: (profile?.services || []).join('\n'),
+    services: profile?.services || '',
   });
 
   // Update form data when profile data changes
@@ -25,13 +25,13 @@ export function Details() {
     if (profile) {
       setFormData({
         name: profile.name || '',
+        phone: profile.phone || '',
         businessName: profile.businessName || '',
         businessAddress: profile.businessAddress || '',
-        phone: profile.phone || '',
         contactEmail: profile.contactEmail || '',
         industry: profile.industry || '',
         about: profile.about || '',
-        services: (profile.services || []).join('\n'),
+        services: profile.services || '',
       });
     }
   }, [profile]);
@@ -42,8 +42,8 @@ export function Details() {
 
     try {
       setIsSubmitting(true);
-      setError(null);
-      setSuccess(null);
+      setError('');
+      setSuccess('');
 
       await api.updateUserDetails({
         ...formData,
@@ -251,13 +251,13 @@ export function Details() {
                   setIsEditing(false);
                   setFormData({
                     name: profile.name || '',
+                    phone: profile.phone || '',
                     businessName: profile.businessName || '',
                     businessAddress: profile.businessAddress || '',
-                    phone: profile.phone || '',
                     contactEmail: profile.contactEmail || '',
                     industry: profile.industry || '',
                     about: profile.about || '',
-                    services: (profile.services || []).join('\n'),
+                    services: profile.services || '',
                   });
                 }}
                 disabled={isSubmitting}

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
-import { useAuthStore } from '../../store/auth';
-import { fetchApi } from '../../lib/api';
+import { useAuth } from '../../contexts/AuthContext';
+import { api } from '../../lib/api';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -9,6 +9,7 @@ interface Message {
 }
 
 export default function WidgetPreview() {
+  const { user, profile } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -17,7 +18,6 @@ export default function WidgetPreview() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { user, profile } = useAuthStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [chatId, setChatId] = useState<string | null>(null);
 
@@ -43,7 +43,7 @@ export default function WidgetPreview() {
     setIsLoading(true);
 
     try {
-      const response = await fetchApi('/quote/generate', {
+      const response = await api('/quote/generate', {
         method: 'POST',
         body: JSON.stringify({
           message: input,

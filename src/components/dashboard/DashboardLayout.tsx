@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuthStore } from '../../store/auth';
+import { useAuth } from '../../contexts/AuthContext';
 import { ChangePassword } from '../auth/ChangePassword';
 import { 
   LayoutGrid, 
@@ -26,15 +26,15 @@ const actions = [
 ];
 
 export function DashboardLayout() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user } = useAuth();
   const location = useLocation();
 
-  if (!isAuthenticated) {
+  if (!user) {
     return <Navigate to="/login" />;
   }
 
   // Show forced password change screen if needed
-  if (user?.needsPasswordChange) {
+  if (user.user_metadata?.needsPasswordChange) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md w-full">

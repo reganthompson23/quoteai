@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/auth';
+import { useAuth } from '../../contexts/AuthContext';
 
 const signupSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -32,7 +32,7 @@ const INDUSTRIES = [
 
 export function SignupPage() {
   const navigate = useNavigate();
-  const { signup } = useAuthStore();
+  const { signUp } = useAuth();
   const [error, setError] = useState('');
 
   const {
@@ -40,13 +40,13 @@ export function SignupPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
+    resolver: zodResolver(signupSchema)
   });
 
   const onSubmit = async (data: SignupFormData) => {
     try {
       setError('');
-      await signup(data.email, data.password, data.businessName, data.industry);
+      await signUp(data.email, data.password, data.businessName, data.industry);
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Failed to create account');

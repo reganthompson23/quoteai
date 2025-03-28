@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/auth';
+import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../lib/api';
 
 interface ChangePasswordProps {
@@ -10,7 +10,7 @@ interface ChangePasswordProps {
 
 export function ChangePassword({ onClose, isModal = false }: ChangePasswordProps) {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, signOut } = useAuth();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
@@ -54,7 +54,7 @@ export function ChangePassword({ onClose, isModal = false }: ChangePasswordProps
 
       // After successful password change, log out and redirect to login page after a delay
       setTimeout(() => {
-        logout();
+        signOut();
         navigate('/login');
       }, 2000);
 
